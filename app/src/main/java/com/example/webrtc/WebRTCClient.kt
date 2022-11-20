@@ -36,6 +36,9 @@ class WebRTCClient(
     private val iceServer =
         listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
 
+    private val peerConnection by lazy { buildPeerConnection() }
+
+
     init {
         initPeerConnectionFactory(context)
     }
@@ -56,4 +59,7 @@ class WebRTCClient(
             disableNetworkMonitor = true
         })
     }.createPeerConnectionFactory()
+
+    private fun buildPeerConnection() =
+        peerConnectionFactory.createPeerConnection(iceServer, observer)
 }
