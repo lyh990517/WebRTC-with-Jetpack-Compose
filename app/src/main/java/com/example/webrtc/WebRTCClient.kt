@@ -15,6 +15,7 @@ class WebRTCClient(
         private const val FIELD_TRIALS = "WebRTC-H264HighProfile/Enabled/"
         private const val ICE_SERVER_URL = "stun:stun.l.google.com:19302"
     }
+
     private val constraints = MediaConstraints().apply {
         mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
     }
@@ -26,8 +27,27 @@ class WebRTCClient(
 
     private val database = Firebase.firestore
 
-    init {
+    private val peerConnectionFactory by lazy { buildPeerConnectionFactory() }
 
+
+    init {
+        initPeerConnectionFactory(context)
     }
 
+    private fun initPeerConnectionFactory(context: Application) {
+        val options = PeerConnectionFactory.InitializationOptions.builder(context)
+            .setEnableInternalTracer(true)
+            .setFieldTrials(FIELD_TRIALS)
+            .createInitializationOptions()
+        PeerConnectionFactory.initialize(options)
+    }
+
+    private fun buildPeerConnectionFactory() = PeerConnectionFactory.builder().apply {
+        setVideoDecoderFactory(DefaultVideoDecoderFactory(rootEglBase.eglBaseContext))
+        setVideoEncoderFactory(DefaultVideoEncoderFactory(rootEglBase.eglBaseContext, true, true))
+        setOptions(PeerConnectionFactory.Options().apply {
+            disableEncryption = true
+            disableNetworkMonitor = true
+        })
+    }.createPeerConnectionFactory()
 }
