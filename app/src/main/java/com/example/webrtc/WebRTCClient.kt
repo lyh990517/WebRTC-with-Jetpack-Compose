@@ -1,6 +1,7 @@
 package com.example.webrtc
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -34,6 +35,8 @@ class WebRTCClient(
 
     private val audioSource by lazy { peerConnectionFactory.createAudioSource(MediaConstraints()) }
 
+    private val videoCapture by lazy { getVideoCapture(context) }
+
     private val iceServer =
         listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
 
@@ -43,6 +46,15 @@ class WebRTCClient(
     init {
         initPeerConnectionFactory(context)
     }
+
+    private fun getVideoCapture(context: Context) =
+        Camera2Enumerator(context).run {
+            deviceNames.find {
+                isFrontFacing(it)
+            }?.let {
+                createCapturer(it, null)
+            } ?: throw IllegalStateException()
+        }
 
     private fun initPeerConnectionFactory(context: Application) {
         val options = PeerConnectionFactory.InitializationOptions.builder(context)
