@@ -29,6 +29,9 @@ class WebRTCClient(
 
     private val peerConnectionFactory by lazy { buildPeerConnectionFactory() }
 
+    private val localVideoSource by lazy { peerConnectionFactory.createVideoSource(false) }
+
+    private val audioSource by lazy { peerConnectionFactory.createAudioSource(MediaConstraints()) }
 
     init {
         initPeerConnectionFactory(context)
