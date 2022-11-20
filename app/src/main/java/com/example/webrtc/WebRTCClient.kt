@@ -117,6 +117,10 @@ class WebRTCClient(
         }, constraints)
     }
 
+    fun addCandidate(iceCandidate: IceCandidate?){
+        peerConnection?.addIceCandidate(iceCandidate)
+    }
+
     fun answer(roomID: String) =
         peerConnection?.Answer(roomID)
 
