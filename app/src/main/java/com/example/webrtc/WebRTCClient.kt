@@ -89,6 +89,37 @@ class WebRTCClient(
 
         }, constraints)
     }
+
+    private fun PeerConnection.Answer(roomID: String) {
+        createAnswer(object : SdpObserver {
+            override fun onCreateSuccess(p0: SessionDescription?) {
+                Log.e("Rsupport", "setLocalDescription")
+                peerConnection?.setLocalDescription(this, p0)
+                val answer = hashMapOf(
+                    "sdp" to p0?.description,
+                    "type" to p0?.type
+                )
+                database.collection("calls").document(roomID).set(answer)
+            }
+
+            override fun onSetSuccess() {
+                Log.e("Rsupport", "onSetSuccess")
+            }
+
+            override fun onCreateFailure(p0: String?) {
+                Log.e("Rsupport", "onCreateFailure: $p0")
+            }
+
+            override fun onSetFailure(p0: String?) {
+
+            }
+
+        }, constraints)
+    }
+
+    fun answer(roomID: String) =
+        peerConnection?.Answer(roomID)
+
     fun call(roomID: String) =
         peerConnection?.Call(roomID)
 }
