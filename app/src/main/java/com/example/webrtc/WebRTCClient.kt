@@ -117,7 +117,29 @@ class WebRTCClient(
         }, constraints)
     }
 
-    fun addCandidate(iceCandidate: IceCandidate?){
+    fun onRemoteSessionReceived(description: SessionDescription) {
+        Log.e("Rsupport", "setRemoteDescription")
+        peerConnection?.setRemoteDescription(object : SdpObserver {
+            override fun onCreateSuccess(p0: SessionDescription?) {
+
+            }
+
+            override fun onSetSuccess() {
+                Log.e("Rsupport", "onSetSuccess")
+            }
+
+            override fun onCreateFailure(p0: String?) {
+                Log.e("Rsupport", "onCreateFailure: $p0")
+            }
+
+            override fun onSetFailure(p0: String?) {
+
+            }
+
+        }, description)
+    }
+
+    fun addCandidate(iceCandidate: IceCandidate?) {
         peerConnection?.addIceCandidate(iceCandidate)
     }
 
