@@ -1,6 +1,7 @@
 package com.example.webrtc
 
 import android.app.Application
+import android.util.Log
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import org.webrtc.*
@@ -62,4 +63,32 @@ class WebRTCClient(
 
     private fun buildPeerConnection() =
         peerConnectionFactory.createPeerConnection(iceServer, observer)
+
+    private fun PeerConnection.Call(roomID: String) {
+        createOffer(object : SdpObserver {
+            override fun onCreateSuccess(p0: SessionDescription?) {
+                peerConnection?.setLocalDescription(this, p0)
+                val offer = hashMapOf(
+                    "sdp" to p0?.description,
+                    "type" to p0?.type
+                )
+                database.collection("calls").document(roomID).set(offer)
+            }
+
+            override fun onSetSuccess() {
+                Log.e("Rsupport", "onSetSuccess")
+            }
+
+            override fun onCreateFailure(p0: String?) {
+                Log.e("Rsupport", "onCreateFailure: $p0")
+            }
+
+            override fun onSetFailure(p0: String?) {
+
+            }
+
+        }, constraints)
+    }
+    fun call(roomID: String) =
+        peerConnection?.Call(roomID)
 }
