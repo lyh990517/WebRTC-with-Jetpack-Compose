@@ -56,6 +56,25 @@ class WebRTCClient(
             } ?: throw IllegalStateException()
         }
 
+    fun initSurfaceView(view: SurfaceViewRenderer) = view.run {
+        setMirror(true)
+        setEnableHardwareScaler(true)
+        init(rootEglBase.eglBaseContext, null)
+    }
+
+    fun startLocalView(localVideoOutput: SurfaceViewRenderer){
+        val surfaceTextureHelper = SurfaceTextureHelper.create(Thread.currentThread().name, rootEglBase.eglBaseContext)
+        (videoCapture as VideoCapturer).initialize(surfaceTextureHelper, localVideoOutput.context, localVideoSource.capturerObserver)
+        videoCapture.startCapture(320, 240, 60)
+        localAudioTrack = peerConnectionFactory.createAudioTrack(LOCAL_TRACK_ID + "_audio", audioSource);
+        localVideoTrack = peerConnectionFactory.createVideoTrack(LOCAL_TRACK_ID, localVideoSource)
+        localVideoTrack?.addSink(localVideoOutput)
+        val localStream = peerConnectionFactory.createLocalMediaStream(LOCAL_STREAM_ID)
+        localStream.addTrack(localVideoTrack)
+        localStream.addTrack(localAudioTrack)
+        peerConnection?.addStream(localStream)
+    }
+
     private fun initPeerConnectionFactory(context: Application) {
         val options = PeerConnectionFactory.InitializationOptions.builder(context)
             .setEnableInternalTracer(true)
