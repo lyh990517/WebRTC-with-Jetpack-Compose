@@ -33,6 +33,9 @@ class WebRTCClient(
 
     private val audioSource by lazy { peerConnectionFactory.createAudioSource(MediaConstraints()) }
 
+    private val iceServer =
+        listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
+
     init {
         initPeerConnectionFactory(context)
     }
