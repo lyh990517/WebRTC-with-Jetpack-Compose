@@ -1,4 +1,4 @@
-package com.example.webrtc
+package com.example.webrtc.client
 
 import android.app.Application
 import android.content.Context

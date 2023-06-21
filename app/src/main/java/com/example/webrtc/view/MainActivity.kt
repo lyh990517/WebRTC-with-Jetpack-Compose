@@ -1,4 +1,4 @@
-package com.example.webrtc
+package com.example.webrtc.view
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
