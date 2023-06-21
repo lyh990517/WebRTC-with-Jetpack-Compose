@@ -9,11 +9,16 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.webrtc.data.WebRTCRepository
 import com.example.webrtc.databinding.ActivityWebRtcconnectBinding
+import dagger.hilt.android.AndroidEntryPoint
 import org.webrtc.*
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class WebRTCConnectActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWebRtcconnectBinding
+    @Inject lateinit var webRTCRepository: WebRTCRepository
 
     private var roomID: String = "test-call"
     private var isJoin: Boolean = false
@@ -65,7 +70,7 @@ class WebRTCConnectActivity : AppCompatActivity() {
         initializeSignalingClient()
     }
 
-    private fun initializeSignalingClient() = SignalingClient(roomID, createSignalListener())
+    private fun initializeSignalingClient() = SignalingClient(roomID, createSignalListener(),webRTCRepository)
 
     private fun initializeRTCClient() {
         rtcClient = WebRTCClient(application, createPeerConnectionObserver())

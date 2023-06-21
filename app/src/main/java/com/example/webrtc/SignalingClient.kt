@@ -1,66 +1,53 @@
 package com.example.webrtc
 
 import android.util.Log
+import com.example.webrtc.data.WebRTCRepository
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
+import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
 class SignalingClient(
     private val roomID: String,
-    private val signalListener: SignalListener
+    private val signalListener: SignalListener,
+    private val webRTCRepository: WebRTCRepository
 ) : CoroutineScope {
+
     private val database = Firebase.firestore
+    private val dataFlow: Flow<Map<String, Any>> = webRTCRepository.connect(roomID)
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + Job()
 
-    private var fetchJob: Job
-
     init {
-        fetchJob = connect()
+        connect()
     }
 
-    private fun connect() = launch {
+    private fun connect() = CoroutineScope(coroutineContext).launch {
+        dataFlow.catch {
 
-        database.enableNetwork().addOnFailureListener { e ->
-            Log.e("Rsupport", "connect error : ${e.message}")
-        }
+        }.collect { data ->
+            Log.e("data", "$data")
+            when {
+                data.containsKey("type") && data.getValue("type").toString() == "OFFER" -> {
+                    handleOfferReceived(data)
+                }
 
-        database.collection("calls").document(roomID).addSnapshotListener { snapshot, e ->
-            if (e != null) {
-                Log.e("Rsupport", "listener error : ${e.message}")
-                return@addSnapshotListener
-            }
+                data.containsKey("type") && data.getValue("type").toString() == "ANSWER" -> {
+                    handleAnswerReceived(data)
+                }
 
-            if (snapshot != null && snapshot.exists()) {
-                val data = snapshot.data
-                when {
-                    data?.containsKey("type")!! && data.getValue("type").toString() == "OFFER" -> {
-                        handleOfferReceived(data)
-                    }
-                    data.containsKey("type") && data.getValue("type").toString() == "ANSWER" -> {
-                        handleAnswerReceived(data)
-                    }
+                else -> {
+                    handleIceCandidateReceived(data)
                 }
             }
         }
-
-        database.collection("calls").document(roomID).collection("candidates")
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    Log.e("Rsupport", "listener error : ${e.message}")
-                    return@addSnapshotListener
-                }
-
-                if (snapshot != null && snapshot.isEmpty.not()) {
-                    snapshot.forEach { dataSnapshot ->
-                        val data = dataSnapshot.data
-                        handleIceCandidateReceived(data)
-                    }
-                }
-            }
     }
 
     fun sendIceCandidate(candidate: IceCandidate?, isJoin: Boolean) = runBlocking {
@@ -110,9 +97,5 @@ class SignalingClient(
                 data["sdp"].toString()
             )
         )
-    }
-
-    fun destroy() {
-        fetchJob.cancel()
     }
 }
