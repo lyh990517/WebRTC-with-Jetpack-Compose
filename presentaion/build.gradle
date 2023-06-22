@@ -54,4 +54,9 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:31.0.3')
     implementation 'com.google.firebase:firebase-analytics-ktx'
     implementation 'com.google.firebase:firebase-firestore-ktx'
+
+    implementation 'androidx.compose.ui:ui:1.4.3'
+    implementation 'androidx.compose.material:material:1.4.3'
+    implementation 'androidx.compose.runtime:runtime:1.4.3'
+    implementation 'androidx.activity:activity-compose:1.7.2'
 }
