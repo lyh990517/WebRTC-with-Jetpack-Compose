@@ -1,7 +1,7 @@
 package com.example.webrtc.client
 
 import android.util.Log
-import com.example.webrtc.data.WebRTCRepository
+import com.example.webrtc.data.SignalRepository
 import com.example.webrtc.event.SignalEvent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +13,7 @@ import org.webrtc.SessionDescription
 import kotlin.coroutines.CoroutineContext
 
 class SignalingClient(
-    private val webRTCRepository: WebRTCRepository,
+    private val signalRepository: SignalRepository,
 ) : CoroutineScope {
     private lateinit var dataFlow: Flow<Map<String, Any>>
     private val _eventFlow = MutableSharedFlow<SignalEvent>()
@@ -22,7 +22,7 @@ class SignalingClient(
         get() = Dispatchers.IO + Job()
 
     fun initialize(roomID: String){
-        dataFlow  = webRTCRepository.connect(roomID)
+        dataFlow  = signalRepository.connect(roomID)
     }
     fun connect() = CoroutineScope(coroutineContext).launch {
         dataFlow.catch {
