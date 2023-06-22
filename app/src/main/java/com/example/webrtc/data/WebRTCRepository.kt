@@ -1,7 +1,7 @@
 package com.example.webrtc.data
 
-import kotlinx.coroutines.flow.Flow
+import org.webrtc.IceCandidate
 
 interface WebRTCRepository {
-    fun connect(roomID: String) : Flow<Map<String, Any>>
+    fun sendIceCandidate(candidate: IceCandidate?, isJoin: Boolean, roomId: String)
 }

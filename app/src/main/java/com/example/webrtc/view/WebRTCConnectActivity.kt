@@ -11,23 +11,24 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.example.webrtc.client.WebRTCClient
-import com.example.webrtc.data.WebRTCRepository
+import com.example.webrtc.data.SignalRepository
 import com.example.webrtc.databinding.ActivityWebRtcconnectBinding
+import com.example.webrtc.event.PeerConnectionEvent
 import com.example.webrtc.event.SignalEvent
+import com.example.webrtc.event.WebRTCEvent
 import com.example.webrtc.viewmodel.ConnectionViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import org.webrtc.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class WebRTCConnectActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWebRtcconnectBinding
+
     @Inject
-    lateinit var webRTCRepository: WebRTCRepository
+    lateinit var signalRepository: SignalRepository
+
     @Inject
     lateinit var firestore: FirebaseFirestore
 
@@ -35,8 +36,6 @@ class WebRTCConnectActivity : AppCompatActivity() {
 
     private var roomID: String = "test-call"
     private var isJoin: Boolean = false
-
-    private lateinit var rtcClient: WebRTCClient
 
     companion object {
         private const val TAG = "RTCActivity"
@@ -49,34 +48,85 @@ class WebRTCConnectActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityWebRtcconnectBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        lifecycleScope.launch {
-            viewModel.eventFlow.collect{
-                Log.e("event","$it")
-                when(it){
-                    is SignalEvent.OfferReceived -> {
-                        if (isJoin) {
-                            rtcClient.onRemoteSessionReceived(it.data)
-                            rtcClient.answer(roomID)
-                        }
-                    }
-                    is SignalEvent.AnswerReceived -> {
-                        if (isJoin.not()) rtcClient.onRemoteSessionReceived(it.data)
-                    }
-                    is SignalEvent.IceCandidateReceived -> {
-                        rtcClient.addCandidate(it.data)
-                    }
-                }
-            }
-        }
+        collectSignalEvent()
+        collectConnectionEvent()
+        collectRTCEvent()
         getIntentData()
         checkCameraAndAudioPermission()
 
     }
 
+    private fun collectRTCEvent() {
+        lifecycleScope.launch {
+            viewModel.webRTCEvent.collect {
+                when (it) {
+                    is WebRTCEvent.Initialize -> {
+                        Log.e("rtc","initialize")
+                        it.webRTCClient.apply {
+                            initPeerConnectionFactory(application)
+                            initVideoCapture(application)
+                            initSurfaceView(binding.remoteView)
+                            initSurfaceView(binding.localView)
+                            startLocalView(binding.localView)
+                            if(!isJoin) call(roomID)
+                            viewModel.connect()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun collectConnectionEvent() {
+        lifecycleScope.launch {
+            viewModel.peerConnectionEvent.collect {
+                when (it) {
+                    is PeerConnectionEvent.OnIceCandidate -> {
+                        Log.e("peerConnectionEvent","OnIceCandidate")
+                        viewModel.sendIceCandidate(it.data, isJoin, roomID)
+                        viewModel.addCandidate(it.data)
+                    }
+
+                    is PeerConnectionEvent.OnAddStream -> {
+                        Log.e("peerConnectionEvent","OnAddStream")
+                        it.data.videoTracks?.get(0)?.addSink(binding.remoteView)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun collectSignalEvent() {
+        lifecycleScope.launch {
+            viewModel.signalEvent.collect {
+                Log.e("event", "$it")
+                when (it) {
+                    is SignalEvent.OfferReceived -> {
+                        if (isJoin) {
+                            Log.e("signalEvent","OfferReceived")
+                            viewModel.onRemoteSessionReceived(it.data)
+                            viewModel.answer(roomID)
+                        }
+                    }
+
+                    is SignalEvent.AnswerReceived -> {
+                        Log.e("signalEvent","AnswerReceived")
+                        if (isJoin.not()) viewModel.onRemoteSessionReceived(it.data)
+                    }
+
+                    is SignalEvent.IceCandidateReceived -> {
+                        Log.e("signalEvent","IceCandidateReceived")
+                        viewModel.addCandidate(it.data)
+                    }
+                }
+            }
+        }
+    }
+
     private fun getIntentData() {
         roomID = intent?.getStringExtra("roomID")!!
         isJoin = intent?.getBooleanExtra("isJoin", false)!!
-        viewModel.init(roomID)
+        viewModel.initSignal(roomID)
     }
 
     private fun checkCameraAndAudioPermission() {
@@ -92,75 +142,9 @@ class WebRTCConnectActivity : AppCompatActivity() {
         ) {
             requestCameraAndAudioPermission()
         } else {
-            initializeClient()
+            viewModel.initRTC()
         }
     }
-
-    private fun initializeClient() {
-        initializeRTCClient()
-    }
-
-
-    private fun initializeRTCClient() {
-        rtcClient = WebRTCClient(application, createPeerConnectionObserver())
-        rtcClient.initSurfaceView(binding.remoteView)
-        rtcClient.initSurfaceView(binding.localView)
-        rtcClient.startLocalView(binding.localView)
-        Log.e("ROOMID", "$roomID")
-        if (!isJoin) rtcClient.call(roomID)
-        viewModel.connect()
-    }
-
-    private fun createPeerConnectionObserver(): PeerConnection.Observer =
-        object : PeerConnection.Observer {
-            override fun onSignalingChange(p0: PeerConnection.SignalingState?) {
-                Log.e("Rsupport", "onSignalingChange")
-            }
-
-            override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {
-                Log.e("Rsupport", "onIceConnectionChange")
-            }
-
-            override fun onIceConnectionReceivingChange(p0: Boolean) {
-                Log.e("Rsupport", "onIceConnectionReceivingChange")
-            }
-
-            override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {
-                Log.e("Rsupport", "onIceGatheringChange")
-            }
-
-            override fun onIceCandidate(p0: IceCandidate?) {
-                Log.e("Rsupport", "onIceCandidate : $p0")
-                sendIceCandidate(p0, isJoin)
-                rtcClient.addCandidate(p0)
-            }
-
-            override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {
-                Log.e("Rsupport", "onIceCandidatesRemoved")
-            }
-
-            override fun onAddStream(p0: MediaStream?) {
-                Log.e("Rsupport", "onAddStream")
-                p0?.videoTracks?.get(0)?.addSink(binding.remoteView)
-            }
-
-            override fun onRemoveStream(p0: MediaStream?) {
-                Log.e("Rsupport", "onRemoveStream")
-            }
-
-            override fun onDataChannel(p0: DataChannel?) {
-                Log.e("Rsupport", "onDataChannel")
-            }
-
-            override fun onRenegotiationNeeded() {
-                Log.e("Rsupport", "onRenegotiationNeeded")
-            }
-
-            override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {
-                Log.e("Rsupport", "onAddTrack")
-            }
-
-        }
 
     private fun requestCameraAndAudioPermission(dialogShown: Boolean = false) {
         Log.e(TAG, "RequestPermission")
@@ -196,25 +180,6 @@ class WebRTCConnectActivity : AppCompatActivity() {
                 permissionDenied()
             }
         }
-    }
-
-    fun sendIceCandidate(candidate: IceCandidate?, isJoin: Boolean) = runBlocking {
-        val type = if (isJoin) "answerCandidate" else "offerCandidate"
-
-        val iceCandidate = hashMapOf(
-            "serverUrl" to candidate?.serverUrl,
-            "sdpMid" to candidate?.sdpMid,
-            "sdpMLineIndex" to candidate?.sdpMLineIndex,
-            "sdpCandidate" to candidate?.sdp,
-            "type" to type
-        )
-
-        firestore.collection("calls").document(roomID).collection("candidates").document(type)
-            .set(iceCandidate).addOnSuccessListener {
-                Log.e("Rsupport", "sendIceCandidate: Success")
-            }.addOnFailureListener {
-                Log.e("Rsupport", "sendIceCandidate: Error $it")
-            }
     }
 
     private fun permissionDenied() {
