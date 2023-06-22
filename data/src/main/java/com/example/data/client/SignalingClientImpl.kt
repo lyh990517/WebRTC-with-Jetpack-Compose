@@ -14,7 +14,7 @@ import org.webrtc.SessionDescription
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
-class SignalingClientImpl @Inject constructor(
+internal class SignalingClientImpl @Inject constructor(
     private val signalRepository: SignalRepository,
 ) : SignalingClient,CoroutineScope {
     private lateinit var dataFlow: Flow<Map<String, Any>>

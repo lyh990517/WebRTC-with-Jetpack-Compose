@@ -6,7 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import org.webrtc.IceCandidate
 import javax.inject.Inject
 
-class WebRTCRepositoryImpl @Inject constructor(
+internal class WebRTCRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : WebRTCRepository {
     override fun sendIceCandidate(candidate: IceCandidate?, isJoin: Boolean, roomId: String) {

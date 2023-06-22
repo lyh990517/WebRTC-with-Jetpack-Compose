@@ -16,7 +16,7 @@ import kotlinx.coroutines.runBlocking
 import org.webrtc.*
 import javax.inject.Inject
 
-class WebRTCClientImpl @Inject constructor(
+internal class WebRTCClientImpl @Inject constructor(
     private val webRTCRepository: WebRTCRepository,
     private val database: FirebaseFirestore
 ) : WebRTCClient {

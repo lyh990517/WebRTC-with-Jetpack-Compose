@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class SignalRepositoryImpl @Inject constructor(
+internal class SignalRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : SignalRepository {
     override fun connect(roomID: String) = callbackFlow {

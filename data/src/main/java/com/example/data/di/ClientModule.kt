@@ -13,7 +13,7 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class ClientModule {
+internal abstract class ClientModule {
 
     @Binds
     abstract fun providesSignalingClient(signalingClient: SignalingClientImpl): SignalingClient
