@@ -30,25 +30,25 @@ class ConnectionViewModel @Inject constructor(
         _webRTCEvent.emit(WebRTCEvent.Initialize(webRTCClient))
     }
 
-    fun connect() = viewModelScope.launch(Dispatchers.IO) {
+    fun connect() = viewModelScope.launch {
         signalingClient.connect()
     }
 
     fun sendIceCandidate(candidate: IceCandidate?, isJoin: Boolean, roomId: String) =
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             webRTCClient.sendIceCandidate(candidate, isJoin, roomId)
         }
 
-    fun addCandidate(candidate: IceCandidate?) = viewModelScope.launch(Dispatchers.IO) {
+    fun addCandidate(candidate: IceCandidate?) = viewModelScope.launch {
         webRTCClient.addCandidate(candidate)
     }
 
     fun onRemoteSessionReceived(sessionDescription: SessionDescription) =
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch {
             webRTCClient.onRemoteSessionReceived(sessionDescription)
         }
 
-    fun answer(roomId: String) = viewModelScope.launch(Dispatchers.Default) {
+    fun answer(roomId: String) = viewModelScope.launch {
         webRTCClient.answer(roomId)
     }
 }
