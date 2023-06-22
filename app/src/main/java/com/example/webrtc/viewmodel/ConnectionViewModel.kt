@@ -44,11 +44,11 @@ class ConnectionViewModel @Inject constructor(
     }
 
     fun onRemoteSessionReceived(sessionDescription: SessionDescription) =
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.Default) {
             webRTCClient.onRemoteSessionReceived(sessionDescription)
         }
 
-    fun answer(roomId: String) = viewModelScope.launch(Dispatchers.IO) {
+    fun answer(roomId: String) = viewModelScope.launch(Dispatchers.Default) {
         webRTCClient.answer(roomId)
     }
 }

@@ -68,7 +68,7 @@ class WebRTCConnectActivity : AppCompatActivity() {
                             initSurfaceView(binding.remoteView)
                             initSurfaceView(binding.localView)
                             startLocalView(binding.localView)
-                            call(roomID)
+                            if(!isJoin) call(roomID)
                             viewModel.connect()
                         }
                     }
