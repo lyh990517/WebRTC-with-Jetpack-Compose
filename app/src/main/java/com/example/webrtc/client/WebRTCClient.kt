@@ -16,7 +16,6 @@ import org.webrtc.*
 
 class WebRTCClient(
     private val webRTCRepository: WebRTCRepository
-    //private val roomID: String
 ) {
     private val constraints = MediaConstraints().apply {
         mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
@@ -104,60 +103,29 @@ class WebRTCClient(
 
     private fun createPeerConnectionObserver(): PeerConnection.Observer =
         object : PeerConnection.Observer {
-            override fun onSignalingChange(p0: PeerConnection.SignalingState?) {
-                Log.e("Rsupport", "onSignalingChange")
-            }
-
-            override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {
-                Log.e("Rsupport", "onIceConnectionChange")
-            }
-
-            override fun onIceConnectionReceivingChange(p0: Boolean) {
-                Log.e("Rsupport", "onIceConnectionReceivingChange")
-            }
-
-            override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {
-                Log.e("Rsupport", "onIceGatheringChange")
-            }
-
+            override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
+            override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
+            override fun onIceConnectionReceivingChange(p0: Boolean) {}
+            override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
             override fun onIceCandidate(p0: IceCandidate?) {
-                Log.e("Rsupport", "onIceCandidate : $p0")
                 CoroutineScope(Dispatchers.IO).launch {
                     p0?.let {
                         _eventFlow.emit(PeerConnectionEvent.OnIceCandidate(it))
                     }
                 }
             }
-
-            override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {
-                Log.e("Rsupport", "onIceCandidatesRemoved")
-            }
-
+            override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
             override fun onAddStream(p0: MediaStream?) {
-                Log.e("Rsupport", "onAddStream")
                 CoroutineScope(Dispatchers.IO).launch {
                     p0?.let {
                         _eventFlow.emit(PeerConnectionEvent.OnAddStream(it))
                     }
                 }
             }
-
-            override fun onRemoveStream(p0: MediaStream?) {
-                Log.e("Rsupport", "onRemoveStream")
-            }
-
-            override fun onDataChannel(p0: DataChannel?) {
-                Log.e("Rsupport", "onDataChannel")
-            }
-
-            override fun onRenegotiationNeeded() {
-                Log.e("Rsupport", "onRenegotiationNeeded")
-            }
-
-            override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {
-                Log.e("Rsupport", "onAddTrack")
-            }
-
+            override fun onRemoveStream(p0: MediaStream?) {}
+            override fun onDataChannel(p0: DataChannel?) {}
+            override fun onRenegotiationNeeded() {}
+            override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
         }
 
     private fun buildPeerConnection() =
