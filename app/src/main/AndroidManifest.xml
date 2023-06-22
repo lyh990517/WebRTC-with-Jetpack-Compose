@@ -19,14 +19,14 @@
         android:theme="@style/Theme.WebRTC"
         tools:targetApi="31">
         <activity
-            android:name=".view.WebRTCConnectActivity"
+            android:name="com.example.webrtc.WebRTCConnectActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".view.MainActivity"
+            android:name="com.example.webrtc.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
