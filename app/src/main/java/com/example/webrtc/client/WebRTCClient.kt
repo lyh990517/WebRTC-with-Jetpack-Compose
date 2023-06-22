@@ -47,7 +47,7 @@ class WebRTCClient(
     val eventFlow = _eventFlow
 
 
-    fun getVideoCapture(context: Context) =
+    private fun getVideoCapture(context: Context) =
         Camera2Enumerator(context).run {
             deviceNames.find {
                 isFrontFacing(it)
@@ -81,9 +81,10 @@ class WebRTCClient(
         peerConnection?.addStream(localStream)
     }
 
-    fun initVideoCapture(context: Application){
+    fun initVideoCapture(context: Application) {
         videoCapture = getVideoCapture(context)
     }
+
     fun initPeerConnectionFactory(context: Application) {
         val options = PeerConnectionFactory.InitializationOptions.builder(context)
             .setEnableInternalTracer(true)
@@ -162,94 +163,55 @@ class WebRTCClient(
     private fun buildPeerConnection() =
         peerConnectionFactory.createPeerConnection(iceServer, createPeerConnectionObserver())
 
-    private fun PeerConnection.Call(roomID: String) {
-        createOffer(object : SdpObserver {
-            override fun onCreateSuccess(p0: SessionDescription?) {
-                peerConnection?.setLocalDescription(this, p0)
-                val offer = hashMapOf(
-                    "sdp" to p0?.description,
-                    "type" to p0?.type
-                )
-                database.collection("calls").document(roomID).set(offer)
-            }
-
-            override fun onSetSuccess() {
-                Log.e("Rsupport", "onSetSuccess")
-            }
-
-            override fun onCreateFailure(p0: String?) {
-                Log.e("Rsupport", "onCreateFailure: $p0")
-            }
-
-            override fun onSetFailure(p0: String?) {
-
-            }
-
-        }, constraints)
+    private fun PeerConnection.call(roomID: String) {
+        createOffer(createSdpObserver() { sdp, observer -> setLocalSdp(observer, sdp, roomID) }, constraints)
     }
 
     fun sendIceCandidate(candidate: IceCandidate?, isJoin: Boolean, roomID: String) = runBlocking {
         webRTCRepository.sendIceCandidate(candidate, isJoin, roomID)
     }
 
-    private fun PeerConnection.Answer(roomID: String) {
-        createAnswer(object : SdpObserver {
-            override fun onCreateSuccess(p0: SessionDescription?) {
-                Log.e("Rsupport", "setLocalDescription")
-                peerConnection?.setLocalDescription(this, p0)
-                val answer = hashMapOf(
-                    "sdp" to p0?.description,
-                    "type" to p0?.type
-                )
-                database.collection("calls").document(roomID).set(answer)
-            }
+    private fun PeerConnection.answer(roomID: String) {
+        createAnswer(createSdpObserver() { sdp, observer -> setLocalSdp(observer, sdp, roomID) }, constraints)
+    }
 
-            override fun onSetSuccess() {
-                Log.e("Rsupport", "onSetSuccess")
-            }
-
-            override fun onCreateFailure(p0: String?) {
-                Log.e("Rsupport", "onCreateFailure: $p0")
-            }
-
-            override fun onSetFailure(p0: String?) {
-
-            }
-
-        }, constraints)
+    private fun setLocalSdp(
+        observer: SdpObserver,
+        sdp: SessionDescription,
+        roomID: String
+    ) {
+        peerConnection?.setLocalDescription(observer, sdp)
+        database.collection("calls").document(roomID).set(
+            hashMapOf<String, Any>(
+                "sdp" to sdp.description,
+                "type" to sdp.type
+            )
+        )
     }
 
     fun onRemoteSessionReceived(description: SessionDescription) {
-        Log.e("Rsupport", "setRemoteDescription")
-        peerConnection?.setRemoteDescription(object : SdpObserver {
-            override fun onCreateSuccess(p0: SessionDescription?) {
-
-            }
-
-            override fun onSetSuccess() {
-                Log.e("Rsupport", "onSetSuccess")
-            }
-
-            override fun onCreateFailure(p0: String?) {
-                Log.e("Rsupport", "onCreateFailure: $p0")
-            }
-
-            override fun onSetFailure(p0: String?) {
-
-            }
-
-        }, description)
+        peerConnection?.setRemoteDescription(createSdpObserver(), description)
     }
+
+    private fun createSdpObserver(setLocalDescription: ((SessionDescription, SdpObserver) -> Unit)? = null) =
+        object : SdpObserver {
+            override fun onCreateSuccess(p0: SessionDescription?) {
+                setLocalDescription?.let { function -> p0?.let { sdp -> function(sdp, this) } }
+            }
+            override fun onSetSuccess() {}
+            override fun onCreateFailure(p0: String?) {}
+            override fun onSetFailure(p0: String?) {}
+        }
 
     fun addCandidate(iceCandidate: IceCandidate?) {
         peerConnection?.addIceCandidate(iceCandidate)
     }
 
     fun answer(roomID: String) =
-        peerConnection?.Answer(roomID)
+        peerConnection?.answer(roomID)
 
     fun call(roomID: String) =
-        peerConnection?.Call(roomID)
+        peerConnection?.call(roomID)
 
     companion object {
         private const val LOCAL_TRACK_ID = "local_track"
