@@ -1,6 +1,5 @@
 package com.example.webrtc.client
 
-import android.util.Log
 import com.example.webrtc.data.SignalRepository
 import com.example.webrtc.event.SignalEvent
 import kotlinx.coroutines.*
@@ -29,20 +28,9 @@ class SignalingClient(
 
         }.collect { data ->
             when {
-                data.containsKey("type") && data.getValue("type").toString() == "OFFER" -> {
-                    Log.e("offer", "$data")
-                    handleOfferReceived(data)
-                }
-
-                data.containsKey("type") && data.getValue("type").toString() == "ANSWER" -> {
-                    Log.e("answer", "$data")
-                    handleAnswerReceived(data)
-                }
-
-                else -> {
-                    Log.e("ice candidate", "$data")
-                    handleIceCandidateReceived(data)
-                }
+                data.containsKey("type") && data.getValue("type").toString() == "OFFER" -> handleOfferReceived(data)
+                data.containsKey("type") && data.getValue("type").toString() == "ANSWER" -> handleAnswerReceived(data)
+                else -> handleIceCandidateReceived(data)
             }
         }
     }

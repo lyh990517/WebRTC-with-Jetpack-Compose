@@ -1,13 +1,18 @@
 package com.example.webrtc.viewmodel
 
+import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.webrtc.client.SignalingClient
 import com.example.webrtc.client.WebRTCClient
+import com.example.webrtc.event.SignalEvent
 import com.example.webrtc.event.WebRTCEvent
+import com.example.webrtc.state.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
@@ -16,39 +21,75 @@ import javax.inject.Inject
 @HiltViewModel
 class ConnectionViewModel @Inject constructor(
     private val signalingClient: SignalingClient,
-    private val webRTCClient: WebRTCClient
+    private val webRTCClient: WebRTCClient,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    val signalEvent = signalingClient.eventFlow
-    val peerConnectionEvent = webRTCClient.eventFlow
+
+    private val roomId = MutableStateFlow(savedStateHandle["roomID"] ?: "")
+    private val isJoin = MutableStateFlow(savedStateHandle["isJoin"] ?: false)
+
     private val _webRTCEvent = MutableSharedFlow<WebRTCEvent>()
     val webRTCEvent = _webRTCEvent
-    fun initSignal(roomId: String) = viewModelScope.launch {
-        signalingClient.initialize(roomId)
+
+    private val signalEvent = signalingClient.eventFlow
+
+    val peerConnectionEvent = webRTCClient.eventFlow
+
+    val uiState = MutableStateFlow<UiState>(UiState.UnInitialized)
+
+    init {
+        viewModelScope.launch {
+            initSignal()
+            receiveSignal()
+        }
+    }
+
+    private suspend fun receiveSignal() {
+        signalEvent.collect {
+            when (it) {
+                is SignalEvent.OfferReceived -> {
+                    if (isJoin.value) {
+                        onRemoteSessionReceived(it.data)
+                        answer()
+                    }
+                }
+                is SignalEvent.AnswerReceived -> if (isJoin.value.not()) onRemoteSessionReceived(it.data)
+                is SignalEvent.IceCandidateReceived -> addCandidate(it.data)
+            }
+        }
+    }
+
+    private fun initSignal() = viewModelScope.launch {
+        signalingClient.initialize(roomId.value)
     }
 
     fun initRTC() = viewModelScope.launch {
         _webRTCEvent.emit(WebRTCEvent.Initialize(webRTCClient))
     }
 
-    fun connect() = viewModelScope.launch(Dispatchers.IO) {
+    fun connect() = viewModelScope.launch {
         signalingClient.connect()
     }
 
-    fun sendIceCandidate(candidate: IceCandidate?, isJoin: Boolean, roomId: String) =
-        viewModelScope.launch(Dispatchers.IO) {
-            webRTCClient.sendIceCandidate(candidate, isJoin, roomId)
+    fun sendIceCandidate(candidate: IceCandidate?) =
+        viewModelScope.launch {
+            webRTCClient.sendIceCandidate(candidate, isJoin.value, roomId.value)
         }
 
-    fun addCandidate(candidate: IceCandidate?) = viewModelScope.launch(Dispatchers.IO) {
+    fun addCandidate(candidate: IceCandidate?) = viewModelScope.launch {
         webRTCClient.addCandidate(candidate)
     }
 
-    fun onRemoteSessionReceived(sessionDescription: SessionDescription) =
-        viewModelScope.launch(Dispatchers.Default) {
+    private fun onRemoteSessionReceived(sessionDescription: SessionDescription) =
+        viewModelScope.launch {
             webRTCClient.onRemoteSessionReceived(sessionDescription)
         }
 
-    fun answer(roomId: String) = viewModelScope.launch(Dispatchers.Default) {
-        webRTCClient.answer(roomId)
+    private fun answer() = viewModelScope.launch {
+        webRTCClient.answer(roomId.value)
+    }
+
+    fun call() = viewModelScope.launch {
+        if (!isJoin.value) webRTCClient.call(roomId.value)
     }
 }
