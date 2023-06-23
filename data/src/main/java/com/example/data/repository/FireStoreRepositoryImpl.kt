@@ -1,6 +1,7 @@
 package com.example.data.repository
 
 import android.content.Intent
+import android.util.Log
 import com.example.domain.repository.FireStoreRepository
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -21,6 +22,7 @@ class FireStoreRepositoryImpl @Inject constructor(
             .get()
             .addOnSuccessListener {
                 CoroutineScope(Dispatchers.IO).launch {
+                    Log.e("send","${it.data}")
                     send(it)
                 }
             }

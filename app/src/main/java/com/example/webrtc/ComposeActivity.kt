@@ -15,7 +15,7 @@ class ComposeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            WebRTCApp(fireStoreViewModel = fireStoreViewModel)
+            WebRTCApp(context = this, fireStoreViewModel = fireStoreViewModel)
         }
     }
 }

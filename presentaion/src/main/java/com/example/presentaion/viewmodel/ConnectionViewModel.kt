@@ -1,5 +1,6 @@
 package com.example.presentaion.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,7 +24,7 @@ class ConnectionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val roomId = MutableStateFlow(savedStateHandle["roomID"] ?: "")
+    private val roomId = MutableStateFlow(savedStateHandle["roomId"] ?: "")
     private val isJoin = MutableStateFlow(savedStateHandle["isJoin"] ?: false)
 
     private val _webRTCEvent = MutableSharedFlow<WebRTCEvent>()
@@ -36,6 +37,7 @@ class ConnectionViewModel @Inject constructor(
     val uiState = MutableStateFlow<UiState>(UiState.UnInitialized)
 
     init {
+        Log.e("value", "${roomId.value} ${isJoin.value}")
         viewModelScope.launch {
             initSignal()
             receiveSignal()
@@ -51,6 +53,7 @@ class ConnectionViewModel @Inject constructor(
                         answer()
                     }
                 }
+
                 is SignalEvent.AnswerReceived -> if (isJoin.value.not()) onRemoteSessionReceived(it.data)
                 is SignalEvent.IceCandidateReceived -> addCandidate(it.data)
             }

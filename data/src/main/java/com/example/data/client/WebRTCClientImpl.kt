@@ -142,10 +142,11 @@ internal class WebRTCClientImpl @Inject constructor(
         )
     }
 
-    override fun sendIceCandidate(candidate: IceCandidate?, isJoin: Boolean, roomID: String) =
-        runBlocking {
+    override fun sendIceCandidate(candidate: IceCandidate?, isJoin: Boolean, roomID: String) {
+        CoroutineScope(Dispatchers.IO).launch {
             webRTCRepository.sendIceCandidate(candidate, isJoin, roomID)
         }
+    }
 
     override fun PeerConnection.answer(roomID: String) {
         createAnswer(

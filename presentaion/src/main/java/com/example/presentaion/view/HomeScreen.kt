@@ -1,5 +1,6 @@
 package com.example.presentaion.view
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,10 +10,9 @@ import androidx.compose.material.Button
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import com.example.domain.state.FireStoreState
-import com.example.presentaion.viewmodel.FireStoreViewModel
+import com.example.presentaion.Route
 import kotlinx.coroutines.launch
 
 
@@ -31,20 +31,31 @@ fun HomeScreen(
     onStart: (String) -> Unit,
     onJoin: (String) -> Unit
 ) {
-    val roomId = rememberSaveable {
-        mutableStateOf(String())
-    }
+    Log.e("HomeScreen","HomeScreen")
+    val roomId = rememberSaveable { mutableStateOf(String()) }
     val scope = rememberCoroutineScope()
+    val onVoice = remember {
+        mutableStateOf(false)
+    }
+    if(onVoice.value) return
     when (state.value) {
         is FireStoreState.EnterRoom -> {
-            Text(text = "${(state.value as FireStoreState.EnterRoom).isJoin}")
+            if(onVoice.value) return
+            Log.e("Enter","room")
+            val isJoin = (state.value as FireStoreState.EnterRoom).isJoin
+            if(!onVoice.value){
+                navController.navigate("${Route.CONNECT}/${roomId.value}/${isJoin}")
+                onVoice.value = true
+            }
         }
 
         is FireStoreState.RoomAlreadyEnded -> {
+            if(onVoice.value) return
             Text(text = "${(state.value as FireStoreState.RoomAlreadyEnded)}")
         }
 
         is FireStoreState.Idle -> {
+            if(onVoice.value) return
             Text(text = "${(state.value)}")
         }
     }
