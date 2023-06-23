@@ -28,18 +28,7 @@ class MainActivity : AppCompatActivity() {
     private fun init() = with(binding) {
         start.setOnClickListener {
             val roomID = roomID.text.toString()
-            db.collection("calls")
-                .document(roomID)
-                .get()
-                .addOnSuccessListener {
-                    if (it["type"] == "OFFER" || it["type"] == "ANSWER" || it["type"] == "END_CALL") {
-                    } else {
-                        val intent = Intent(this@MainActivity, WebRTCConnectActivity::class.java)
-                        intent.putExtra("roomID", roomID)
-                        intent.putExtra("isJoin", false)
-                        startActivity(intent)
-                    }
-                }
+            getRoomInfo(roomID)
         }
         join.setOnClickListener {
             val roomID = roomID.text.toString()
@@ -48,6 +37,21 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra("isJoin", true)
             startActivity(intent)
         }
+    }
+
+    private fun getRoomInfo(roomID: String) {
+        db.collection("calls")
+            .document(roomID)
+            .get()
+            .addOnSuccessListener {
+                if (it["type"] == "OFFER" || it["type"] == "ANSWER" || it["type"] == "END_CALL") {
+                } else {
+                    val intent = Intent(this@MainActivity, WebRTCConnectActivity::class.java)
+                    intent.putExtra("roomID", roomID)
+                    intent.putExtra("isJoin", false)
+                    startActivity(intent)
+                }
+            }
     }
 
     private fun checkCameraAndAudioPermission() {
