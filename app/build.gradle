@@ -26,6 +26,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.2"
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -35,6 +38,9 @@ android {
     }
     viewBinding{
         enabled = true
+    }
+    buildFeatures {
+        compose true
     }
 }
 
@@ -66,5 +72,6 @@ dependencies {
     implementation 'androidx.activity:activity-compose:1.7.2'
 
     implementation "androidx.navigation:navigation-compose:2.6.0"
+    implementation "androidx.hilt:hilt-navigation-compose:1.0.0"
 
 }
