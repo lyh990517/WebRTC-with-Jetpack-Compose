@@ -7,51 +7,58 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.domain.state.FireStoreState
+import com.example.presentaion.viewmodel.FireStoreViewModel
 import com.example.webrtc.databinding.ActivityMainBinding
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private val db = Firebase.firestore
+    private val viewModel: FireStoreViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        binding.viewModel = viewModel
         setContentView(binding.root)
         checkCameraAndAudioPermission()
-        init()
+        collectState()
     }
 
-    private fun init() = with(binding) {
-        start.setOnClickListener {
-            val roomID = roomID.text.toString()
-            getRoomInfo(roomID)
-        }
-        join.setOnClickListener {
-            val roomID = roomID.text.toString()
-            val intent = Intent(this@MainActivity, WebRTCConnectActivity::class.java)
-            intent.putExtra("roomID", roomID)
-            intent.putExtra("isJoin", true)
-            startActivity(intent)
-        }
-    }
+    private fun collectState() {
+        lifecycleScope.launch {
+            viewModel.state.collect {
+                when (it) {
+                    is FireStoreState.EnterRoom -> {
+                        val intent =
+                            Intent(this@MainActivity, WebRTCConnectActivity::class.java).apply {
+                                putExtra("roomID", it.roomId)
+                                putExtra("isJoin", it.isJoin)
+                                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        startActivity(intent)
+                    }
 
-    private fun getRoomInfo(roomID: String) {
-        db.collection("calls")
-            .document(roomID)
-            .get()
-            .addOnSuccessListener {
-                if (it["type"] == "OFFER" || it["type"] == "ANSWER" || it["type"] == "END_CALL") {
-                } else {
-                    val intent = Intent(this@MainActivity, WebRTCConnectActivity::class.java)
-                    intent.putExtra("roomID", roomID)
-                    intent.putExtra("isJoin", false)
-                    startActivity(intent)
+                    is FireStoreState.RoomAlreadyEnded -> {
+                        Snackbar.make(binding.root, "이미 사용된 방입니다.", Snackbar.LENGTH_SHORT).show()
+                    }
+
+                    is FireStoreState.Idle -> {
+
+                    }
                 }
             }
+        }
     }
 
     private fun checkCameraAndAudioPermission() {

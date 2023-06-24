@@ -39,6 +39,9 @@ android {
     viewBinding{
         enabled = true
     }
+    dataBinding {
+        enabled = true
+    }
     buildFeatures {
         compose true
     }

@@ -21,8 +21,8 @@ fun WebRTCApp(
             HomeScreen(
                 navController = navHostController,
                 state = fireStoreViewModel.state.collectAsState(),
-                onStart = { fireStoreViewModel.getRoomInfo(it, false) },
-                onJoin = { fireStoreViewModel.getRoomInfo(it, true) })
+                onStart = { fireStoreViewModel.getRoomInfo(false) },
+                onJoin = { fireStoreViewModel.getRoomInfo(true) })
         }
         composable(Route.CONNECT.path) {
             ConnectScreen()

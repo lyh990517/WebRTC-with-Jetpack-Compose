@@ -1,5 +1,6 @@
 package com.example.presentaion.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.domain.state.FireStoreState
@@ -16,12 +17,14 @@ class FireStoreViewModel @Inject constructor(
 ) : ViewModel() {
     private val _state = MutableStateFlow<FireStoreState>(FireStoreState.Idle)
     val state = _state.asStateFlow()
-    fun getRoomInfo(roomId: String, isJoin: Boolean) = viewModelScope.launch {
-        getRoomInfoUseCase(roomId).collect { snapshot ->
+    val roomId = MutableStateFlow("")
+    fun getRoomInfo(isJoin: Boolean) = viewModelScope.launch {
+        Log.e("123","123")
+        getRoomInfoUseCase(roomId.value).collect { snapshot ->
             if (snapshot["type"] == "OFFER" || snapshot["type"] == "ANSWER" || snapshot["type"] == "END_CALL") {
                 _state.emit(FireStoreState.RoomAlreadyEnded)
             } else {
-                _state.emit(FireStoreState.EnterRoom(isJoin))
+                _state.emit(FireStoreState.EnterRoom(roomId.value, isJoin))
             }
         }
     }
