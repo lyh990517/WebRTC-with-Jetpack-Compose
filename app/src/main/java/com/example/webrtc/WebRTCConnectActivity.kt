@@ -64,6 +64,7 @@ class WebRTCConnectActivity : AppCompatActivity() {
                             viewModel.connect()
                         }
                     }
+                    is WebRTCEvent.CloseSession -> finish()
                 }
             }
         }

@@ -92,15 +92,16 @@ class ConnectionViewModel @Inject constructor(
         if (!isJoin.value) webRTCClient.call(roomId.value)
     }
 
-    fun toggleVoice() {
-
+    fun toggleVoice() = viewModelScope.launch {
+        webRTCClient.toggleVoice()
     }
 
-    fun toggleVideo() {
-
+    fun toggleVideo() = viewModelScope.launch {
+        webRTCClient.toggleVideo()
     }
 
-    fun closeSession() {
-
+    fun closeSession() = viewModelScope.launch {
+        webRTCClient.closeSession()
+        _webRTCEvent.emit(WebRTCEvent.CloseSession)
     }
 }

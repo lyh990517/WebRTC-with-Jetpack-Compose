@@ -9,8 +9,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.webrtc.*
@@ -47,6 +49,26 @@ internal class WebRTCClientImpl @Inject constructor(
 
     val eventFlow = _eventFlow
 
+    private val isMicEnabled = MutableStateFlow(true)
+    private val isVideoEnabled = MutableStateFlow(true)
+
+
+    init {
+        collectState()
+    }
+
+    private fun collectState() {
+        CoroutineScope(Dispatchers.IO).launch {
+            isMicEnabled.collect{
+                localAudioTrack?.setEnabled(it)
+            }
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            isVideoEnabled.collect{
+                localVideoTrack?.setEnabled(it)
+            }
+        }
+    }
 
     override fun getVideoCapture(context: Context) =
         Camera2Enumerator(context).run {
@@ -188,6 +210,19 @@ internal class WebRTCClientImpl @Inject constructor(
     }
 
     override fun getEvent(): SharedFlow<PeerConnectionEvent> = eventFlow.asSharedFlow()
+    override fun toggleVoice() {
+        isMicEnabled.value = !isMicEnabled.value
+    }
+
+    override fun toggleVideo() {
+        isVideoEnabled.value = !isVideoEnabled.value
+    }
+
+    override fun closeSession() {
+        localAudioTrack?.dispose()
+        localVideoTrack?.dispose()
+        peerConnection?.close()
+    }
 
     override fun answer(roomID: String) =
         peerConnection?.answer(roomID)

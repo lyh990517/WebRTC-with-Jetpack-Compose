@@ -54,4 +54,10 @@ interface WebRTCClient {
 
     fun getEvent(): SharedFlow<PeerConnectionEvent>
 
+    fun toggleVoice()
+
+    fun toggleVideo()
+
+    fun closeSession()
+
 }
