@@ -7,6 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.domain.event.PeerConnectionEvent
 import com.example.domain.event.WebRTCEvent
 import com.example.domain.state.UiState
+import com.example.presentaion.ui_component.WebRTCController
 import com.example.presentaion.viewmodel.ConnectionViewModel
 import com.example.webrtc.databinding.ActivityWebRtcconnectBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,15 +25,24 @@ class WebRTCConnectActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityWebRtcconnectBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setCompose()
         collectConnectionEvent()
         collectRTCEvent()
         collectState()
     }
 
+    private fun setCompose() {
+        binding.composeView.apply {
+            setContent {
+                WebRTCController(viewModel = viewModel)
+            }
+        }
+    }
+
     private fun collectState() {
         lifecycleScope.launch {
-            viewModel.uiState.collect{
-                when(it){
+            viewModel.uiState.collect {
+                when (it) {
                     is UiState.UnInitialized -> viewModel.initRTC()
                 }
             }

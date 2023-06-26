@@ -51,6 +51,7 @@ class ConnectionViewModel @Inject constructor(
                         answer()
                     }
                 }
+
                 is SignalEvent.AnswerReceived -> if (isJoin.value.not()) onRemoteSessionReceived(it.data)
                 is SignalEvent.IceCandidateReceived -> addCandidate(it.data)
             }
@@ -89,5 +90,17 @@ class ConnectionViewModel @Inject constructor(
 
     fun call() = viewModelScope.launch {
         if (!isJoin.value) webRTCClient.call(roomId.value)
+    }
+
+    fun toggleVoice() {
+
+    }
+
+    fun toggleVideo() {
+
+    }
+
+    fun closeSession() {
+
     }
 }
