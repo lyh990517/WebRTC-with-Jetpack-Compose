@@ -31,6 +31,16 @@ class WebRTCConnectActivity : AppCompatActivity() {
         collectState()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.closeSession()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        viewModel.closeSession()
+    }
+
     private fun setCompose() {
         binding.composeView.apply {
             setContent {
