@@ -82,7 +82,7 @@ private fun InputContent(
         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue)
     ) {
         Icon(imageVector = Icons.Filled.Send, contentDescription = "", tint = Color.White)
-        Text(text = "Start", color = Color.White, fontSize = 20.sp)
+        Text(text = "Create Room", color = Color.White, fontSize = 20.sp)
     }
     Spacer(modifier = Modifier.padding(vertical = 10.dp))
     Button(modifier = Modifier
