@@ -1,5 +1,6 @@
 package com.example.presentaion.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -101,7 +102,11 @@ class ConnectionViewModel @Inject constructor(
     }
 
     fun closeSession() = viewModelScope.launch {
-        webRTCClient.closeSession()
-        _webRTCEvent.emit(WebRTCEvent.CloseSession)
+        try {
+            webRTCClient.closeSession()
+            _webRTCEvent.emit(WebRTCEvent.CloseSession)
+        } catch (e: Exception) {
+            Log.e("error", "${e.message}")
+        }
     }
 }
