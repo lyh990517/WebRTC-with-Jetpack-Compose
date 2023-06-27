@@ -1,4 +1,4 @@
-package com.example.usecase
+package com.example.domain.usecase
 
 import com.example.domain.repository.FireStoreRepository
 import javax.inject.Inject
