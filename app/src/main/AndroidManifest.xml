@@ -25,7 +25,6 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        <activity android:name=".ComposeActivity"/>
         <activity
             android:name="com.example.webrtc.MainActivity"
             android:exported="true">
