@@ -22,7 +22,7 @@ fun MenuButton(
 ) {
     FloatingActionButton(
         onClick = onClick,
-        backgroundColor = if (state.value) defaultBackgroundColor else Color.Gray
+        backgroundColor = if (!state.value) defaultBackgroundColor else Color.Gray
     ) {
         Icon(imageVector = imageVector, contentDescription = description)
     }
