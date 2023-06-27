@@ -17,13 +17,12 @@ class FireStoreViewModel @Inject constructor(
 ) : ViewModel() {
     private val _state = MutableStateFlow<FireStoreState>(FireStoreState.Idle)
     val state = _state.asStateFlow()
-    val roomId = MutableStateFlow("")
-    fun getRoomInfo(isJoin: Boolean) = viewModelScope.launch {
-        getRoomInfoUseCase(roomId.value).collect { snapshot ->
+    fun getRoomInfo(roomId: String, isJoin: Boolean) = viewModelScope.launch {
+        getRoomInfoUseCase(roomId).collect { snapshot ->
             if (snapshot["type"] == "END_CALL") {
                 _state.emit(FireStoreState.RoomAlreadyEnded)
             } else {
-                _state.emit(FireStoreState.EnterRoom(roomId.value, isJoin))
+                _state.emit(FireStoreState.EnterRoom(roomId, isJoin))
             }
         }
     }

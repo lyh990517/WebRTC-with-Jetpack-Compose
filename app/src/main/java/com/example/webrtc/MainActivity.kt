@@ -3,34 +3,31 @@ package com.example.webrtc
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.domain.state.FireStoreState
+import com.example.presentaion.view.MainScreen
 import com.example.presentaion.viewmodel.FireStoreViewModel
-import com.example.webrtc.databinding.ActivityMainBinding
-import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
     private val viewModel: FireStoreViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        binding.viewModel = viewModel
-        setContentView(binding.root)
         checkCameraAndAudioPermission()
+        setContent {
+            MainScreen(viewModel = viewModel)
+        }
         collectState()
     }
 
@@ -50,7 +47,7 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     is FireStoreState.RoomAlreadyEnded -> {
-                        Snackbar.make(binding.root, "이미 사용된 방입니다.", Snackbar.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity,"이미 사용된 방입니다.",Toast.LENGTH_SHORT).show()
                     }
 
                     is FireStoreState.Idle -> {
