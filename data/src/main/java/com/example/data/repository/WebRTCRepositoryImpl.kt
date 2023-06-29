@@ -22,9 +22,9 @@ internal class WebRTCRepositoryImpl @Inject constructor(
 
         firestore.collection("calls").document(roomId).collection("candidates").document(type)
             .set(iceCandidate).addOnSuccessListener {
-                Log.e("Rsupport", "sendIceCandidate: Success")
+                Log.e("FireStore", "sendIceCandidate: Success")
             }.addOnFailureListener {
-                Log.e("Rsupport", "sendIceCandidate: Error $it")
+                Log.e("FireStore", "sendIceCandidate: Error $it")
             }
     }
 }
