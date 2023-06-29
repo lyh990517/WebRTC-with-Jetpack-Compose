@@ -1,5 +1,5 @@
 # OverView
-this is app using openai api
+Video call application using webrtc
 
 # Getting Started
 After making the room
@@ -27,3 +27,12 @@ signaling: FireStore
 networking: WebRTC
 <br>
 # App Preview
+<br>
+
+![KakaoTalk_Photo_2023-06-27-20-03-36](https://github.com/lyh990517/WebRTC/assets/45873564/099c66ac-41a4-448f-8762-9ca9d6367218)
+
+<br>
+
+![KakaoTalk_Photo_2023-06-27-20-03-30](https://github.com/lyh990517/WebRTC/assets/45873564/896427fd-d097-4f14-bbc0-bded0b245fa0)
+
+
