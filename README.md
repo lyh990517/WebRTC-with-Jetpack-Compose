@@ -1,38 +1,25 @@
-# OverView
-Video call application using webrtc
+# Overview
+This project is a video call application built using WebRTC technology. With this application, you can make video calls on both web browsers and mobile devices.
 
 # Getting Started
-After making the room
-<br>
-Enter the same number or same word as the room and press join on the other side
+Here is a step-by-step guide on how to get started with this application:
 
-# Modularization
+1. **Creating a Room**
 
-  ![스크린샷 2023-06-27 오후 7 48 36](https://github.com/lyh990517/WebRTC/assets/45873564/389bf280-e956-436e-b6e7-2cd97dccae30)
+   - Launch the app and select the option to "Create a New Room" or a similar choice.
+   - A unique number or word will be assigned to the created room.
+
+2. **Joining a Room**
+
+   - To join a room created by another user, enter the assigned number or word for that room and click the "Join" button.
+   - When both users join the same room by using the same number or word, the video call will begin.
+
+With these simple steps, you can set up and enjoy video calls. Share the room number or word with other users to start a call together.
 
 
-# Used skill
-Language:Kotlin
-<br>
-UI: Jetpack compose + XML
-<br>
-Architecture: Clean Architecture + Multi Module
-<br>
-DI:Hilt
-<br>
-Asynchronous:Coroutine Flow
-<br>
-signaling: FireStore
-<br>
-networking: WebRTC
-<br>
 # App Preview
-<br>
 
-![KakaoTalk_Photo_2023-06-27-20-03-36](https://github.com/lyh990517/WebRTC/assets/45873564/099c66ac-41a4-448f-8762-9ca9d6367218)
-
-<br>
-
-![KakaoTalk_Photo_2023-06-27-20-03-30](https://github.com/lyh990517/WebRTC/assets/45873564/896427fd-d097-4f14-bbc0-bded0b245fa0)
+<img src="https://github.com/lyh990517/WebRTC/assets/45873564/099c66ac-41a4-448f-8762-9ca9d6367218" width="400" height="800">
+<img src="https://github.com/lyh990517/WebRTC/assets/45873564/896427fd-d097-4f14-bbc0-bded0b245fa0" width="400" height="800">
 
 
