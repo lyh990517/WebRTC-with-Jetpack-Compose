@@ -3,7 +3,11 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
-        jcenter()
+        maven { url "https://raw.githubusercontent.com/alexgreench/google-webrtc/master" }
+        maven {
+            // r8 maven
+            url = uri("https://storage.googleapis.com/r8-releases/raw")
+        }
     }
 }
 dependencyResolutionManagement {
@@ -11,7 +15,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        jcenter()
+        maven { url "https://raw.githubusercontent.com/alexgreench/google-webrtc/master" }
     }
 }
 rootProject.name = "WebRTC"

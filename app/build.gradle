@@ -30,13 +30,13 @@ android {
         kotlinCompilerExtensionVersion = "1.4.2"
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '11'
     }
-    viewBinding{
+    viewBinding {
         enabled = true
     }
     dataBinding {
@@ -58,7 +58,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-    implementation 'org.webrtc:google-webrtc:1.0.32006'
+    implementation 'org.webrtc:google-webrtc:1.0.30039@aar'
     implementation platform('com.google.firebase:firebase-bom:31.0.3')
     implementation 'com.google.firebase:firebase-analytics-ktx'
     implementation 'com.google.firebase:firebase-firestore-ktx'
