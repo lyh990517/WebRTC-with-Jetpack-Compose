@@ -1,9 +1,9 @@
 package com.example.presentaion.ui_component
 
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -22,7 +22,7 @@ fun MenuButton(
 ) {
     FloatingActionButton(
         onClick = onClick,
-        backgroundColor = if (!state.value) defaultBackgroundColor else Color.Gray
+        containerColor = if (!state.value) defaultBackgroundColor else Color.Gray
     ) {
         Icon(imageVector = imageVector, contentDescription = description)
     }
