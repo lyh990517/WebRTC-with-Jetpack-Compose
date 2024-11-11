@@ -234,6 +234,6 @@ internal class WebRTCClientImpl @Inject constructor(
         private const val LOCAL_TRACK_ID = "local_track"
         private const val LOCAL_STREAM_ID = "local_track"
         private const val FIELD_TRIALS = "WebRTC-H264HighProfile/Enabled/"
-        private const val ICE_SERVER_URL = "stun:stun.l.google.com:19302"
+        private const val ICE_SERVER_URL = "stun:stun4.l.google.com:19302"
     }
 }
