@@ -3,24 +3,21 @@ package com.example.data.client
 import android.app.Application
 import android.content.Context
 import com.example.domain.client.WebRTCClient
-import com.example.domain.repository.WebRTCRepository
 import com.example.domain.event.PeerConnectionEvent
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.domain.repository.FireStoreRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.webrtc.*
 import javax.inject.Inject
 
 internal class WebRTCClientImpl @Inject constructor(
-    private val webRTCRepository: WebRTCRepository,
-    private val database: FirebaseFirestore
+    private val fireStoreRepository: FireStoreRepository,
 ) : WebRTCClient {
     private val constraints = MediaConstraints().apply {
         mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
@@ -59,12 +56,12 @@ internal class WebRTCClientImpl @Inject constructor(
 
     private fun collectState() {
         CoroutineScope(Dispatchers.IO).launch {
-            isMicEnabled.collect{
+            isMicEnabled.collect {
                 localAudioTrack?.setEnabled(it)
             }
         }
         CoroutineScope(Dispatchers.IO).launch {
-            isVideoEnabled.collect{
+            isVideoEnabled.collect {
                 localVideoTrack?.setEnabled(it)
             }
         }
@@ -166,7 +163,7 @@ internal class WebRTCClientImpl @Inject constructor(
 
     override fun sendIceCandidate(candidate: IceCandidate?, isJoin: Boolean, roomID: String) =
         runBlocking {
-            webRTCRepository.sendIceCandidate(candidate, isJoin, roomID)
+            fireStoreRepository.sendIceCandidateToRoom(candidate, isJoin, roomID)
         }
 
     override fun PeerConnection.answer(roomID: String) {
@@ -182,12 +179,7 @@ internal class WebRTCClientImpl @Inject constructor(
         roomID: String
     ) {
         peerConnection?.setLocalDescription(observer, sdp)
-        database.collection("calls").document(roomID).set(
-            hashMapOf<String, Any>(
-                "sdp" to sdp.description,
-                "type" to sdp.type
-            )
-        )
+        fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
     }
 
     override fun onRemoteSessionReceived(description: SessionDescription) {

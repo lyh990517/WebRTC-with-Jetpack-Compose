@@ -1,8 +1,8 @@
 package com.example.data.client
 
 import com.example.domain.client.SignalingClient
-import com.example.domain.repository.SignalRepository
 import com.example.domain.event.SignalEvent
+import com.example.domain.repository.FireStoreRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,23 +15,28 @@ import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
 internal class SignalingClientImpl @Inject constructor(
-    private val signalRepository: SignalRepository,
-) : SignalingClient,CoroutineScope {
+    private val fireStoreRepository: FireStoreRepository,
+) : SignalingClient, CoroutineScope {
     private lateinit var dataFlow: Flow<Map<String, Any>>
     private val eventFlow = MutableSharedFlow<SignalEvent>()
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + Job()
 
-    override fun initialize(roomID: String){
-        dataFlow  = signalRepository.connect(roomID)
+    override fun initialize(roomID: String) {
+        dataFlow = fireStoreRepository.connect(roomID)
     }
+
     override fun connect() = CoroutineScope(coroutineContext).launch {
         dataFlow.catch {
 
         }.collect { data ->
             when {
-                data.containsKey("type") && data.getValue("type").toString() == "OFFER" -> handleOfferReceived(data)
-                data.containsKey("type") && data.getValue("type").toString() == "ANSWER" -> handleAnswerReceived(data)
+                data.containsKey("type") && data.getValue("type")
+                    .toString() == "OFFER" -> handleOfferReceived(data)
+
+                data.containsKey("type") && data.getValue("type")
+                    .toString() == "ANSWER" -> handleAnswerReceived(data)
+
                 else -> handleIceCandidateReceived(data)
             }
         }

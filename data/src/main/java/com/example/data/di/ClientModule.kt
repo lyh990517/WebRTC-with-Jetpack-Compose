@@ -4,8 +4,6 @@ import com.example.data.client.SignalingClientImpl
 import com.example.data.client.WebRTCClientImpl
 import com.example.domain.client.SignalingClient
 import com.example.domain.client.WebRTCClient
-import com.example.domain.repository.SignalRepository
-import com.example.domain.repository.WebRTCRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
