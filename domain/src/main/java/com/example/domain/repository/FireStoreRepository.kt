@@ -13,5 +13,5 @@ interface FireStoreRepository {
 
     fun sendSdpToRoom(sdp: SessionDescription, roomId: String)
 
-    fun connect(roomID: String): Flow<Map<String, Any>>
+    fun connectToRoom(roomID: String): Flow<Map<String, Any>>
 }

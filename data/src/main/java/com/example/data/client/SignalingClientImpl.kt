@@ -23,7 +23,7 @@ internal class SignalingClientImpl @Inject constructor(
         get() = Dispatchers.IO + Job()
 
     override fun initialize(roomID: String) {
-        dataFlow = fireStoreRepository.connect(roomID)
+        dataFlow = fireStoreRepository.connectToRoom(roomID)
     }
 
     override fun connect() = CoroutineScope(coroutineContext).launch {
