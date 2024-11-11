@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,54 +40,59 @@ class WebRTCConnectActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var remoteView by remember { mutableStateOf<SurfaceViewRenderer?>(null) }
-            var localView by remember { mutableStateOf<SurfaceViewRenderer?>(null) }
+            ConnectionScreen()
+        }
+    }
 
-            LaunchedEffect(remoteView, localView) {
-                if (remoteView != null && localView != null) {
-                    collectConnectionEvent(remoteView = remoteView!!)
-                    collectRTCEvent(remoteView = remoteView!!, localView = localView!!)
+    @Composable
+    fun ConnectionScreen() {
+        var remoteView by remember { mutableStateOf<SurfaceViewRenderer?>(null) }
+        var localView by remember { mutableStateOf<SurfaceViewRenderer?>(null) }
+
+        LaunchedEffect(remoteView, localView) {
+            if (remoteView != null && localView != null) {
+                collectConnectionEvent(remoteView = remoteView!!)
+                collectRTCEvent(remoteView = remoteView!!, localView = localView!!)
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            viewModel.uiState.collect {
+                when (it) {
+                    is UiState.UnInitialized -> viewModel.initRTC()
                 }
             }
+        }
 
-            LaunchedEffect(Unit) {
-                viewModel.uiState.collect {
-                    when (it) {
-                        is UiState.UnInitialized -> viewModel.initRTC()
-                    }
+        Box(modifier = Modifier.fillMaxSize()) {
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = {
+                    SurfaceViewRenderer(it)
+                },
+                update = {
+                    remoteView = it
                 }
-            }
-
-            Box(modifier = Modifier.fillMaxSize()) {
-                AndroidView(
-                    modifier = Modifier.fillMaxSize(),
-                    factory = {
-                        SurfaceViewRenderer(it)
-                    },
-                    update = {
-                        remoteView = it
-                    }
-                )
-                AndroidView(
-                    modifier = Modifier
-                        .fillMaxHeight(0.5f)
-                        .fillMaxWidth(0.5f)
-                        .align(Alignment.BottomStart)
-                        .padding(50.dp),
-                    factory = {
-                        SurfaceViewRenderer(it)
-                    },
-                    update = {
-                        localView = it
-                    }
-                )
-                WebRTCController(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
-                    viewModel = viewModel
-                )
-            }
+            )
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxHeight(0.5f)
+                    .fillMaxWidth(0.5f)
+                    .align(Alignment.BottomStart)
+                    .padding(50.dp),
+                factory = {
+                    SurfaceViewRenderer(it)
+                },
+                update = {
+                    localView = it
+                }
+            )
+            WebRTCController(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter),
+                viewModel = viewModel
+            )
         }
     }
 
