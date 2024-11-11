@@ -2,7 +2,22 @@ package com.example.webrtc
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import com.example.domain.event.PeerConnectionEvent
 import com.example.domain.event.WebRTCEvent
@@ -12,23 +27,67 @@ import com.example.presentaion.viewmodel.ConnectionViewModel
 import com.example.webrtc.databinding.ActivityWebRtcconnectBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import org.webrtc.SurfaceViewRenderer
 
 @AndroidEntryPoint
 class WebRTCConnectActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityWebRtcconnectBinding
 
     private val viewModel: ConnectionViewModel by viewModels()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityWebRtcconnectBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        setCompose()
-        collectConnectionEvent()
-        collectRTCEvent()
-        collectState()
+        setContent {
+            var remoteView by remember { mutableStateOf<SurfaceViewRenderer?>(null) }
+            var localView by remember { mutableStateOf<SurfaceViewRenderer?>(null) }
+
+            LaunchedEffect(remoteView, localView) {
+                if (remoteView != null && localView != null) {
+                    collectConnectionEvent(remoteView = remoteView!!)
+                    collectRTCEvent(remoteView = remoteView!!, localView = localView!!)
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                viewModel.uiState.collect {
+                    when (it) {
+                        is UiState.UnInitialized -> viewModel.initRTC()
+                    }
+                }
+            }
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = {
+                        SurfaceViewRenderer(it)
+                    },
+                    update = {
+                        remoteView = it
+                    }
+                )
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxHeight(0.5f)
+                        .fillMaxWidth(0.5f)
+                        .align(Alignment.BottomStart)
+                        .padding(50.dp),
+                    factory = {
+                        SurfaceViewRenderer(it)
+                    },
+                    update = {
+                        localView = it
+                    }
+                )
+                WebRTCController(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                    viewModel = viewModel
+                )
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -41,25 +100,10 @@ class WebRTCConnectActivity : AppCompatActivity() {
         viewModel.closeSession()
     }
 
-    private fun setCompose() {
-        binding.composeView.apply {
-            setContent {
-                WebRTCController(viewModel = viewModel)
-            }
-        }
-    }
-
-    private fun collectState() {
-        lifecycleScope.launch {
-            viewModel.uiState.collect {
-                when (it) {
-                    is UiState.UnInitialized -> viewModel.initRTC()
-                }
-            }
-        }
-    }
-
-    private fun collectRTCEvent() {
+    private fun collectRTCEvent(
+        remoteView: SurfaceViewRenderer,
+        localView: SurfaceViewRenderer
+    ) {
         lifecycleScope.launch {
             viewModel.webRTCEvent.collect {
                 when (it) {
@@ -67,20 +111,21 @@ class WebRTCConnectActivity : AppCompatActivity() {
                         it.webRTCClient.apply {
                             initPeerConnectionFactory(application)
                             initVideoCapture(application)
-                            initSurfaceView(binding.remoteView)
-                            initSurfaceView(binding.localView)
-                            startLocalView(binding.localView)
+                            initSurfaceView(remoteView)
+                            initSurfaceView(localView)
+                            startLocalView(localView)
                             viewModel.call()
                             viewModel.connect()
                         }
                     }
+
                     is WebRTCEvent.CloseSession -> finish()
                 }
             }
         }
     }
 
-    private fun collectConnectionEvent() {
+    private fun collectConnectionEvent(remoteView: SurfaceViewRenderer) {
         lifecycleScope.launch {
             viewModel.peerConnectionEvent.collect {
                 when (it) {
@@ -90,7 +135,7 @@ class WebRTCConnectActivity : AppCompatActivity() {
                     }
 
                     is PeerConnectionEvent.OnAddStream -> {
-                        it.data.videoTracks?.get(0)?.addSink(binding.remoteView)
+                        it.data.videoTracks?.get(0)?.addSink(remoteView)
                     }
                 }
             }

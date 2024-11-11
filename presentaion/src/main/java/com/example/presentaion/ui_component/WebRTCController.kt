@@ -17,11 +17,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.presentaion.viewmodel.ConnectionViewModel
 
 @Composable
-fun WebRTCController(viewModel: ConnectionViewModel) {
+fun WebRTCController(
+    modifier: Modifier = Modifier,
+    viewModel: ConnectionViewModel
+) {
     val isCallClicked = rememberSaveable { mutableStateOf(false) }
     val isVideoClicked = rememberSaveable { mutableStateOf(false) }
     Row(
-        Modifier.fillMaxSize(),
+        modifier = Modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {

@@ -59,5 +59,4 @@ interface WebRTCClient {
     fun toggleVideo()
 
     fun closeSession()
-
 }
