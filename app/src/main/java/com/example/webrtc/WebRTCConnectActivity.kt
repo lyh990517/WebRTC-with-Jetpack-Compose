@@ -51,7 +51,6 @@ class WebRTCConnectActivity : AppCompatActivity() {
 
         LaunchedEffect(remoteView, localView) {
             if (remoteView != null && localView != null) {
-                collectConnectionEvent(remoteView = remoteView!!)
                 collectRTCEvent(remoteView = remoteView!!, localView = localView!!)
             }
         }
@@ -121,28 +120,11 @@ class WebRTCConnectActivity : AppCompatActivity() {
                             initSurfaceView(localView)
                             startLocalView(localView)
                             viewModel.call()
-                            viewModel.connect()
+                            viewModel.connect(remoteView)
                         }
                     }
 
                     is WebRTCEvent.CloseSession -> finish()
-                }
-            }
-        }
-    }
-
-    private fun collectConnectionEvent(remoteView: SurfaceViewRenderer) {
-        lifecycleScope.launch {
-            viewModel.peerConnectionEvent.collect {
-                when (it) {
-                    is PeerConnectionEvent.OnIceCandidate -> {
-                        viewModel.sendIceCandidate(it.data)
-                        viewModel.addCandidate(it.data)
-                    }
-
-                    is PeerConnectionEvent.OnAddStream -> {
-                        it.data.videoTracks?.get(0)?.addSink(remoteView)
-                    }
                 }
             }
         }

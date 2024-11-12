@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
+import org.webrtc.SurfaceViewRenderer
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,8 +28,6 @@ class ConnectionViewModel @Inject constructor(
 
     private val _webRTCEvent = MutableSharedFlow<WebRTCEvent>()
     val webRTCEvent = _webRTCEvent
-
-    val peerConnectionEvent = webRTCClient.getEvent()
 
     val uiState = MutableStateFlow<UiState>(UiState.UnInitialized)
 
@@ -46,17 +45,8 @@ class ConnectionViewModel @Inject constructor(
         _webRTCEvent.emit(WebRTCEvent.Initialize(webRTCClient))
     }
 
-    fun connect() = viewModelScope.launch {
-        webRTCClient.connect(roomId.value)
-    }
-
-    fun sendIceCandidate(candidate: IceCandidate?) =
-        viewModelScope.launch {
-            webRTCClient.sendIceCandidate(candidate, isJoin.value, roomId.value)
-        }
-
-    fun addCandidate(candidate: IceCandidate?) = viewModelScope.launch {
-        webRTCClient.addCandidate(candidate)
+    fun connect(remoteView: SurfaceViewRenderer) = viewModelScope.launch {
+        webRTCClient.connect(roomId.value, isJoin.value, remoteView)
     }
 
     fun call() = viewModelScope.launch {

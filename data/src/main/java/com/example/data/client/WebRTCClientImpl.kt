@@ -3,20 +3,32 @@ package com.example.data.client
 import android.app.Application
 import android.content.Context
 import com.example.domain.client.WebRTCClient
-import com.example.domain.event.PeerConnectionEvent
-import com.example.domain.event.SignalEvent
 import com.example.domain.repository.FireStoreRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.webrtc.*
+import org.webrtc.AudioTrack
+import org.webrtc.Camera2Enumerator
+import org.webrtc.CameraVideoCapturer
+import org.webrtc.DataChannel
+import org.webrtc.DefaultVideoDecoderFactory
+import org.webrtc.DefaultVideoEncoderFactory
+import org.webrtc.EglBase
+import org.webrtc.IceCandidate
+import org.webrtc.MediaConstraints
+import org.webrtc.MediaStream
+import org.webrtc.PeerConnection
+import org.webrtc.PeerConnectionFactory
+import org.webrtc.RtpReceiver
+import org.webrtc.SdpObserver
+import org.webrtc.SessionDescription
+import org.webrtc.SurfaceTextureHelper
+import org.webrtc.SurfaceViewRenderer
+import org.webrtc.VideoCapturer
+import org.webrtc.VideoTrack
 import javax.inject.Inject
 
 internal class WebRTCClientImpl @Inject constructor(
@@ -50,7 +62,11 @@ internal class WebRTCClientImpl @Inject constructor(
 
     private lateinit var dataFlow: Flow<Map<String, Any>>
 
-    private val eventFlow = MutableSharedFlow<PeerConnectionEvent>()
+    private var join: Boolean = false
+
+    private var roomId = ""
+
+    private lateinit var remoteSurfaceView: SurfaceViewRenderer
 
     init {
         collectState()
@@ -133,7 +149,8 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onIceCandidate(p0: IceCandidate?) {
                 CoroutineScope(Dispatchers.IO).launch {
                     p0?.let {
-                        eventFlow.emit(PeerConnectionEvent.OnIceCandidate(it))
+                        fireStoreRepository.sendIceCandidateToRoom(it, join, roomId)
+                        peerConnection?.addIceCandidate(it)
                     }
                 }
             }
@@ -141,8 +158,8 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
             override fun onAddStream(p0: MediaStream?) {
                 CoroutineScope(Dispatchers.IO).launch {
-                    p0?.let {
-                        eventFlow.emit(PeerConnectionEvent.OnAddStream(it))
+                    p0?.let { mediaStream ->
+                        mediaStream.videoTracks?.get(0)?.addSink(remoteSurfaceView)
                     }
                 }
             }
@@ -203,8 +220,6 @@ internal class WebRTCClientImpl @Inject constructor(
         peerConnection?.addIceCandidate(iceCandidate)
     }
 
-    override fun getEvent(): SharedFlow<PeerConnectionEvent> = eventFlow.asSharedFlow()
-
     override fun toggleVoice() {
         isMicEnabled.value = !isMicEnabled.value
     }
@@ -229,19 +244,24 @@ internal class WebRTCClientImpl @Inject constructor(
         dataFlow = fireStoreRepository.connectToRoom(roomID)
     }
 
-    override fun connect(roomID: String) = CoroutineScope(Dispatchers.IO).launch {
-        dataFlow.collect { data ->
-            when {
-                data.containsKey("type") && data.getValue("type")
-                    .toString() == "OFFER" -> handleOfferReceived(data, roomID)
+    override fun connect(roomID: String, isJoin: Boolean, remoteView: SurfaceViewRenderer) =
+        CoroutineScope(Dispatchers.IO).launch {
+            join = isJoin
+            roomId = roomID
+            remoteSurfaceView = remoteView
 
-                data.containsKey("type") && data.getValue("type")
-                    .toString() == "ANSWER" -> handleAnswerReceived(data)
+            dataFlow.collect { data ->
+                when {
+                    data.containsKey("type") && data.getValue("type")
+                        .toString() == "OFFER" -> handleOfferReceived(data, roomID)
 
-                else -> handleIceCandidateReceived(data)
+                    data.containsKey("type") && data.getValue("type")
+                        .toString() == "ANSWER" -> handleAnswerReceived(data)
+
+                    else -> handleIceCandidateReceived(data)
+                }
             }
         }
-    }
 
     override fun handleIceCandidateReceived(data: Map<String, Any>) {
         CoroutineScope(Dispatchers.IO).launch {

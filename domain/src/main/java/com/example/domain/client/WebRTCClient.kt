@@ -54,8 +54,6 @@ interface WebRTCClient {
 
     fun call(roomID: String): Unit?
 
-    fun getEvent(): SharedFlow<PeerConnectionEvent>
-
     fun toggleVoice()
 
     fun toggleVideo()
@@ -64,7 +62,7 @@ interface WebRTCClient {
 
     fun initialize(roomID: String)
 
-    fun connect(roomID: String): Job
+    fun connect(roomID: String, isJoin: Boolean, remoteView: SurfaceViewRenderer): Job
 
     fun handleIceCandidateReceived(data: Map<String, Any>)
 
