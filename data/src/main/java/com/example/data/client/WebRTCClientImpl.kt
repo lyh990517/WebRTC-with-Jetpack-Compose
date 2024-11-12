@@ -4,13 +4,16 @@ import android.app.Application
 import android.content.Context
 import com.example.domain.client.WebRTCClient
 import com.example.domain.event.PeerConnectionEvent
+import com.example.domain.event.SignalEvent
 import com.example.domain.repository.FireStoreRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.webrtc.*
@@ -42,13 +45,12 @@ internal class WebRTCClientImpl @Inject constructor(
 
     private val peerConnection by lazy { buildPeerConnection() }
 
-    private val _eventFlow = MutableSharedFlow<PeerConnectionEvent>()
-
-    val eventFlow = _eventFlow
-
     private val isMicEnabled = MutableStateFlow(true)
     private val isVideoEnabled = MutableStateFlow(true)
 
+    private lateinit var dataFlow: Flow<Map<String, Any>>
+
+    private val eventFlow = MutableSharedFlow<PeerConnectionEvent>()
 
     init {
         collectState()
@@ -131,7 +133,7 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onIceCandidate(p0: IceCandidate?) {
                 CoroutineScope(Dispatchers.IO).launch {
                     p0?.let {
-                        _eventFlow.emit(PeerConnectionEvent.OnIceCandidate(it))
+                        eventFlow.emit(PeerConnectionEvent.OnIceCandidate(it))
                     }
                 }
             }
@@ -140,7 +142,7 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onAddStream(p0: MediaStream?) {
                 CoroutineScope(Dispatchers.IO).launch {
                     p0?.let {
-                        _eventFlow.emit(PeerConnectionEvent.OnAddStream(it))
+                        eventFlow.emit(PeerConnectionEvent.OnAddStream(it))
                     }
                 }
             }
@@ -202,6 +204,7 @@ internal class WebRTCClientImpl @Inject constructor(
     }
 
     override fun getEvent(): SharedFlow<PeerConnectionEvent> = eventFlow.asSharedFlow()
+
     override fun toggleVoice() {
         isMicEnabled.value = !isMicEnabled.value
     }
@@ -221,6 +224,59 @@ internal class WebRTCClientImpl @Inject constructor(
 
     override fun call(roomID: String) =
         peerConnection?.call(roomID)
+
+    override fun initialize(roomID: String) {
+        dataFlow = fireStoreRepository.connectToRoom(roomID)
+    }
+
+    override fun connect(roomID: String) = CoroutineScope(Dispatchers.IO).launch {
+        dataFlow.collect { data ->
+            when {
+                data.containsKey("type") && data.getValue("type")
+                    .toString() == "OFFER" -> handleOfferReceived(data, roomID)
+
+                data.containsKey("type") && data.getValue("type")
+                    .toString() == "ANSWER" -> handleAnswerReceived(data)
+
+                else -> handleIceCandidateReceived(data)
+            }
+        }
+    }
+
+    override fun handleIceCandidateReceived(data: Map<String, Any>) {
+        CoroutineScope(Dispatchers.IO).launch {
+            peerConnection?.addIceCandidate(
+                IceCandidate(
+                    data["sdpMid"].toString(),
+                    Math.toIntExact(data["sdpMLineIndex"] as Long),
+                    data["sdpCandidate"].toString()
+                )
+            )
+        }
+    }
+
+    override fun handleAnswerReceived(data: Map<String, Any>) {
+        CoroutineScope(Dispatchers.IO).launch {
+            peerConnection?.setRemoteDescription(
+                createSdpObserver(), SessionDescription(
+                    SessionDescription.Type.ANSWER,
+                    data["sdp"].toString()
+                )
+            )
+        }
+    }
+
+    override fun handleOfferReceived(data: Map<String, Any>, roomID: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            peerConnection?.setRemoteDescription(
+                createSdpObserver(), SessionDescription(
+                    SessionDescription.Type.OFFER,
+                    data["sdp"].toString()
+                )
+            )
+            answer(roomID)
+        }
+    }
 
     companion object {
         private const val LOCAL_TRACK_ID = "local_track"

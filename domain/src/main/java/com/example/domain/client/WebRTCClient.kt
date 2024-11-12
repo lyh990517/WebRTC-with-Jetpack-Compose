@@ -3,7 +3,9 @@ package com.example.domain.client
 import android.app.Application
 import android.content.Context
 import com.example.domain.event.PeerConnectionEvent
+import com.example.domain.event.SignalEvent
 import com.example.domain.event.WebRTCEvent
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharedFlow
 import org.webrtc.CameraVideoCapturer
 import org.webrtc.IceCandidate
@@ -59,4 +61,14 @@ interface WebRTCClient {
     fun toggleVideo()
 
     fun closeSession()
+
+    fun initialize(roomID: String)
+
+    fun connect(roomID: String): Job
+
+    fun handleIceCandidateReceived(data: Map<String, Any>)
+
+    fun handleAnswerReceived(data: Map<String, Any>)
+
+    fun handleOfferReceived(data: Map<String, Any>, roomID: String)
 }

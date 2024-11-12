@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.domain.client.SignalingClient
 import com.example.domain.client.WebRTCClient
 import com.example.domain.event.SignalEvent
 import com.example.domain.event.WebRTCEvent
@@ -19,7 +18,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ConnectionViewModel @Inject constructor(
-    private val signalingClient: SignalingClient,
     private val webRTCClient: WebRTCClient,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -30,8 +28,6 @@ class ConnectionViewModel @Inject constructor(
     private val _webRTCEvent = MutableSharedFlow<WebRTCEvent>()
     val webRTCEvent = _webRTCEvent
 
-    private val signalEvent = signalingClient.getEvent()
-
     val peerConnectionEvent = webRTCClient.getEvent()
 
     val uiState = MutableStateFlow<UiState>(UiState.UnInitialized)
@@ -39,28 +35,11 @@ class ConnectionViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             initSignal()
-            receiveSignal()
-        }
-    }
-
-    private suspend fun receiveSignal() {
-        signalEvent.collect {
-            when (it) {
-                is SignalEvent.OfferReceived -> {
-                    if (isJoin.value) {
-                        onRemoteSessionReceived(it.data)
-                        answer()
-                    }
-                }
-
-                is SignalEvent.AnswerReceived -> if (isJoin.value.not()) onRemoteSessionReceived(it.data)
-                is SignalEvent.IceCandidateReceived -> addCandidate(it.data)
-            }
         }
     }
 
     private fun initSignal() = viewModelScope.launch {
-        signalingClient.initialize(roomId.value)
+        webRTCClient.initialize(roomId.value)
     }
 
     fun initRTC() = viewModelScope.launch {
@@ -68,7 +47,7 @@ class ConnectionViewModel @Inject constructor(
     }
 
     fun connect() = viewModelScope.launch {
-        signalingClient.connect()
+        webRTCClient.connect(roomId.value)
     }
 
     fun sendIceCandidate(candidate: IceCandidate?) =
@@ -78,15 +57,6 @@ class ConnectionViewModel @Inject constructor(
 
     fun addCandidate(candidate: IceCandidate?) = viewModelScope.launch {
         webRTCClient.addCandidate(candidate)
-    }
-
-    private fun onRemoteSessionReceived(sessionDescription: SessionDescription) =
-        viewModelScope.launch {
-            webRTCClient.onRemoteSessionReceived(sessionDescription)
-        }
-
-    private fun answer() = viewModelScope.launch {
-        webRTCClient.answer(roomId.value)
     }
 
     fun call() = viewModelScope.launch {

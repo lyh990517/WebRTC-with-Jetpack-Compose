@@ -6,5 +6,4 @@ sealed class WebRTCEvent {
     data class Initialize(val webRTCClient: WebRTCClient) : WebRTCEvent()
 
     object CloseSession : WebRTCEvent()
-
 }
