@@ -20,16 +20,17 @@ import javax.inject.Singleton
 @Singleton
 class SignalingManager @Inject constructor(
     private val fireStoreRepository: FireStoreRepository,
-    private val peerConnectionManager: PeerConnectionManager
+    private val peerConnectionManager: PeerConnectionManager,
 ) {
     private val constraints = MediaConstraints().apply {
         mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
     }
     private val signalingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val peerConnection get() =  peerConnectionManager.getPeerConnection()
 
-    fun startSignaling(roomID: String) {
+    fun startSignaling(isHost: Boolean, roomID: String) {
         signalingScope.launch {
-            val peerConnection = peerConnectionManager.getPeerConnection()
+            if (isHost) sendOfferToGuest(roomID)
 
             fireStoreRepository.connectToRoom(roomID).collect { packet ->
                 when {
@@ -38,7 +39,7 @@ class SignalingManager @Inject constructor(
                         val sdpObserver = createSdpObserver()
                         peerConnection.setRemoteDescription(sdpObserver, sdp)
 
-                        sendAnswer(roomID)
+                        sendAnswerToHost(roomID)
                     }
 
                     packet.isAnswer() -> {
@@ -58,9 +59,7 @@ class SignalingManager @Inject constructor(
         }
     }
 
-    fun sendOffer(roomID: String) {
-        val peerConnection = peerConnectionManager.getPeerConnection()
-
+    private fun sendOfferToGuest(roomID: String) {
         val sdpObserver = createSdpObserver { sdp, observer ->
             peerConnection.setLocalDescription(observer, sdp)
             fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
@@ -69,9 +68,7 @@ class SignalingManager @Inject constructor(
         peerConnection.createOffer(sdpObserver, constraints)
     }
 
-    private fun sendAnswer(roomID: String) {
-        val peerConnection = peerConnectionManager.getPeerConnection()
-
+    private fun sendAnswerToHost(roomID: String) {
         val sdpObserver = createSdpObserver { sdp, observer ->
             peerConnection.setLocalDescription(observer, sdp)
             fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)

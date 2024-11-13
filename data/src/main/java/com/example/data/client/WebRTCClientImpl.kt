@@ -27,7 +27,7 @@ internal class WebRTCClientImpl @Inject constructor(
     private val peerConnectionManager: PeerConnectionManager,
     private val rootEglBase: EglBase,
     @RemoteSurface private val remoteView: SurfaceViewRenderer,
-    @LocalSurface private val localView: SurfaceViewRenderer
+    @LocalSurface private val localView: SurfaceViewRenderer,
 ) : WebRTCClient {
 
     private var localAudioTrack: AudioTrack? = null
@@ -46,9 +46,7 @@ internal class WebRTCClientImpl @Inject constructor(
     override fun connect(roomID: String, isHost: Boolean) {
         initialize(roomID, isHost)
 
-        if (isHost) signalingManager.sendOffer(roomID)
-
-        signalingManager.startSignaling(roomID)
+        signalingManager.startSignaling(isHost, roomID)
     }
 
     override fun toggleVoice() {
