@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
                         val intent =
                             Intent(this@MainActivity, WebRTCConnectActivity::class.java).apply {
                                 putExtra("roomID", it.roomId)
-                                putExtra("isJoin", it.isJoin)
+                                putExtra("isHost", it.isHost)
                                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             }

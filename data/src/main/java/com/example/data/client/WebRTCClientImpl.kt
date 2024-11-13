@@ -61,10 +61,10 @@ internal class WebRTCClientImpl @Inject constructor(
     private val surfaceTextureHelper =
         SurfaceTextureHelper.create(Thread.currentThread().name, rootEglBase.eglBaseContext)
 
-    override fun connect(roomID: String, isJoin: Boolean) {
-        initialize(roomID, isJoin)
+    override fun connect(roomID: String, isHost: Boolean) {
+        initialize(roomID, isHost)
 
-        if (!isJoin) sendOffer(roomID)
+        if (isHost) sendOffer(roomID)
 
         collectFireStoreUpdate(roomID)
     }
@@ -84,8 +84,8 @@ internal class WebRTCClientImpl @Inject constructor(
         webRtcScope.cancel()
     }
 
-    private fun initialize(roomID: String, isJoin: Boolean) {
-        initializePeerConnection(isJoin, roomID)
+    private fun initialize(roomID: String, isHost: Boolean) {
+        initializePeerConnection(isHost, roomID)
         initializeSurfaceView(remoteView)
         initializeSurfaceView(localView)
         initializeVideoCapture()
@@ -121,8 +121,8 @@ internal class WebRTCClientImpl @Inject constructor(
         }
     }
 
-    private fun initializePeerConnection(isJoin: Boolean, roomID: String) {
-        peerConnectionManager.initializePeerConnection(isJoin, roomID)
+    private fun initializePeerConnection(isHost: Boolean, roomID: String) {
+        peerConnectionManager.initializePeerConnection(isHost, roomID)
 
         peerConnection = peerConnectionManager.getPeerConnection()
     }

@@ -7,5 +7,5 @@ interface WebRTCClient {
 
     fun disconnect()
 
-    fun connect(roomID: String, isJoin: Boolean)
+    fun connect(roomID: String, isHost: Boolean)
 }

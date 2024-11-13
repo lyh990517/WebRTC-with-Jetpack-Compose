@@ -78,7 +78,7 @@ private fun InputContent(
             .fillMaxWidth()
             .height(50.dp)
             .padding(horizontal = 40.dp),
-        onClick = { viewModel.getRoomInfo(roomId.value, false) },
+        onClick = { viewModel.getRoomInfo(roomId.value, true) },
         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue)
     ) {
         Icon(imageVector = Icons.Filled.Send, contentDescription = "", tint = Color.White)
@@ -90,7 +90,7 @@ private fun InputContent(
         .height(50.dp)
         .padding(horizontal = 40.dp),
         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue),
-        onClick = { viewModel.getRoomInfo(roomId.value, true) }) {
+        onClick = { viewModel.getRoomInfo(roomId.value, false) }) {
         Text(text = "Join", color = Color.White, fontSize = 20.sp)
     }
 }

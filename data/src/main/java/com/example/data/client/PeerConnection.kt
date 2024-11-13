@@ -22,10 +22,10 @@ class PeerConnectionManager @Inject constructor(
 
     private lateinit var peerConnection: PeerConnection
 
-    fun initializePeerConnection(isJoin: Boolean, roomID: String) {
+    fun initializePeerConnection(isHost: Boolean, roomID: String) {
         peerConnectionFactory.createPeerConnection(
             iceServer,
-            createPeerConnectionObserver(isJoin, roomID)
+            createPeerConnectionObserver(isHost, roomID)
         )?.let { connection ->
             peerConnection = connection
         }
@@ -34,7 +34,7 @@ class PeerConnectionManager @Inject constructor(
     fun getPeerConnection() = peerConnection
 
     private fun createPeerConnectionObserver(
-        isJoin: Boolean,
+        isHost: Boolean,
         roomID: String
     ): PeerConnection.Observer =
         object : PeerConnection.Observer {
@@ -44,7 +44,7 @@ class PeerConnectionManager @Inject constructor(
             override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
             override fun onIceCandidate(p0: IceCandidate?) {
                 p0?.let {
-                    fireStoreRepository.sendIceCandidateToRoom(it, isJoin, roomID)
+                    fireStoreRepository.sendIceCandidateToRoom(it, isHost, roomID)
                     peerConnection.addIceCandidate(it)
                 }
             }

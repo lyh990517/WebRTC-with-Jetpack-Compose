@@ -7,7 +7,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.domain.client.WebRTCClient
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,11 +17,11 @@ class ConnectionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : AndroidViewModel(application) {
 
-    private val roomId = MutableStateFlow(savedStateHandle["roomID"] ?: "")
-    private val isJoin = MutableStateFlow(savedStateHandle["isJoin"] ?: false)
+    private val roomId = savedStateHandle["roomID"] ?: ""
+    private val isHost = savedStateHandle["isHost"] ?: false
 
     fun connect() = viewModelScope.launch {
-        webRTCClient.connect(roomId.value, isJoin.value)
+        webRTCClient.connect(roomId, isHost)
     }
 
     fun toggleVoice() = viewModelScope.launch {

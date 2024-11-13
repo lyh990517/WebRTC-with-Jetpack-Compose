@@ -10,7 +10,7 @@ import org.webrtc.SessionDescription
 interface FireStoreRepository {
     fun getRoomInfo(roomID: String): Flow<DocumentSnapshot>
 
-    fun sendIceCandidateToRoom(candidate: IceCandidate?, isJoin: Boolean, roomId: String)
+    fun sendIceCandidateToRoom(candidate: IceCandidate?, isHost: Boolean, roomId: String)
 
     fun sendSdpToRoom(sdp: SessionDescription, roomId: String)
 

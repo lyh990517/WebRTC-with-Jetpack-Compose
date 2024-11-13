@@ -31,8 +31,8 @@ class FireStoreRepositoryImpl @Inject constructor(
         awaitClose {}
     }
 
-    override fun sendIceCandidateToRoom(candidate: IceCandidate?, isJoin: Boolean, roomId: String) {
-        val type = if (isJoin) "answerCandidate" else "offerCandidate"
+    override fun sendIceCandidateToRoom(candidate: IceCandidate?, isHost: Boolean, roomId: String) {
+        val type = if (isHost) "offerCandidate" else "answerCandidate"
 
         val iceCandidate = hashMapOf(
             "serverUrl" to candidate?.serverUrl,
