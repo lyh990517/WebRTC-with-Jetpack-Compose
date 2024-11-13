@@ -15,5 +15,4 @@ object FirebaseModule {
     @Singleton
     @Provides
     fun providesFirebase() = Firebase.firestore
-
 }

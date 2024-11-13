@@ -28,7 +28,7 @@ class SignalingManager @Inject constructor(
                 peerConnectionManager.createOffer(roomID)
             }
 
-            fireStoreRepository.connectToRoom(roomID).collect { packet ->
+            fireStoreRepository.getRoomUpdates(roomID).collect { packet ->
                 when {
                     packet.isOffer() -> handleOffer(packet, roomID)
                     packet.isAnswer() -> handleAnswer(packet)

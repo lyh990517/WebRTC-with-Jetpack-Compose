@@ -59,7 +59,7 @@ class FireStoreRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun connectToRoom(roomID: String) = callbackFlow {
+    override fun getRoomUpdates(roomID: String) = callbackFlow {
         firestore.enableNetwork().addOnFailureListener { e ->
             CoroutineScope(Dispatchers.IO).launch {
                 send(Packet(mapOf("error" to e)))

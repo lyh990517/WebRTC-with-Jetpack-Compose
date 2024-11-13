@@ -9,8 +9,8 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal abstract class ClientModule {
+internal abstract class WebRtcClientModule {
 
     @Binds
-    abstract fun provideWebRTCClient(webRTCClient: WebRtcClientImpl): WebRtcClient
+    abstract fun provideWebRtcClient(webRTCClient: WebRtcClientImpl): WebRtcClient
 }
