@@ -1,6 +1,6 @@
 package com.example.domain.client
 
-interface WebRTCClient {
+interface WebRtcClient {
     fun toggleVoice()
 
     fun toggleVideo()

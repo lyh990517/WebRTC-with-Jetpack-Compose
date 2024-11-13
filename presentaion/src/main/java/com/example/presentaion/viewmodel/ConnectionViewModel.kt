@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.example.domain.client.WebRTCClient
+import com.example.domain.client.WebRtcClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -13,7 +13,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ConnectionViewModel @Inject constructor(
     application: Application,
-    private val webRTCClient: WebRTCClient,
+    private val webRTCClient: WebRtcClient,
     savedStateHandle: SavedStateHandle
 ) : AndroidViewModel(application) {
 
