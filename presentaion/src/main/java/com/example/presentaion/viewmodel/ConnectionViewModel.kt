@@ -5,7 +5,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.domain.client.WebRTCClient
-import com.example.domain.event.SignalEvent
 import com.example.domain.event.WebRTCEvent
 import com.example.domain.state.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel

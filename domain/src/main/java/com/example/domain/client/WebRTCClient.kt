@@ -2,11 +2,7 @@ package com.example.domain.client
 
 import android.app.Application
 import android.content.Context
-import com.example.domain.event.PeerConnectionEvent
-import com.example.domain.event.SignalEvent
-import com.example.domain.event.WebRTCEvent
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.SharedFlow
 import org.webrtc.CameraVideoCapturer
 import org.webrtc.IceCandidate
 import org.webrtc.PeerConnection

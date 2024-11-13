@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
-import com.example.domain.event.PeerConnectionEvent
 import com.example.domain.event.WebRTCEvent
 import com.example.domain.state.UiState
 import com.example.presentaion.ui_component.WebRTCController
