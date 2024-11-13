@@ -1,30 +1,35 @@
 package com.example.data.repository
 
 import android.util.Log
+import com.example.domain.Candidate
 import com.example.domain.Packet
+import com.example.domain.parseData
+import com.example.domain.parseDate
 import com.example.domain.repository.FireStoreRepository
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
+import java.lang.Exception
 import javax.inject.Inject
 
 class FireStoreRepositoryImpl @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
 ) : FireStoreRepository {
+    private val fireStoreScope = CoroutineScope(Dispatchers.IO)
 
     override fun getRoomInfo(roomID: String): Flow<DocumentSnapshot> = callbackFlow {
-        firestore.collection("calls")
-            .document(roomID)
+        getRoom(roomID)
             .get()
             .addOnSuccessListener {
-                CoroutineScope(Dispatchers.IO).launch {
+                fireStoreScope.launch {
                     send(it)
                 }
             }
@@ -32,18 +37,16 @@ class FireStoreRepositoryImpl @Inject constructor(
     }
 
     override fun sendIceCandidateToRoom(candidate: IceCandidate?, isHost: Boolean, roomId: String) {
-        val type = if (isHost) "offerCandidate" else "answerCandidate"
+        if (candidate == null) return
 
-        val iceCandidate = hashMapOf(
-            "serverUrl" to candidate?.serverUrl,
-            "sdpMid" to candidate?.sdpMid,
-            "sdpMLineIndex" to candidate?.sdpMLineIndex,
-            "sdpCandidate" to candidate?.sdp,
-            "type" to type
-        )
+        val type = if (isHost) Candidate.OFFER else Candidate.ANSWER
 
-        firestore.collection("calls").document(roomId).collection("candidates").document(type)
-            .set(iceCandidate).addOnSuccessListener {
+        val parsedIceCandidate = candidate.parseDate(type.value)
+
+        getRoom(roomId)
+            .collection(ICE_CANDIDATE)
+            .document(type.value)
+            .set(parsedIceCandidate).addOnSuccessListener {
                 Log.e("FireStore", "sendIceCandidate: Success")
             }.addOnFailureListener {
                 Log.e("FireStore", "sendIceCandidate: Error $it")
@@ -51,52 +54,63 @@ class FireStoreRepositoryImpl @Inject constructor(
     }
 
     override fun sendSdpToRoom(sdp: SessionDescription, roomId: String) {
-        firestore.collection("calls").document(roomId).set(
-            hashMapOf<String, Any>(
-                "sdp" to sdp.description,
-                "type" to sdp.type
-            )
-        )
+        val parsedSdp = sdp.parseData()
+
+        getRoom(roomId)
+            .set(parsedSdp)
     }
 
     override fun getRoomUpdates(roomID: String) = callbackFlow {
         firestore.enableNetwork().addOnFailureListener { e ->
-            CoroutineScope(Dispatchers.IO).launch {
-                send(Packet(mapOf("error" to e)))
+            fireStoreScope.launch {
+                sendError(e)
             }
         }
 
-        firestore.collection("calls").document(roomID).addSnapshotListener { snapshot, e ->
+        getRoom(roomID).addSnapshotListener { snapshot, e ->
             if (e != null) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    send(Packet(mapOf("error" to e)))
+                fireStoreScope.launch {
+                    sendError(e)
                 }
             }
 
             if (snapshot != null && snapshot.exists()) {
-                CoroutineScope(Dispatchers.IO).launch {
+                fireStoreScope.launch {
                     val data = snapshot.data
                     data?.let { send(Packet(it)) }
                 }
             }
         }
 
-        firestore.collection("calls").document(roomID).collection("candidates")
+        getRoom(roomID).collection(ICE_CANDIDATE)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        send(Packet(mapOf("error" to e)))
+                    fireStoreScope.launch {
+                        sendError(e)
                     }
                 }
 
                 if (snapshot != null && snapshot.isEmpty.not()) {
                     snapshot.forEach { dataSnapshot ->
-                        CoroutineScope(Dispatchers.IO).launch {
+                        fireStoreScope.launch {
                             send(Packet(dataSnapshot.data))
                         }
                     }
                 }
             }
         awaitClose { }
+    }
+
+    private suspend fun ProducerScope<Packet>.sendError(e: Exception) {
+        send(Packet(mapOf("error" to e)))
+    }
+
+    private fun getRoom(roomId: String) = firestore
+        .collection(ROOT)
+        .document(roomId)
+
+    companion object {
+        private const val ROOT = "calls"
+        private const val ICE_CANDIDATE = "candidates"
     }
 }
