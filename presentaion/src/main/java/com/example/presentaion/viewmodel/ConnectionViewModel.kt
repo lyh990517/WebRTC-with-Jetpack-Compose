@@ -1,54 +1,50 @@
 package com.example.presentaion.viewmodel
 
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.domain.client.WebRTCClient
-import com.example.domain.event.WebRTCEvent
-import com.example.domain.state.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import org.webrtc.IceCandidate
-import org.webrtc.SessionDescription
 import org.webrtc.SurfaceViewRenderer
 import javax.inject.Inject
 
 @HiltViewModel
 class ConnectionViewModel @Inject constructor(
+    application: Application,
     private val webRTCClient: WebRTCClient,
     savedStateHandle: SavedStateHandle
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val roomId = MutableStateFlow(savedStateHandle["roomID"] ?: "")
     private val isJoin = MutableStateFlow(savedStateHandle["isJoin"] ?: false)
 
-    private val _webRTCEvent = MutableSharedFlow<WebRTCEvent>()
-    val webRTCEvent = _webRTCEvent
-
-    val uiState = MutableStateFlow<UiState>(UiState.UnInitialized)
-
-    init {
-        viewModelScope.launch {
-            initSignal()
-        }
-    }
-
-    private fun initSignal() = viewModelScope.launch {
+    fun initialize(
+        remoteView: SurfaceViewRenderer,
+        localView: SurfaceViewRenderer
+    ) = viewModelScope.launch {
         webRTCClient.initialize(roomId.value)
+
+        webRTCClient.apply {
+            initPeerConnectionFactory(getApplication())
+            initVideoCapture(getApplication())
+            initSurfaceView(remoteView)
+            initSurfaceView(localView)
+            startLocalView(localView)
+        }
+
+        call()
+        connect(remoteView)
     }
 
-    fun initRTC() = viewModelScope.launch {
-        _webRTCEvent.emit(WebRTCEvent.Initialize(webRTCClient))
-    }
-
-    fun connect(remoteView: SurfaceViewRenderer) = viewModelScope.launch {
+    private fun connect(remoteView: SurfaceViewRenderer) = viewModelScope.launch {
         webRTCClient.connect(roomId.value, isJoin.value, remoteView)
     }
 
-    fun call() = viewModelScope.launch {
+    private fun call() = viewModelScope.launch {
         if (!isJoin.value) webRTCClient.call(roomId.value)
     }
 
@@ -63,7 +59,6 @@ class ConnectionViewModel @Inject constructor(
     fun closeSession() = viewModelScope.launch {
         try {
             webRTCClient.closeSession()
-            _webRTCEvent.emit(WebRTCEvent.CloseSession)
         } catch (e: Exception) {
             Log.e("error", "${e.message}")
         }

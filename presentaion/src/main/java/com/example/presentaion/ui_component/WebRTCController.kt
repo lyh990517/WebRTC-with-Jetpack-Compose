@@ -23,8 +23,9 @@ fun WebRTCController(
 ) {
     val isCallClicked = rememberSaveable { mutableStateOf(false) }
     val isVideoClicked = rememberSaveable { mutableStateOf(false) }
+
     Row(
-        modifier = Modifier,
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {

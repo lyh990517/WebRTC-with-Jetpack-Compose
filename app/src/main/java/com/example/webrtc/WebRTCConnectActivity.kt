@@ -2,6 +2,7 @@ package com.example.webrtc
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
@@ -19,14 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.lifecycleScope
-import com.example.domain.event.WebRTCEvent
-import com.example.domain.state.UiState
 import com.example.presentaion.ui_component.WebRTCController
 import com.example.presentaion.viewmodel.ConnectionViewModel
-import com.example.webrtc.databinding.ActivityWebRtcconnectBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import org.webrtc.SurfaceViewRenderer
 
 @AndroidEntryPoint
@@ -48,17 +45,10 @@ class WebRTCConnectActivity : AppCompatActivity() {
         var remoteView by remember { mutableStateOf<SurfaceViewRenderer?>(null) }
         var localView by remember { mutableStateOf<SurfaceViewRenderer?>(null) }
 
-        LaunchedEffect(remoteView, localView) {
-            if (remoteView != null && localView != null) {
-                collectRTCEvent(remoteView = remoteView!!, localView = localView!!)
-            }
-        }
-
         LaunchedEffect(Unit) {
-            viewModel.uiState.collect {
-                when (it) {
-                    is UiState.UnInitialized -> viewModel.initRTC()
-                }
+            delay(200)
+            if (remoteView != null && localView != null) {
+                viewModel.initialize(remoteView!!, localView!!)
             }
         }
 
@@ -102,30 +92,5 @@ class WebRTCConnectActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         viewModel.closeSession()
-    }
-
-    private fun collectRTCEvent(
-        remoteView: SurfaceViewRenderer,
-        localView: SurfaceViewRenderer
-    ) {
-        lifecycleScope.launch {
-            viewModel.webRTCEvent.collect {
-                when (it) {
-                    is WebRTCEvent.Initialize -> {
-                        it.webRTCClient.apply {
-                            initPeerConnectionFactory(application)
-                            initVideoCapture(application)
-                            initSurfaceView(remoteView)
-                            initSurfaceView(localView)
-                            startLocalView(localView)
-                            viewModel.call()
-                            viewModel.connect(remoteView)
-                        }
-                    }
-
-                    is WebRTCEvent.CloseSession -> finish()
-                }
-            }
-        }
     }
 }
