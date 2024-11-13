@@ -13,32 +13,26 @@ import org.webrtc.PeerConnectionFactory
 import org.webrtc.SurfaceTextureHelper
 import org.webrtc.SurfaceViewRenderer
 import org.webrtc.VideoCapturer
+import org.webrtc.VideoSource
 import org.webrtc.VideoTrack
 import javax.inject.Inject
 import javax.inject.Singleton
 
-//TODO peerConnection 사용 유무 기준으로 분리
-
 @Singleton
 internal class WebRtcClientImpl @Inject constructor(
     private val application: Application,
+    @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
+    @LocalSurface private val localSurface: SurfaceViewRenderer,
     private val signalingManager: SignalingManager,
     private val peerConnectionFactory: PeerConnectionFactory,
     private val peerConnectionManager: PeerConnectionManager,
     private val rootEglBase: EglBase,
-    @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
-    @LocalSurface private val localSurface: SurfaceViewRenderer,
+    private val localAudioTrack: AudioTrack,
+    private val localVideoTrack: VideoTrack,
+    private val localVideoSource: VideoSource,
 ) : WebRtcClient {
 
-    private var localAudioTrack: AudioTrack? = null
-
-    private var localVideoTrack: VideoTrack? = null
-
     private lateinit var peerConnection: PeerConnection
-
-    private val localVideoSource by lazy { peerConnectionFactory.createVideoSource(false) }
-
-    private val localAudioSource by lazy { peerConnectionFactory.createAudioSource(MediaConstraints()) }
 
     private val surfaceTextureHelper =
         SurfaceTextureHelper.create(Thread.currentThread().name, rootEglBase.eglBaseContext)
@@ -50,16 +44,16 @@ internal class WebRtcClientImpl @Inject constructor(
     }
 
     override fun toggleVoice() {
-        localAudioTrack?.setEnabled(localAudioTrack?.enabled()?.not() ?: false)
+        localAudioTrack.setEnabled(!localAudioTrack.enabled())
     }
 
     override fun toggleVideo() {
-        localVideoTrack?.setEnabled(localVideoTrack?.enabled()?.not() ?: false)
+        localVideoTrack.setEnabled(!localVideoTrack.enabled())
     }
 
     override fun disconnect() {
-        localAudioTrack?.dispose()
-        localVideoTrack?.dispose()
+        localAudioTrack.dispose()
+        localVideoTrack.dispose()
         peerConnection.close()
         signalingManager.close()
     }
@@ -116,15 +110,10 @@ internal class WebRtcClientImpl @Inject constructor(
     }
 
     private fun initializeLocalResourceTracks() {
-        localAudioTrack =
-            peerConnectionFactory.createAudioTrack(LOCAL_TRACK_ID + "_audio", localAudioSource)
-        localVideoTrack = peerConnectionFactory.createVideoTrack(LOCAL_TRACK_ID, localVideoSource)
-
-        localVideoTrack?.addSink(localSurface)
+        localVideoTrack.addSink(localSurface)
     }
 
     companion object {
-        private const val LOCAL_TRACK_ID = "local_track"
         private const val LOCAL_STREAM_ID = "local_track"
     }
 }
