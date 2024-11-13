@@ -10,13 +10,14 @@ import org.webrtc.PeerConnectionFactory
 import org.webrtc.RtpReceiver
 import org.webrtc.SurfaceViewRenderer
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class PeerConnectionManager @Inject constructor(
     private val fireStoreRepository: FireStoreRepository,
     private val peerConnectionFactory: PeerConnectionFactory,
     @RemoteSurface private val remoteSurface: SurfaceViewRenderer
 ) {
-
     private val iceServer =
         listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
 

@@ -2,27 +2,14 @@ package com.example.data.client
 
 import android.app.Application
 import com.example.domain.LocalSurface
-import com.example.domain.Packet.Companion.isAnswer
-import com.example.domain.Packet.Companion.isOffer
-import com.example.domain.Packet.Companion.toAnswerSdp
-import com.example.domain.Packet.Companion.toIceCandidate
-import com.example.domain.Packet.Companion.toOfferSdp
 import com.example.domain.RemoteSurface
 import com.example.domain.client.WebRTCClient
-import com.example.domain.repository.FireStoreRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import org.webrtc.AudioTrack
 import org.webrtc.Camera2Enumerator
 import org.webrtc.EglBase
 import org.webrtc.MediaConstraints
 import org.webrtc.PeerConnection
 import org.webrtc.PeerConnectionFactory
-import org.webrtc.SdpObserver
-import org.webrtc.SessionDescription
 import org.webrtc.SurfaceTextureHelper
 import org.webrtc.SurfaceViewRenderer
 import org.webrtc.VideoCapturer
@@ -35,18 +22,13 @@ import javax.inject.Singleton
 @Singleton
 internal class WebRTCClientImpl @Inject constructor(
     private val application: Application,
-    private val fireStoreRepository: FireStoreRepository,
+    private val signalingManager: SignalingManager,
     private val peerConnectionFactory: PeerConnectionFactory,
     private val peerConnectionManager: PeerConnectionManager,
     private val rootEglBase: EglBase,
     @RemoteSurface private val remoteView: SurfaceViewRenderer,
     @LocalSurface private val localView: SurfaceViewRenderer
 ) : WebRTCClient {
-    private val webRtcScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
-    private val constraints = MediaConstraints().apply {
-        mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
-    }
 
     private var localAudioTrack: AudioTrack? = null
 
@@ -64,9 +46,9 @@ internal class WebRTCClientImpl @Inject constructor(
     override fun connect(roomID: String, isHost: Boolean) {
         initialize(roomID, isHost)
 
-        if (isHost) sendOffer(roomID)
+        if (isHost) signalingManager.sendOffer(roomID)
 
-        collectFireStoreUpdate(roomID)
+        signalingManager.startSignaling(roomID)
     }
 
     override fun toggleVoice() {
@@ -81,7 +63,7 @@ internal class WebRTCClientImpl @Inject constructor(
         localAudioTrack?.dispose()
         localVideoTrack?.dispose()
         peerConnection.close()
-        webRtcScope.cancel()
+        signalingManager.close()
     }
 
     private fun initialize(roomID: String, isHost: Boolean) {
@@ -90,35 +72,6 @@ internal class WebRTCClientImpl @Inject constructor(
         initializeSurfaceView(localView)
         initializeVideoCapture()
         initializeLocalStream()
-    }
-
-    private fun collectFireStoreUpdate(roomID: String) {
-        webRtcScope.launch {
-            fireStoreRepository.connectToRoom(roomID).collect { packet ->
-                when {
-                    packet.isOffer() -> {
-                        val sdp = packet.toOfferSdp()
-                        val sdpObserver = createSdpObserver()
-                        peerConnection.setRemoteDescription(sdpObserver, sdp)
-
-                        sendAnswer(roomID)
-                    }
-
-                    packet.isAnswer() -> {
-                        val sdp = packet.toAnswerSdp()
-                        val sdpObserver = createSdpObserver()
-
-                        peerConnection.setRemoteDescription(sdpObserver, sdp)
-                    }
-
-                    else -> {
-                        val iceCandidate = packet.toIceCandidate()
-
-                        peerConnection.addIceCandidate(iceCandidate)
-                    }
-                }
-            }
-        }
     }
 
     private fun initializePeerConnection(isHost: Boolean, roomID: String) {
@@ -168,35 +121,6 @@ internal class WebRTCClientImpl @Inject constructor(
 
         videoCapture.startCapture(320, 240, 60)
     }
-
-    private fun sendOffer(roomID: String) {
-        val sdpObserver = createSdpObserver { sdp, observer ->
-            peerConnection.setLocalDescription(observer, sdp)
-            fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
-        }
-
-        peerConnection.createOffer(sdpObserver, constraints)
-    }
-
-    private fun sendAnswer(roomID: String) {
-        val sdpObserver = createSdpObserver { sdp, observer ->
-            peerConnection.setLocalDescription(observer, sdp)
-            fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
-        }
-
-        peerConnection.createAnswer(sdpObserver, constraints)
-    }
-
-    private fun createSdpObserver(setLocalDescription: ((SessionDescription, SdpObserver) -> Unit)? = null) =
-        object : SdpObserver {
-            override fun onCreateSuccess(p0: SessionDescription?) {
-                setLocalDescription?.let { function -> p0?.let { sdp -> function(sdp, this) } }
-            }
-
-            override fun onSetSuccess() {}
-            override fun onCreateFailure(p0: String?) {}
-            override fun onSetFailure(p0: String?) {}
-        }
 
     companion object {
         private const val LOCAL_TRACK_ID = "local_track"
