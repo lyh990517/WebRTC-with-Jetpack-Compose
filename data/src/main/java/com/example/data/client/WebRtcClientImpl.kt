@@ -15,11 +15,8 @@ import javax.inject.Singleton
 
 @Singleton
 internal class WebRtcClientImpl @Inject constructor(
-    @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
-    @LocalSurface private val localSurface: SurfaceViewRenderer,
     private val signalingManager: SignalingManager,
     private val peerConnectionManager: PeerConnectionManager,
-    private val rootEglBase: EglBase,
     private val localMediaStream: MediaStream,
     private val localAudioTrack: AudioTrack,
     private val localVideoTrack: VideoTrack,
@@ -51,10 +48,7 @@ internal class WebRtcClientImpl @Inject constructor(
 
     private fun initializeClient(roomID: String, isHost: Boolean) {
         initializePeerConnection(isHost, roomID)
-        initializeSurfaceView(remoteSurface)
-        initializeSurfaceView(localSurface)
         initializeVideoCapture()
-        initializeLocalResourceTracks()
         initializeLocalStream()
     }
 
@@ -64,21 +58,11 @@ internal class WebRtcClientImpl @Inject constructor(
         peerConnection = peerConnectionManager.getPeerConnection()
     }
 
-    private fun initializeSurfaceView(view: SurfaceViewRenderer) = view.run {
-        setMirror(true)
-        setEnableHardwareScaler(true)
-        init(rootEglBase.eglBaseContext, null)
-    }
-
     private fun initializeVideoCapture() {
         videoCapturer.startCapture(320, 240, 60)
     }
 
     private fun initializeLocalStream() {
         peerConnection.addStream(localMediaStream)
-    }
-
-    private fun initializeLocalResourceTracks() {
-        localVideoTrack.addSink(localSurface)
     }
 }

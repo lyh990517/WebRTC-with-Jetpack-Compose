@@ -1,10 +1,13 @@
 package com.example.data.di
 
 import android.app.Application
+import android.content.Context
 import com.example.domain.LocalSurface
+import com.example.domain.RemoteSurface
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import org.webrtc.AudioSource
 import org.webrtc.AudioTrack
@@ -24,11 +27,48 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object PeerConnectionModule {
+object WebRtcModule {
 
     @Provides
     @Singleton
     fun providesRootEglBase(): EglBase = EglBase.create()
+
+    @Provides
+    @Singleton
+    @RemoteSurface
+    fun providesRemoveSurface(
+        @ApplicationContext context: Context,
+        rootEglBase: EglBase,
+    ): SurfaceViewRenderer {
+        val remoteSurface = SurfaceViewRenderer(context)
+
+        initializeSurfaceView(remoteSurface, rootEglBase)
+
+        return remoteSurface
+    }
+
+    @Provides
+    @Singleton
+    @LocalSurface
+    fun providesLocalSurface(
+        @ApplicationContext context: Context,
+        rootEglBase: EglBase,
+    ): SurfaceViewRenderer {
+        val localSurface = SurfaceViewRenderer(context)
+
+        initializeSurfaceView(localSurface, rootEglBase)
+
+        return localSurface
+    }
+
+    private fun initializeSurfaceView(
+        view: SurfaceViewRenderer,
+        rootEglBase: EglBase,
+    ) = view.run {
+        setMirror(true)
+        setEnableHardwareScaler(true)
+        init(rootEglBase.eglBaseContext, null)
+    }
 
     @Provides
     @Singleton
@@ -72,10 +112,16 @@ object PeerConnectionModule {
     @Provides
     @Singleton
     fun providesVideoTrack(
+        @LocalSurface localSurface: SurfaceViewRenderer,
         peerConnectionFactory: PeerConnectionFactory,
         videoSource: VideoSource,
-    ): VideoTrack =
-        peerConnectionFactory.createVideoTrack("local_track", videoSource)
+    ): VideoTrack {
+        val localVideoTrack = peerConnectionFactory.createVideoTrack("local_track", videoSource)
+
+        localVideoTrack.addSink(localSurface)
+
+        return localVideoTrack
+    }
 
     @Provides
     @Singleton
