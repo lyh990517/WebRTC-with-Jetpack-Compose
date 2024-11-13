@@ -2,6 +2,12 @@ package com.example.data.client
 
 import android.app.Application
 import com.example.domain.LocalSurface
+import com.example.domain.Packet
+import com.example.domain.Packet.Companion.isAnswer
+import com.example.domain.Packet.Companion.isOffer
+import com.example.domain.Packet.Companion.toAnswerSdp
+import com.example.domain.Packet.Companion.toIceCandidate
+import com.example.domain.Packet.Companion.toOfferSdp
 import com.example.domain.RemoteSurface
 import com.example.domain.client.WebRTCClient
 import com.example.domain.repository.FireStoreRepository
@@ -54,6 +60,8 @@ internal class WebRTCClientImpl @Inject constructor(
 
     private val peerConnectionFactory by lazy { buildPeerConnectionFactory() }
 
+    private lateinit var peerConnection: PeerConnection
+
     private val localVideoSource by lazy { peerConnectionFactory.createVideoSource(false) }
 
     private val localAudioSource by lazy { peerConnectionFactory.createAudioSource(MediaConstraints()) }
@@ -63,8 +71,6 @@ internal class WebRTCClientImpl @Inject constructor(
 
     private val iceServer =
         listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
-
-    private lateinit var peerConnection: PeerConnection
 
     override fun connect(roomID: String, isJoin: Boolean) {
         initialize(roomID, isJoin)
@@ -100,15 +106,11 @@ internal class WebRTCClientImpl @Inject constructor(
 
     private fun collectFireStoreUpdate(roomID: String) {
         webRtcScope.launch {
-            fireStoreRepository.connectToRoom(roomID).collect { data ->
+            fireStoreRepository.connectToRoom(roomID).collect { packet ->
                 when {
-                    data.containsKey("type") && data.getValue("type")
-                        .toString() == "OFFER" -> handleOfferReceived(data, roomID)
-
-                    data.containsKey("type") && data.getValue("type")
-                        .toString() == "ANSWER" -> handleAnswerReceived(data)
-
-                    else -> handleIceCandidateReceived(data)
+                    packet.isOffer() -> handleOfferReceived(packet, roomID)
+                    packet.isAnswer() -> handleAnswerReceived(packet)
+                    else -> handleIceCandidateReceived(packet)
                 }
             }
         }
@@ -240,31 +242,21 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onSetFailure(p0: String?) {}
         }
 
-    private fun handleIceCandidateReceived(data: Map<String, Any>) {
-        val iceCandidate = IceCandidate(
-            data["sdpMid"].toString(),
-            Math.toIntExact(data["sdpMLineIndex"] as Long),
-            data["sdpCandidate"].toString()
-        )
+    private fun handleIceCandidateReceived(packet: Packet) {
+        val iceCandidate = packet.toIceCandidate()
 
         peerConnection.addIceCandidate(iceCandidate)
     }
 
-    private fun handleAnswerReceived(data: Map<String, Any>) {
-        val sdp = SessionDescription(
-            SessionDescription.Type.ANSWER,
-            data["sdp"].toString()
-        )
+    private fun handleAnswerReceived(packet: Packet) {
+        val sdp = packet.toAnswerSdp()
         val sdpObserver = createSdpObserver()
 
         peerConnection.setRemoteDescription(sdpObserver, sdp)
     }
 
-    private fun handleOfferReceived(data: Map<String, Any>, roomID: String) {
-        val sdp = SessionDescription(
-            SessionDescription.Type.OFFER,
-            data["sdp"].toString()
-        )
+    private fun handleOfferReceived(packet: Packet, roomID: String) {
+        val sdp = packet.toOfferSdp()
         val sdpObserver = createSdpObserver()
 
         peerConnection.setRemoteDescription(sdpObserver, sdp)

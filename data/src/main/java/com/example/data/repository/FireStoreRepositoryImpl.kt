@@ -1,6 +1,7 @@
 package com.example.data.repository
 
 import android.util.Log
+import com.example.domain.Packet
 import com.example.domain.repository.FireStoreRepository
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -61,21 +62,21 @@ class FireStoreRepositoryImpl @Inject constructor(
     override fun connectToRoom(roomID: String) = callbackFlow {
         firestore.enableNetwork().addOnFailureListener { e ->
             CoroutineScope(Dispatchers.IO).launch {
-                send(mapOf("error" to e))
+                send(Packet(mapOf("error" to e)))
             }
         }
 
         firestore.collection("calls").document(roomID).addSnapshotListener { snapshot, e ->
             if (e != null) {
                 CoroutineScope(Dispatchers.IO).launch {
-                    send(mapOf("error" to e))
+                    send(Packet(mapOf("error" to e)))
                 }
             }
 
             if (snapshot != null && snapshot.exists()) {
                 CoroutineScope(Dispatchers.IO).launch {
                     val data = snapshot.data
-                    data?.let { send(it) }
+                    data?.let { send(Packet(it)) }
                 }
             }
         }
@@ -84,15 +85,14 @@ class FireStoreRepositoryImpl @Inject constructor(
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
                     CoroutineScope(Dispatchers.IO).launch {
-                        send(mapOf("error" to e))
+                        send(Packet(mapOf("error" to e)))
                     }
                 }
 
                 if (snapshot != null && snapshot.isEmpty.not()) {
                     snapshot.forEach { dataSnapshot ->
                         CoroutineScope(Dispatchers.IO).launch {
-                            val data = dataSnapshot.data
-                            send(data)
+                            send(Packet(dataSnapshot.data))
                         }
                     }
                 }
