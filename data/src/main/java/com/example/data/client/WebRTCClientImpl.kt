@@ -68,7 +68,7 @@ internal class WebRTCClientImpl @Inject constructor(
         initialize(roomID, isJoin)
 
         CoroutineScope(Dispatchers.IO).launch {
-            if (!isJoin) call(roomID)
+            if (!isJoin) sendOffer(roomID)
 
             fireStoreRepository.connectToRoom(roomID).collect { data ->
                 when {
@@ -208,10 +208,10 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
         }
 
-    private fun call(roomID: String) =
-        peerConnection.call(roomID)
+    private fun sendOffer(roomID: String) =
+        peerConnection.sendOffer(roomID)
 
-    private fun PeerConnection.call(roomID: String) {
+    private fun PeerConnection.sendOffer(roomID: String) {
         createOffer(
             createSdpObserver { sdp, observer ->
                 peerConnection.setLocalDescription(observer, sdp)
@@ -221,10 +221,10 @@ internal class WebRTCClientImpl @Inject constructor(
         )
     }
 
-    private fun answer(roomID: String) =
-        peerConnection.answer(roomID)
+    private fun sendAnswer(roomID: String) =
+        peerConnection.sendAnswer(roomID)
 
-    private fun PeerConnection.answer(roomID: String) {
+    private fun PeerConnection.sendAnswer(roomID: String) {
         createAnswer(
             createSdpObserver { sdp, observer ->
                 peerConnection.setLocalDescription(observer, sdp)
@@ -279,7 +279,7 @@ internal class WebRTCClientImpl @Inject constructor(
 
             peerConnection.setRemoteDescription(sdpObserver, sdp)
 
-            answer(roomID)
+            sendAnswer(roomID)
         }
     }
 
