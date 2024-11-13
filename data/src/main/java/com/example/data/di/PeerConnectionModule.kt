@@ -13,6 +13,7 @@ import org.webrtc.DefaultVideoDecoderFactory
 import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.EglBase
 import org.webrtc.MediaConstraints
+import org.webrtc.MediaStream
 import org.webrtc.PeerConnectionFactory
 import org.webrtc.SurfaceTextureHelper
 import org.webrtc.SurfaceViewRenderer
@@ -86,6 +87,21 @@ object PeerConnectionModule {
 
     @Provides
     @Singleton
+    fun providesMediaStream(
+        peerConnectionFactory: PeerConnectionFactory,
+        videoTrack: VideoTrack,
+        audioTrack: AudioTrack,
+    ): MediaStream {
+        val mediaStream = peerConnectionFactory.createLocalMediaStream("local_track")
+
+        mediaStream.addTrack(videoTrack)
+        mediaStream.addTrack(audioTrack)
+
+        return mediaStream
+    }
+
+    @Provides
+    @Singleton
     fun providesSurfaceTextureHelper(rootEglBase: EglBase): SurfaceTextureHelper =
         SurfaceTextureHelper.create(Thread.currentThread().name, rootEglBase.eglBaseContext)
 
@@ -113,5 +129,4 @@ object PeerConnectionModule {
 
         return videoCapturer
     }
-
 }
