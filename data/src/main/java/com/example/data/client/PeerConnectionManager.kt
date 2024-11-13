@@ -41,19 +41,25 @@ class PeerConnectionManager @Inject constructor(
     }
 
     fun createOffer(roomID: String) {
-        val sdpObserver = createSdpObserver { sdp, observer ->
-            peerConnection.setLocalDescription(observer, sdp)
-            fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
-        }
+        val sdpObserver = createSdpObserver(
+            onSdpCreationSuccess = { sdp, observer ->
+                peerConnection.setLocalDescription(observer, sdp)
+
+                fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
+            }
+        )
 
         peerConnection.createOffer(sdpObserver, constraints)
     }
 
     fun createAnswer(roomID: String) {
-        val sdpObserver = createSdpObserver { sdp, observer ->
-            peerConnection.setLocalDescription(observer, sdp)
-            fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
-        }
+        val sdpObserver = createSdpObserver(
+            onSdpCreationSuccess = { sdp, observer ->
+                peerConnection.setLocalDescription(observer, sdp)
+
+                fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
+            }
+        )
 
         peerConnection.createAnswer(sdpObserver, constraints)
     }
@@ -76,10 +82,10 @@ class PeerConnectionManager @Inject constructor(
         peerConnection.addIceCandidate(iceCandidate)
     }
 
-    private fun createSdpObserver(setLocalDescription: ((SessionDescription, SdpObserver) -> Unit)? = null) =
+    private fun createSdpObserver(onSdpCreationSuccess: ((SessionDescription, SdpObserver) -> Unit)? = null) =
         object : SdpObserver {
             override fun onCreateSuccess(p0: SessionDescription?) {
-                setLocalDescription?.let { function -> p0?.let { sdp -> function(sdp, this) } }
+                onSdpCreationSuccess?.let { function -> p0?.let { sdp -> function(sdp, this) } }
             }
 
             override fun onSetSuccess() {}
