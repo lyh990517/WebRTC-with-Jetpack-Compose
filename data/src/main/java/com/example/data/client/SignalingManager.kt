@@ -1,5 +1,6 @@
 package com.example.data.client
 
+import com.example.domain.Packet
 import com.example.domain.Packet.Companion.isAnswer
 import com.example.domain.Packet.Companion.isOffer
 import com.example.domain.Packet.Companion.toAnswerSdp
@@ -29,28 +30,32 @@ class SignalingManager @Inject constructor(
 
             fireStoreRepository.connectToRoom(roomID).collect { packet ->
                 when {
-                    packet.isOffer() -> {
-                        val sdp = packet.toOfferSdp()
-
-                        peerConnectionManager.setRemoteDescription(sdp)
-
-                        peerConnectionManager.createAnswer(roomID)
-                    }
-
-                    packet.isAnswer() -> {
-                        val sdp = packet.toAnswerSdp()
-
-                        peerConnectionManager.setRemoteDescription(sdp)
-                    }
-
-                    else -> {
-                        val iceCandidate = packet.toIceCandidate()
-
-                        peerConnectionManager.addIceCandidate(iceCandidate)
-                    }
+                    packet.isOffer() -> handleOffer(packet, roomID)
+                    packet.isAnswer() -> handleAnswer(packet)
+                    else -> handleIceCandidate(packet)
                 }
             }
         }
+    }
+
+    private fun handleIceCandidate(packet: Packet) {
+        val iceCandidate = packet.toIceCandidate()
+
+        peerConnectionManager.addIceCandidate(iceCandidate)
+    }
+
+    private fun handleAnswer(packet: Packet) {
+        val sdp = packet.toAnswerSdp()
+
+        peerConnectionManager.setRemoteDescription(sdp)
+    }
+
+    private fun handleOffer(packet: Packet, roomID: String) {
+        val sdp = packet.toOfferSdp()
+
+        peerConnectionManager.setRemoteDescription(sdp)
+
+        peerConnectionManager.createAnswer(roomID)
     }
 
     fun close() = signalingScope.cancel()
