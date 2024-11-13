@@ -9,7 +9,6 @@ import com.example.domain.client.WebRTCClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import org.webrtc.SurfaceViewRenderer
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,26 +21,15 @@ class ConnectionViewModel @Inject constructor(
     private val roomId = MutableStateFlow(savedStateHandle["roomID"] ?: "")
     private val isJoin = MutableStateFlow(savedStateHandle["isJoin"] ?: false)
 
-    fun initialize(
-        remoteView: SurfaceViewRenderer,
-        localView: SurfaceViewRenderer
+    fun connectToRoom(
     ) = viewModelScope.launch {
-        webRTCClient.initialize(roomId.value)
-
-        webRTCClient.apply {
-            initPeerConnectionFactory(getApplication())
-            initVideoCapture(getApplication())
-            initSurfaceView(remoteView)
-            initSurfaceView(localView)
-            startLocalView(localView)
-        }
-
+        webRTCClient.connectToRoom(roomId.value)
         call()
-        connect(remoteView)
+        connect()
     }
 
-    private fun connect(remoteView: SurfaceViewRenderer) = viewModelScope.launch {
-        webRTCClient.connect(roomId.value, isJoin.value, remoteView)
+    private fun connect() = viewModelScope.launch {
+        webRTCClient.connect(roomId.value, isJoin.value)
     }
 
     private fun call() = viewModelScope.launch {

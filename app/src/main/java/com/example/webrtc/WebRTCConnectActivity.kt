@@ -20,17 +20,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.domain.LocalSurface
+import com.example.domain.RemoteSurface
 import com.example.presentaion.ui_component.WebRTCController
 import com.example.presentaion.viewmodel.ConnectionViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import org.webrtc.SurfaceViewRenderer
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class WebRTCConnectActivity : AppCompatActivity() {
 
 
     private val viewModel: ConnectionViewModel by viewModels()
+
+    @Inject
+    @RemoteSurface
+    lateinit var remote: SurfaceViewRenderer
+
+    @Inject
+    @LocalSurface
+    lateinit var local: SurfaceViewRenderer
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,34 +58,29 @@ class WebRTCConnectActivity : AppCompatActivity() {
 
         LaunchedEffect(Unit) {
             delay(200)
-            if (remoteView != null && localView != null) {
-                viewModel.initialize(remoteView!!, localView!!)
-            }
+            remoteView = remote
+            localView = local
+
+            viewModel.connectToRoom()
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            AndroidView(
-                modifier = Modifier.fillMaxSize(),
-                factory = {
-                    SurfaceViewRenderer(it)
-                },
-                update = {
-                    remoteView = it
-                }
-            )
-            AndroidView(
-                modifier = Modifier
-                    .fillMaxHeight(0.5f)
-                    .fillMaxWidth(0.5f)
-                    .align(Alignment.BottomStart)
-                    .padding(50.dp),
-                factory = {
-                    SurfaceViewRenderer(it)
-                },
-                update = {
-                    localView = it
-                }
-            )
+            remoteView?.let { view ->
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { view }
+                )
+            }
+            localView?.let { view ->
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxHeight(0.5f)
+                        .fillMaxWidth(0.5f)
+                        .align(Alignment.BottomStart)
+                        .padding(50.dp),
+                    factory = { view }
+                )
+            }
             WebRTCController(
                 modifier = Modifier
                     .fillMaxWidth()

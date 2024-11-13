@@ -2,6 +2,8 @@ package com.example.data.client
 
 import android.app.Application
 import android.content.Context
+import com.example.domain.LocalSurface
+import com.example.domain.RemoteSurface
 import com.example.domain.client.WebRTCClient
 import com.example.domain.repository.FireStoreRepository
 import kotlinx.coroutines.CoroutineScope
@@ -32,7 +34,10 @@ import org.webrtc.VideoTrack
 import javax.inject.Inject
 
 internal class WebRTCClientImpl @Inject constructor(
+    private val application: Application,
     private val fireStoreRepository: FireStoreRepository,
+    @RemoteSurface private val remoteView: SurfaceViewRenderer,
+    @LocalSurface private val localView: SurfaceViewRenderer
 ) : WebRTCClient {
     private val constraints = MediaConstraints().apply {
         mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
@@ -66,10 +71,17 @@ internal class WebRTCClientImpl @Inject constructor(
 
     private var roomId = ""
 
-    private lateinit var remoteSurfaceView: SurfaceViewRenderer
-
     init {
         collectState()
+        start()
+    }
+
+    fun start() {
+        initPeerConnectionFactory(application)
+        initVideoCapture(application)
+        initSurfaceView(remoteView)
+        initSurfaceView(localView)
+        startLocalView()
     }
 
     private fun collectState() {
@@ -100,19 +112,19 @@ internal class WebRTCClientImpl @Inject constructor(
         init(rootEglBase.eglBaseContext, null)
     }
 
-    override fun startLocalView(localVideoOutput: SurfaceViewRenderer) {
+    override fun startLocalView() {
         val surfaceTextureHelper =
             SurfaceTextureHelper.create(Thread.currentThread().name, rootEglBase.eglBaseContext)
         (videoCapture as VideoCapturer).initialize(
             surfaceTextureHelper,
-            localVideoOutput.context,
+            localView.context,
             localVideoSource.capturerObserver
         )
         videoCapture.startCapture(320, 240, 60)
         localAudioTrack =
             peerConnectionFactory.createAudioTrack(LOCAL_TRACK_ID + "_audio", audioSource);
         localVideoTrack = peerConnectionFactory.createVideoTrack(LOCAL_TRACK_ID, localVideoSource)
-        localVideoTrack?.addSink(localVideoOutput)
+        localVideoTrack?.addSink(localView)
         val localStream = peerConnectionFactory.createLocalMediaStream(LOCAL_STREAM_ID)
         localStream.addTrack(localVideoTrack)
         localStream.addTrack(localAudioTrack)
@@ -159,7 +171,7 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onAddStream(p0: MediaStream?) {
                 CoroutineScope(Dispatchers.IO).launch {
                     p0?.let { mediaStream ->
-                        mediaStream.videoTracks?.get(0)?.addSink(remoteSurfaceView)
+                        mediaStream.videoTracks?.get(0)?.addSink(remoteView)
                     }
                 }
             }
@@ -240,15 +252,14 @@ internal class WebRTCClientImpl @Inject constructor(
     override fun call(roomID: String) =
         peerConnection?.call(roomID)
 
-    override fun initialize(roomID: String) {
+    override fun connectToRoom(roomID: String) {
         dataFlow = fireStoreRepository.connectToRoom(roomID)
     }
 
-    override fun connect(roomID: String, isJoin: Boolean, remoteView: SurfaceViewRenderer) =
+    override fun connect(roomID: String, isJoin: Boolean) =
         CoroutineScope(Dispatchers.IO).launch {
             join = isJoin
             roomId = roomID
-            remoteSurfaceView = remoteView
 
             dataFlow.collect { data ->
                 when {

@@ -16,7 +16,7 @@ interface WebRTCClient {
 
     fun initSurfaceView(view: SurfaceViewRenderer)
 
-    fun startLocalView(localVideoOutput: SurfaceViewRenderer)
+    fun startLocalView()
 
     fun initVideoCapture(context: Application)
 
@@ -56,9 +56,9 @@ interface WebRTCClient {
 
     fun closeSession()
 
-    fun initialize(roomID: String)
+    fun connectToRoom(roomID: String)
 
-    fun connect(roomID: String, isJoin: Boolean, remoteView: SurfaceViewRenderer): Job
+    fun connect(roomID: String, isJoin: Boolean): Job
 
     fun handleIceCandidateReceived(data: Map<String, Any>)
 
