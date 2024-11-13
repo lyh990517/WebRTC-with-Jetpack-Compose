@@ -107,7 +107,7 @@ internal class WebRTCClientImpl @Inject constructor(
     private fun initialize(roomID: String, isJoin: Boolean) {
         initPeerConnectionFactory()
         initPeerConnection(isJoin, roomID)
-        initVideoCapture(application)
+        initVideoCapture()
         initSurfaceView(remoteView)
         initSurfaceView(localView)
         startLocalView()
@@ -122,8 +122,8 @@ internal class WebRTCClientImpl @Inject constructor(
         }
     }
 
-    private fun getVideoCapture(context: Context) =
-        Camera2Enumerator(context).run {
+    private fun getVideoCapture() =
+        Camera2Enumerator(application).run {
             deviceNames.find {
                 isFrontFacing(it)
             }?.let {
@@ -156,8 +156,8 @@ internal class WebRTCClientImpl @Inject constructor(
         peerConnection.addStream(localStream)
     }
 
-    private fun initVideoCapture(context: Application) {
-        videoCapture = getVideoCapture(context)
+    private fun initVideoCapture() {
+        videoCapture = getVideoCapture()
     }
 
     private fun initPeerConnectionFactory() {
