@@ -2,7 +2,6 @@ package com.example.presentaion.ui_component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
@@ -52,7 +51,7 @@ fun WebRTCController(
             description = "Close",
             defaultBackgroundColor = Color.Red
         ) {
-            viewModel.closeSession()
+            viewModel.disconnect()
         }
     }
 }

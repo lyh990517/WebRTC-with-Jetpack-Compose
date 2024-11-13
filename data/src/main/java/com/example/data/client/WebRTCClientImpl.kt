@@ -8,10 +8,7 @@ import com.example.domain.client.WebRTCClient
 import com.example.domain.repository.FireStoreRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.webrtc.AudioTrack
 import org.webrtc.Camera2Enumerator
 import org.webrtc.CameraVideoCapturer
@@ -32,7 +29,9 @@ import org.webrtc.SurfaceViewRenderer
 import org.webrtc.VideoCapturer
 import org.webrtc.VideoTrack
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 internal class WebRTCClientImpl @Inject constructor(
     private val application: Application,
     private val fireStoreRepository: FireStoreRepository,
@@ -60,44 +59,68 @@ internal class WebRTCClientImpl @Inject constructor(
     private val iceServer =
         listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
 
-    private val peerConnection by lazy { buildPeerConnection() }
+    private lateinit var peerConnection: PeerConnection
 
-    private val isMicEnabled = MutableStateFlow(true)
-    private val isVideoEnabled = MutableStateFlow(true)
+    private var isMicEnabled = true
+    private var isVideoEnabled = true
 
-    private lateinit var dataFlow: Flow<Map<String, Any>>
+    override fun connect(roomID: String, isJoin: Boolean) {
+        initialize(roomID, isJoin)
 
-    private var join: Boolean = false
+        CoroutineScope(Dispatchers.IO).launch {
+            if (!isJoin) call(roomID)
 
-    private var roomId = ""
+            fireStoreRepository.connectToRoom(roomID).collect { data ->
+                when {
+                    data.containsKey("type") && data.getValue("type")
+                        .toString() == "OFFER" -> handleOfferReceived(data, roomID)
 
-    init {
-        collectState()
-        start()
+                    data.containsKey("type") && data.getValue("type")
+                        .toString() == "ANSWER" -> handleAnswerReceived(data)
+
+                    else -> handleIceCandidateReceived(data)
+                }
+            }
+        }
     }
 
-    fun start() {
+    override fun toggleVoice() {
+        isMicEnabled = !isMicEnabled
+
+        localAudioTrack?.setEnabled(isMicEnabled)
+    }
+
+    override fun toggleVideo() {
+        isVideoEnabled = !isVideoEnabled
+
+        localVideoTrack?.setEnabled(isVideoEnabled)
+    }
+
+    override fun disconnect() {
+        localAudioTrack?.dispose()
+        localVideoTrack?.dispose()
+        peerConnection.close()
+    }
+
+    private fun initialize(roomID: String, isJoin: Boolean) {
         initPeerConnectionFactory(application)
+        initPeerConnection(isJoin, roomID)
         initVideoCapture(application)
         initSurfaceView(remoteView)
         initSurfaceView(localView)
         startLocalView()
     }
 
-    private fun collectState() {
-        CoroutineScope(Dispatchers.IO).launch {
-            isMicEnabled.collect {
-                localAudioTrack?.setEnabled(it)
-            }
-        }
-        CoroutineScope(Dispatchers.IO).launch {
-            isVideoEnabled.collect {
-                localVideoTrack?.setEnabled(it)
-            }
+    private fun initPeerConnection(isJoin: Boolean, roomID: String) {
+        peerConnectionFactory.createPeerConnection(
+            iceServer,
+            createPeerConnectionObserver(isJoin, roomID)
+        )?.let { connection ->
+            peerConnection = connection
         }
     }
 
-    override fun getVideoCapture(context: Context) =
+    private fun getVideoCapture(context: Context) =
         Camera2Enumerator(context).run {
             deviceNames.find {
                 isFrontFacing(it)
@@ -106,13 +129,13 @@ internal class WebRTCClientImpl @Inject constructor(
             } ?: throw IllegalStateException()
         }
 
-    override fun initSurfaceView(view: SurfaceViewRenderer) = view.run {
+    private fun initSurfaceView(view: SurfaceViewRenderer) = view.run {
         setMirror(true)
         setEnableHardwareScaler(true)
         init(rootEglBase.eglBaseContext, null)
     }
 
-    override fun startLocalView() {
+    private fun startLocalView() {
         val surfaceTextureHelper =
             SurfaceTextureHelper.create(Thread.currentThread().name, rootEglBase.eglBaseContext)
         (videoCapture as VideoCapturer).initialize(
@@ -122,20 +145,20 @@ internal class WebRTCClientImpl @Inject constructor(
         )
         videoCapture.startCapture(320, 240, 60)
         localAudioTrack =
-            peerConnectionFactory.createAudioTrack(LOCAL_TRACK_ID + "_audio", audioSource);
+            peerConnectionFactory.createAudioTrack(LOCAL_TRACK_ID + "_audio", audioSource)
         localVideoTrack = peerConnectionFactory.createVideoTrack(LOCAL_TRACK_ID, localVideoSource)
         localVideoTrack?.addSink(localView)
         val localStream = peerConnectionFactory.createLocalMediaStream(LOCAL_STREAM_ID)
         localStream.addTrack(localVideoTrack)
         localStream.addTrack(localAudioTrack)
-        peerConnection?.addStream(localStream)
+        peerConnection.addStream(localStream)
     }
 
-    override fun initVideoCapture(context: Application) {
+    private fun initVideoCapture(context: Application) {
         videoCapture = getVideoCapture(context)
     }
 
-    override fun initPeerConnectionFactory(context: Application) {
+    private fun initPeerConnectionFactory(context: Application) {
         val options = PeerConnectionFactory.InitializationOptions.builder(context)
             .setEnableInternalTracer(true)
             .setFieldTrials(FIELD_TRIALS)
@@ -143,7 +166,7 @@ internal class WebRTCClientImpl @Inject constructor(
         PeerConnectionFactory.initialize(options)
     }
 
-    override fun buildPeerConnectionFactory() = PeerConnectionFactory.builder().apply {
+    private fun buildPeerConnectionFactory() = PeerConnectionFactory.builder().apply {
         setVideoDecoderFactory(DefaultVideoDecoderFactory(rootEglBase.eglBaseContext))
         setVideoEncoderFactory(DefaultVideoEncoderFactory(rootEglBase.eglBaseContext, true, true))
         setOptions(PeerConnectionFactory.Options().apply {
@@ -152,7 +175,10 @@ internal class WebRTCClientImpl @Inject constructor(
         })
     }.createPeerConnectionFactory()
 
-    override fun createPeerConnectionObserver(): PeerConnection.Observer =
+    private fun createPeerConnectionObserver(
+        isJoin: Boolean,
+        roomID: String
+    ): PeerConnection.Observer =
         object : PeerConnection.Observer {
             override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
             override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
@@ -161,8 +187,8 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onIceCandidate(p0: IceCandidate?) {
                 CoroutineScope(Dispatchers.IO).launch {
                     p0?.let {
-                        fireStoreRepository.sendIceCandidateToRoom(it, join, roomId)
-                        peerConnection?.addIceCandidate(it)
+                        fireStoreRepository.sendIceCandidateToRoom(it, isJoin, roomID)
+                        peerConnection.addIceCandidate(it)
                     }
                 }
             }
@@ -182,42 +208,33 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
         }
 
-    override fun buildPeerConnection() =
-        peerConnectionFactory.createPeerConnection(iceServer, createPeerConnectionObserver())
+    private fun call(roomID: String) =
+        peerConnection.call(roomID)
 
-    override fun PeerConnection.call(roomID: String) {
+    private fun PeerConnection.call(roomID: String) {
         createOffer(
-            createSdpObserver() { sdp, observer -> setLocalSdp(observer, sdp, roomID) },
+            createSdpObserver { sdp, observer ->
+                peerConnection.setLocalDescription(observer, sdp)
+                fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
+            },
             constraints
         )
     }
 
-    override fun sendIceCandidate(candidate: IceCandidate?, isJoin: Boolean, roomID: String) =
-        runBlocking {
-            fireStoreRepository.sendIceCandidateToRoom(candidate, isJoin, roomID)
-        }
+    private fun answer(roomID: String) =
+        peerConnection.answer(roomID)
 
-    override fun PeerConnection.answer(roomID: String) {
+    private fun PeerConnection.answer(roomID: String) {
         createAnswer(
-            createSdpObserver() { sdp, observer -> setLocalSdp(observer, sdp, roomID) },
+            createSdpObserver { sdp, observer ->
+                peerConnection.setLocalDescription(observer, sdp)
+                fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
+            },
             constraints
         )
     }
 
-    override fun setLocalSdp(
-        observer: SdpObserver,
-        sdp: SessionDescription,
-        roomID: String
-    ) {
-        peerConnection?.setLocalDescription(observer, sdp)
-        fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
-    }
-
-    override fun onRemoteSessionReceived(description: SessionDescription) {
-        peerConnection?.setRemoteDescription(createSdpObserver(), description)
-    }
-
-    override fun createSdpObserver(setLocalDescription: ((SessionDescription, SdpObserver) -> Unit)?) =
+    private fun createSdpObserver(setLocalDescription: ((SessionDescription, SdpObserver) -> Unit)? = null) =
         object : SdpObserver {
             override fun onCreateSuccess(p0: SessionDescription?) {
                 setLocalDescription?.let { function -> p0?.let { sdp -> function(sdp, this) } }
@@ -228,83 +245,40 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onSetFailure(p0: String?) {}
         }
 
-    override fun addCandidate(iceCandidate: IceCandidate?) {
-        peerConnection?.addIceCandidate(iceCandidate)
-    }
-
-    override fun toggleVoice() {
-        isMicEnabled.value = !isMicEnabled.value
-    }
-
-    override fun toggleVideo() {
-        isVideoEnabled.value = !isVideoEnabled.value
-    }
-
-    override fun closeSession() {
-        localAudioTrack?.dispose()
-        localVideoTrack?.dispose()
-        peerConnection?.close()
-    }
-
-    override fun answer(roomID: String) =
-        peerConnection?.answer(roomID)
-
-    override fun call(roomID: String) =
-        peerConnection?.call(roomID)
-
-    override fun connectToRoom(roomID: String) {
-        dataFlow = fireStoreRepository.connectToRoom(roomID)
-    }
-
-    override fun connect(roomID: String, isJoin: Boolean) =
+    private fun handleIceCandidateReceived(data: Map<String, Any>) {
         CoroutineScope(Dispatchers.IO).launch {
-            join = isJoin
-            roomId = roomID
-
-            dataFlow.collect { data ->
-                when {
-                    data.containsKey("type") && data.getValue("type")
-                        .toString() == "OFFER" -> handleOfferReceived(data, roomID)
-
-                    data.containsKey("type") && data.getValue("type")
-                        .toString() == "ANSWER" -> handleAnswerReceived(data)
-
-                    else -> handleIceCandidateReceived(data)
-                }
-            }
-        }
-
-    override fun handleIceCandidateReceived(data: Map<String, Any>) {
-        CoroutineScope(Dispatchers.IO).launch {
-            peerConnection?.addIceCandidate(
-                IceCandidate(
-                    data["sdpMid"].toString(),
-                    Math.toIntExact(data["sdpMLineIndex"] as Long),
-                    data["sdpCandidate"].toString()
-                )
+            val iceCandidate = IceCandidate(
+                data["sdpMid"].toString(),
+                Math.toIntExact(data["sdpMLineIndex"] as Long),
+                data["sdpCandidate"].toString()
             )
+
+            peerConnection.addIceCandidate(iceCandidate)
         }
     }
 
-    override fun handleAnswerReceived(data: Map<String, Any>) {
+    private fun handleAnswerReceived(data: Map<String, Any>) {
         CoroutineScope(Dispatchers.IO).launch {
-            peerConnection?.setRemoteDescription(
-                createSdpObserver(), SessionDescription(
-                    SessionDescription.Type.ANSWER,
-                    data["sdp"].toString()
-                )
+            val sdp = SessionDescription(
+                SessionDescription.Type.ANSWER,
+                data["sdp"].toString()
             )
+            val sdpObserver = createSdpObserver()
+
+            peerConnection.setRemoteDescription(sdpObserver, sdp)
         }
     }
 
-    override fun handleOfferReceived(data: Map<String, Any>, roomID: String) {
+    private fun handleOfferReceived(data: Map<String, Any>, roomID: String) {
         CoroutineScope(Dispatchers.IO).launch {
-            peerConnection?.setRemoteDescription(
-                createSdpObserver(), SessionDescription(
-                    SessionDescription.Type.OFFER,
-                    data["sdp"].toString()
-                )
+            val sdp = SessionDescription(
+                SessionDescription.Type.OFFER,
+                data["sdp"].toString()
             )
+            val sdpObserver = createSdpObserver()
+
+            peerConnection.setRemoteDescription(sdpObserver, sdp)
+
             answer(roomID)
         }
     }

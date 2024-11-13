@@ -21,19 +21,8 @@ class ConnectionViewModel @Inject constructor(
     private val roomId = MutableStateFlow(savedStateHandle["roomID"] ?: "")
     private val isJoin = MutableStateFlow(savedStateHandle["isJoin"] ?: false)
 
-    fun connectToRoom(
-    ) = viewModelScope.launch {
-        webRTCClient.connectToRoom(roomId.value)
-        call()
-        connect()
-    }
-
-    private fun connect() = viewModelScope.launch {
+    fun connect() = viewModelScope.launch {
         webRTCClient.connect(roomId.value, isJoin.value)
-    }
-
-    private fun call() = viewModelScope.launch {
-        if (!isJoin.value) webRTCClient.call(roomId.value)
     }
 
     fun toggleVoice() = viewModelScope.launch {
@@ -44,9 +33,9 @@ class ConnectionViewModel @Inject constructor(
         webRTCClient.toggleVideo()
     }
 
-    fun closeSession() = viewModelScope.launch {
+    fun disconnect() = viewModelScope.launch {
         try {
-            webRTCClient.closeSession()
+            webRTCClient.disconnect()
         } catch (e: Exception) {
             Log.e("error", "${e.message}")
         }
