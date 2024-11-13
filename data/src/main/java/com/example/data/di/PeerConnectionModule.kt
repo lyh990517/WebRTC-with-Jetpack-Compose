@@ -1,17 +1,22 @@
 package com.example.data.di
 
 import android.app.Application
+import com.example.domain.LocalSurface
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import org.webrtc.AudioSource
 import org.webrtc.AudioTrack
+import org.webrtc.Camera2Enumerator
 import org.webrtc.DefaultVideoDecoderFactory
 import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.EglBase
 import org.webrtc.MediaConstraints
 import org.webrtc.PeerConnectionFactory
+import org.webrtc.SurfaceTextureHelper
+import org.webrtc.SurfaceViewRenderer
+import org.webrtc.VideoCapturer
 import org.webrtc.VideoSource
 import org.webrtc.VideoTrack
 import javax.inject.Singleton
@@ -78,4 +83,35 @@ object PeerConnectionModule {
         audioSource: AudioSource,
     ): AudioTrack =
         peerConnectionFactory.createAudioTrack("local_track_audio", audioSource)
+
+    @Provides
+    @Singleton
+    fun providesSurfaceTextureHelper(rootEglBase: EglBase): SurfaceTextureHelper =
+        SurfaceTextureHelper.create(Thread.currentThread().name, rootEglBase.eglBaseContext)
+
+    @Provides
+    @Singleton
+    fun providesVideoCapturer(
+        application: Application,
+        @LocalSurface localSurface: SurfaceViewRenderer,
+        surfaceTextureHelper: SurfaceTextureHelper,
+        localVideoSource: VideoSource,
+    ): VideoCapturer {
+        val videoCapturer = Camera2Enumerator(application).run {
+            deviceNames.find {
+                isFrontFacing(it)
+            }?.let {
+                createCapturer(it, null)
+            } ?: throw IllegalStateException()
+        } as VideoCapturer
+
+        videoCapturer.initialize(
+            surfaceTextureHelper,
+            localSurface.context,
+            localVideoSource.capturerObserver
+        )
+
+        return videoCapturer
+    }
+
 }

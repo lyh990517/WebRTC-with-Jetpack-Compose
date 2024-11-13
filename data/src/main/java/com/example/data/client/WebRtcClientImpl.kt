@@ -20,7 +20,6 @@ import javax.inject.Singleton
 
 @Singleton
 internal class WebRtcClientImpl @Inject constructor(
-    private val application: Application,
     @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
     @LocalSurface private val localSurface: SurfaceViewRenderer,
     private val signalingManager: SignalingManager,
@@ -29,13 +28,10 @@ internal class WebRtcClientImpl @Inject constructor(
     private val rootEglBase: EglBase,
     private val localAudioTrack: AudioTrack,
     private val localVideoTrack: VideoTrack,
-    private val localVideoSource: VideoSource,
+    private val videoCapturer: VideoCapturer
 ) : WebRtcClient {
 
     private lateinit var peerConnection: PeerConnection
-
-    private val surfaceTextureHelper =
-        SurfaceTextureHelper.create(Thread.currentThread().name, rootEglBase.eglBaseContext)
 
     override fun connect(roomID: String, isHost: Boolean) {
         initializeClient(roomID, isHost)
@@ -79,25 +75,8 @@ internal class WebRtcClientImpl @Inject constructor(
         init(rootEglBase.eglBaseContext, null)
     }
 
-    private fun getVideoCapture() =
-        Camera2Enumerator(application).run {
-            deviceNames.find {
-                isFrontFacing(it)
-            }?.let {
-                createCapturer(it, null)
-            } ?: throw IllegalStateException()
-        }
-
     private fun initializeVideoCapture() {
-        val videoCapture = getVideoCapture() as VideoCapturer
-
-        videoCapture.initialize(
-            surfaceTextureHelper,
-            localSurface.context,
-            localVideoSource.capturerObserver
-        )
-
-        videoCapture.startCapture(320, 240, 60)
+        videoCapturer.startCapture(320, 240, 60)
     }
 
     private fun initializeLocalStream() {
