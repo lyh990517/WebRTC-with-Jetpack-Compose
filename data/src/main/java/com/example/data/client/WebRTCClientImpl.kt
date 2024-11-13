@@ -2,7 +2,6 @@ package com.example.data.client
 
 import android.app.Application
 import com.example.domain.LocalSurface
-import com.example.domain.Packet
 import com.example.domain.Packet.Companion.isAnswer
 import com.example.domain.Packet.Companion.isOffer
 import com.example.domain.Packet.Companion.toAnswerSdp
@@ -18,16 +17,10 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.webrtc.AudioTrack
 import org.webrtc.Camera2Enumerator
-import org.webrtc.DataChannel
-import org.webrtc.DefaultVideoDecoderFactory
-import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.EglBase
-import org.webrtc.IceCandidate
 import org.webrtc.MediaConstraints
-import org.webrtc.MediaStream
 import org.webrtc.PeerConnection
 import org.webrtc.PeerConnectionFactory
-import org.webrtc.RtpReceiver
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 import org.webrtc.SurfaceTextureHelper
@@ -43,6 +36,9 @@ import javax.inject.Singleton
 internal class WebRTCClientImpl @Inject constructor(
     private val application: Application,
     private val fireStoreRepository: FireStoreRepository,
+    private val peerConnectionFactory: PeerConnectionFactory,
+    private val peerConnectionManager: PeerConnectionManager,
+    private val rootEglBase: EglBase,
     @RemoteSurface private val remoteView: SurfaceViewRenderer,
     @LocalSurface private val localView: SurfaceViewRenderer
 ) : WebRTCClient {
@@ -52,13 +48,9 @@ internal class WebRTCClientImpl @Inject constructor(
         mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
     }
 
-    private val rootEglBase: EglBase = EglBase.create()
-
     private var localAudioTrack: AudioTrack? = null
 
     private var localVideoTrack: VideoTrack? = null
-
-    private val peerConnectionFactory by lazy { buildPeerConnectionFactory() }
 
     private lateinit var peerConnection: PeerConnection
 
@@ -68,9 +60,6 @@ internal class WebRTCClientImpl @Inject constructor(
 
     private val surfaceTextureHelper =
         SurfaceTextureHelper.create(Thread.currentThread().name, rootEglBase.eglBaseContext)
-
-    private val iceServer =
-        listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
 
     override fun connect(roomID: String, isJoin: Boolean) {
         initialize(roomID, isJoin)
@@ -96,7 +85,6 @@ internal class WebRTCClientImpl @Inject constructor(
     }
 
     private fun initialize(roomID: String, isJoin: Boolean) {
-        initializePeerConnectionFactory()
         initializePeerConnection(isJoin, roomID)
         initializeSurfaceView(remoteView)
         initializeSurfaceView(localView)
@@ -108,21 +96,35 @@ internal class WebRTCClientImpl @Inject constructor(
         webRtcScope.launch {
             fireStoreRepository.connectToRoom(roomID).collect { packet ->
                 when {
-                    packet.isOffer() -> handleOfferReceived(packet, roomID)
-                    packet.isAnswer() -> handleAnswerReceived(packet)
-                    else -> handleIceCandidateReceived(packet)
+                    packet.isOffer() -> {
+                        val sdp = packet.toOfferSdp()
+                        val sdpObserver = createSdpObserver()
+                        peerConnection.setRemoteDescription(sdpObserver, sdp)
+
+                        sendAnswer(roomID)
+                    }
+
+                    packet.isAnswer() -> {
+                        val sdp = packet.toAnswerSdp()
+                        val sdpObserver = createSdpObserver()
+
+                        peerConnection.setRemoteDescription(sdpObserver, sdp)
+                    }
+
+                    else -> {
+                        val iceCandidate = packet.toIceCandidate()
+
+                        peerConnection.addIceCandidate(iceCandidate)
+                    }
                 }
             }
         }
     }
 
     private fun initializePeerConnection(isJoin: Boolean, roomID: String) {
-        peerConnectionFactory.createPeerConnection(
-            iceServer,
-            createPeerConnectionObserver(isJoin, roomID)
-        )?.let { connection ->
-            peerConnection = connection
-        }
+        peerConnectionManager.initializePeerConnection(isJoin, roomID)
+
+        peerConnection = peerConnectionManager.getPeerConnection()
     }
 
     private fun getVideoCapture() =
@@ -167,52 +169,6 @@ internal class WebRTCClientImpl @Inject constructor(
         videoCapture.startCapture(320, 240, 60)
     }
 
-    private fun initializePeerConnectionFactory() {
-        val options = PeerConnectionFactory.InitializationOptions.builder(application)
-            .setEnableInternalTracer(true)
-            .setFieldTrials(FIELD_TRIALS)
-            .createInitializationOptions()
-        PeerConnectionFactory.initialize(options)
-    }
-
-    private fun buildPeerConnectionFactory() = PeerConnectionFactory.builder().apply {
-        setVideoDecoderFactory(DefaultVideoDecoderFactory(rootEglBase.eglBaseContext))
-        setVideoEncoderFactory(DefaultVideoEncoderFactory(rootEglBase.eglBaseContext, true, true))
-        setOptions(PeerConnectionFactory.Options().apply {
-            disableEncryption = true
-            disableNetworkMonitor = true
-        })
-    }.createPeerConnectionFactory()
-
-    private fun createPeerConnectionObserver(
-        isJoin: Boolean,
-        roomID: String
-    ): PeerConnection.Observer =
-        object : PeerConnection.Observer {
-            override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
-            override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
-            override fun onIceConnectionReceivingChange(p0: Boolean) {}
-            override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
-            override fun onIceCandidate(p0: IceCandidate?) {
-                p0?.let {
-                    fireStoreRepository.sendIceCandidateToRoom(it, isJoin, roomID)
-                    peerConnection.addIceCandidate(it)
-                }
-            }
-
-            override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
-            override fun onAddStream(p0: MediaStream?) {
-                p0?.let { mediaStream ->
-                    mediaStream.videoTracks?.get(0)?.addSink(remoteView)
-                }
-            }
-
-            override fun onRemoveStream(p0: MediaStream?) {}
-            override fun onDataChannel(p0: DataChannel?) {}
-            override fun onRenegotiationNeeded() {}
-            override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
-        }
-
     private fun sendOffer(roomID: String) {
         val sdpObserver = createSdpObserver { sdp, observer ->
             peerConnection.setLocalDescription(observer, sdp)
@@ -242,32 +198,8 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onSetFailure(p0: String?) {}
         }
 
-    private fun handleIceCandidateReceived(packet: Packet) {
-        val iceCandidate = packet.toIceCandidate()
-
-        peerConnection.addIceCandidate(iceCandidate)
-    }
-
-    private fun handleAnswerReceived(packet: Packet) {
-        val sdp = packet.toAnswerSdp()
-        val sdpObserver = createSdpObserver()
-
-        peerConnection.setRemoteDescription(sdpObserver, sdp)
-    }
-
-    private fun handleOfferReceived(packet: Packet, roomID: String) {
-        val sdp = packet.toOfferSdp()
-        val sdpObserver = createSdpObserver()
-
-        peerConnection.setRemoteDescription(sdpObserver, sdp)
-
-        sendAnswer(roomID)
-    }
-
     companion object {
         private const val LOCAL_TRACK_ID = "local_track"
         private const val LOCAL_STREAM_ID = "local_track"
-        private const val FIELD_TRIALS = "WebRTC-H264HighProfile/Enabled/"
-        private const val ICE_SERVER_URL = "stun:stun4.l.google.com:19302"
     }
 }
