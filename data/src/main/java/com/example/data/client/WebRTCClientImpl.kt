@@ -31,6 +31,8 @@ import org.webrtc.VideoTrack
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//TODO peerConnection 사용 유무 기준으로 분리
+
 @Singleton
 internal class WebRTCClientImpl @Inject constructor(
     private val application: Application,
