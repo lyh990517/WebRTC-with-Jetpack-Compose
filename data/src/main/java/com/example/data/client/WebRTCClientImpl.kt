@@ -7,6 +7,8 @@ import com.example.domain.client.WebRTCClient
 import com.example.domain.repository.FireStoreRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.webrtc.AudioTrack
 import org.webrtc.Camera2Enumerator
@@ -38,6 +40,8 @@ internal class WebRTCClientImpl @Inject constructor(
     @RemoteSurface private val remoteView: SurfaceViewRenderer,
     @LocalSurface private val localView: SurfaceViewRenderer
 ) : WebRTCClient {
+    private val webRtcScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
     private val constraints = MediaConstraints().apply {
         mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
     }
@@ -65,21 +69,9 @@ internal class WebRTCClientImpl @Inject constructor(
     override fun connect(roomID: String, isJoin: Boolean) {
         initialize(roomID, isJoin)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            if (!isJoin) sendOffer(roomID)
+        if (!isJoin) sendOffer(roomID)
 
-            fireStoreRepository.connectToRoom(roomID).collect { data ->
-                when {
-                    data.containsKey("type") && data.getValue("type")
-                        .toString() == "OFFER" -> handleOfferReceived(data, roomID)
-
-                    data.containsKey("type") && data.getValue("type")
-                        .toString() == "ANSWER" -> handleAnswerReceived(data)
-
-                    else -> handleIceCandidateReceived(data)
-                }
-            }
-        }
+        collectFireStoreUpdate(roomID)
     }
 
     override fun toggleVoice() {
@@ -94,6 +86,7 @@ internal class WebRTCClientImpl @Inject constructor(
         localAudioTrack?.dispose()
         localVideoTrack?.dispose()
         peerConnection.close()
+        webRtcScope.cancel()
     }
 
     private fun initialize(roomID: String, isJoin: Boolean) {
@@ -101,8 +94,24 @@ internal class WebRTCClientImpl @Inject constructor(
         initializePeerConnection(isJoin, roomID)
         initializeSurfaceView(remoteView)
         initializeSurfaceView(localView)
-        startVideoCapture()
-        startLocalStream()
+        initializeVideoCapture()
+        initializeLocalStream()
+    }
+
+    private fun collectFireStoreUpdate(roomID: String) {
+        webRtcScope.launch {
+            fireStoreRepository.connectToRoom(roomID).collect { data ->
+                when {
+                    data.containsKey("type") && data.getValue("type")
+                        .toString() == "OFFER" -> handleOfferReceived(data, roomID)
+
+                    data.containsKey("type") && data.getValue("type")
+                        .toString() == "ANSWER" -> handleAnswerReceived(data)
+
+                    else -> handleIceCandidateReceived(data)
+                }
+            }
+        }
     }
 
     private fun initializePeerConnection(isJoin: Boolean, roomID: String) {
@@ -129,7 +138,7 @@ internal class WebRTCClientImpl @Inject constructor(
         init(rootEglBase.eglBaseContext, null)
     }
 
-    private fun startLocalStream() {
+    private fun initializeLocalStream() {
         localAudioTrack =
             peerConnectionFactory.createAudioTrack(LOCAL_TRACK_ID + "_audio", localAudioSource)
         localVideoTrack = peerConnectionFactory.createVideoTrack(LOCAL_TRACK_ID, localVideoSource)
@@ -144,7 +153,7 @@ internal class WebRTCClientImpl @Inject constructor(
         peerConnection.addStream(localStream)
     }
 
-    private fun startVideoCapture() {
+    private fun initializeVideoCapture() {
         val videoCapture = getVideoCapture() as VideoCapturer
 
         videoCapture.initialize(
@@ -183,20 +192,16 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onIceConnectionReceivingChange(p0: Boolean) {}
             override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
             override fun onIceCandidate(p0: IceCandidate?) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    p0?.let {
-                        fireStoreRepository.sendIceCandidateToRoom(it, isJoin, roomID)
-                        peerConnection.addIceCandidate(it)
-                    }
+                p0?.let {
+                    fireStoreRepository.sendIceCandidateToRoom(it, isJoin, roomID)
+                    peerConnection.addIceCandidate(it)
                 }
             }
 
             override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
             override fun onAddStream(p0: MediaStream?) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    p0?.let { mediaStream ->
-                        mediaStream.videoTracks?.get(0)?.addSink(remoteView)
-                    }
+                p0?.let { mediaStream ->
+                    mediaStream.videoTracks?.get(0)?.addSink(remoteView)
                 }
             }
 
@@ -206,30 +211,22 @@ internal class WebRTCClientImpl @Inject constructor(
             override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
         }
 
-    private fun sendOffer(roomID: String) =
-        peerConnection.sendOffer(roomID)
+    private fun sendOffer(roomID: String) {
+        val sdpObserver = createSdpObserver { sdp, observer ->
+            peerConnection.setLocalDescription(observer, sdp)
+            fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
+        }
 
-    private fun PeerConnection.sendOffer(roomID: String) {
-        createOffer(
-            createSdpObserver { sdp, observer ->
-                peerConnection.setLocalDescription(observer, sdp)
-                fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
-            },
-            constraints
-        )
+        peerConnection.createOffer(sdpObserver, constraints)
     }
 
-    private fun sendAnswer(roomID: String) =
-        peerConnection.sendAnswer(roomID)
+    private fun sendAnswer(roomID: String) {
+        val sdpObserver = createSdpObserver { sdp, observer ->
+            peerConnection.setLocalDescription(observer, sdp)
+            fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
+        }
 
-    private fun PeerConnection.sendAnswer(roomID: String) {
-        createAnswer(
-            createSdpObserver { sdp, observer ->
-                peerConnection.setLocalDescription(observer, sdp)
-                fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
-            },
-            constraints
-        )
+        peerConnection.createAnswer(sdpObserver, constraints)
     }
 
     private fun createSdpObserver(setLocalDescription: ((SessionDescription, SdpObserver) -> Unit)? = null) =
@@ -244,41 +241,35 @@ internal class WebRTCClientImpl @Inject constructor(
         }
 
     private fun handleIceCandidateReceived(data: Map<String, Any>) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val iceCandidate = IceCandidate(
-                data["sdpMid"].toString(),
-                Math.toIntExact(data["sdpMLineIndex"] as Long),
-                data["sdpCandidate"].toString()
-            )
+        val iceCandidate = IceCandidate(
+            data["sdpMid"].toString(),
+            Math.toIntExact(data["sdpMLineIndex"] as Long),
+            data["sdpCandidate"].toString()
+        )
 
-            peerConnection.addIceCandidate(iceCandidate)
-        }
+        peerConnection.addIceCandidate(iceCandidate)
     }
 
     private fun handleAnswerReceived(data: Map<String, Any>) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val sdp = SessionDescription(
-                SessionDescription.Type.ANSWER,
-                data["sdp"].toString()
-            )
-            val sdpObserver = createSdpObserver()
+        val sdp = SessionDescription(
+            SessionDescription.Type.ANSWER,
+            data["sdp"].toString()
+        )
+        val sdpObserver = createSdpObserver()
 
-            peerConnection.setRemoteDescription(sdpObserver, sdp)
-        }
+        peerConnection.setRemoteDescription(sdpObserver, sdp)
     }
 
     private fun handleOfferReceived(data: Map<String, Any>, roomID: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val sdp = SessionDescription(
-                SessionDescription.Type.OFFER,
-                data["sdp"].toString()
-            )
-            val sdpObserver = createSdpObserver()
+        val sdp = SessionDescription(
+            SessionDescription.Type.OFFER,
+            data["sdp"].toString()
+        )
+        val sdpObserver = createSdpObserver()
 
-            peerConnection.setRemoteDescription(sdpObserver, sdp)
+        peerConnection.setRemoteDescription(sdpObserver, sdp)
 
-            sendAnswer(roomID)
-        }
+        sendAnswer(roomID)
     }
 
     companion object {
