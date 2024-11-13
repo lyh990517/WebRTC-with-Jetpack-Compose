@@ -1,7 +1,6 @@
 package com.example.data.client
 
 import android.app.Application
-import android.content.Context
 import com.example.domain.LocalSurface
 import com.example.domain.RemoteSurface
 import com.example.domain.client.WebRTCClient
@@ -11,7 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.webrtc.AudioTrack
 import org.webrtc.Camera2Enumerator
-import org.webrtc.CameraVideoCapturer
 import org.webrtc.DataChannel
 import org.webrtc.DefaultVideoDecoderFactory
 import org.webrtc.DefaultVideoEncoderFactory
@@ -54,17 +52,15 @@ internal class WebRTCClientImpl @Inject constructor(
 
     private val localVideoSource by lazy { peerConnectionFactory.createVideoSource(false) }
 
-    private val audioSource by lazy { peerConnectionFactory.createAudioSource(MediaConstraints()) }
+    private val localAudioSource by lazy { peerConnectionFactory.createAudioSource(MediaConstraints()) }
 
-    private lateinit var videoCapture: CameraVideoCapturer
+    private val surfaceTextureHelper =
+        SurfaceTextureHelper.create(Thread.currentThread().name, rootEglBase.eglBaseContext)
 
     private val iceServer =
         listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
 
     private lateinit var peerConnection: PeerConnection
-
-    private var isMicEnabled = true
-    private var isVideoEnabled = true
 
     override fun connect(roomID: String, isJoin: Boolean) {
         initialize(roomID, isJoin)
@@ -87,15 +83,11 @@ internal class WebRTCClientImpl @Inject constructor(
     }
 
     override fun toggleVoice() {
-        isMicEnabled = !isMicEnabled
-
-        localAudioTrack?.setEnabled(isMicEnabled)
+        localAudioTrack?.setEnabled(localAudioTrack?.enabled()?.not() ?: false)
     }
 
     override fun toggleVideo() {
-        isVideoEnabled = !isVideoEnabled
-
-        localVideoTrack?.setEnabled(isVideoEnabled)
+        localVideoTrack?.setEnabled(localVideoTrack?.enabled()?.not() ?: false)
     }
 
     override fun disconnect() {
@@ -105,15 +97,15 @@ internal class WebRTCClientImpl @Inject constructor(
     }
 
     private fun initialize(roomID: String, isJoin: Boolean) {
-        initPeerConnectionFactory()
-        initPeerConnection(isJoin, roomID)
-        initVideoCapture()
-        initSurfaceView(remoteView)
-        initSurfaceView(localView)
-        startLocalView()
+        initializePeerConnectionFactory()
+        initializePeerConnection(isJoin, roomID)
+        initializeSurfaceView(remoteView)
+        initializeSurfaceView(localView)
+        startVideoCapture()
+        startLocalStream()
     }
 
-    private fun initPeerConnection(isJoin: Boolean, roomID: String) {
+    private fun initializePeerConnection(isJoin: Boolean, roomID: String) {
         peerConnectionFactory.createPeerConnection(
             iceServer,
             createPeerConnectionObserver(isJoin, roomID)
@@ -131,36 +123,40 @@ internal class WebRTCClientImpl @Inject constructor(
             } ?: throw IllegalStateException()
         }
 
-    private fun initSurfaceView(view: SurfaceViewRenderer) = view.run {
+    private fun initializeSurfaceView(view: SurfaceViewRenderer) = view.run {
         setMirror(true)
         setEnableHardwareScaler(true)
         init(rootEglBase.eglBaseContext, null)
     }
 
-    private fun startLocalView() {
-        val surfaceTextureHelper =
-            SurfaceTextureHelper.create(Thread.currentThread().name, rootEglBase.eglBaseContext)
-        (videoCapture as VideoCapturer).initialize(
+    private fun startLocalStream() {
+        localAudioTrack =
+            peerConnectionFactory.createAudioTrack(LOCAL_TRACK_ID + "_audio", localAudioSource)
+        localVideoTrack = peerConnectionFactory.createVideoTrack(LOCAL_TRACK_ID, localVideoSource)
+
+        localVideoTrack?.addSink(localView)
+
+        val localStream = peerConnectionFactory.createLocalMediaStream(LOCAL_STREAM_ID)
+
+        localStream.addTrack(localVideoTrack)
+        localStream.addTrack(localAudioTrack)
+
+        peerConnection.addStream(localStream)
+    }
+
+    private fun startVideoCapture() {
+        val videoCapture = getVideoCapture() as VideoCapturer
+
+        videoCapture.initialize(
             surfaceTextureHelper,
             localView.context,
             localVideoSource.capturerObserver
         )
+
         videoCapture.startCapture(320, 240, 60)
-        localAudioTrack =
-            peerConnectionFactory.createAudioTrack(LOCAL_TRACK_ID + "_audio", audioSource)
-        localVideoTrack = peerConnectionFactory.createVideoTrack(LOCAL_TRACK_ID, localVideoSource)
-        localVideoTrack?.addSink(localView)
-        val localStream = peerConnectionFactory.createLocalMediaStream(LOCAL_STREAM_ID)
-        localStream.addTrack(localVideoTrack)
-        localStream.addTrack(localAudioTrack)
-        peerConnection.addStream(localStream)
     }
 
-    private fun initVideoCapture() {
-        videoCapture = getVideoCapture()
-    }
-
-    private fun initPeerConnectionFactory() {
+    private fun initializePeerConnectionFactory() {
         val options = PeerConnectionFactory.InitializationOptions.builder(application)
             .setEnableInternalTracer(true)
             .setFieldTrials(FIELD_TRIALS)
