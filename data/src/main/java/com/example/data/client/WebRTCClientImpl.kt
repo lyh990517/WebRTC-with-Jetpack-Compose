@@ -103,7 +103,7 @@ internal class WebRTCClientImpl @Inject constructor(
     }
 
     private fun initialize(roomID: String, isJoin: Boolean) {
-        initPeerConnectionFactory(application)
+        initPeerConnectionFactory()
         initPeerConnection(isJoin, roomID)
         initVideoCapture(application)
         initSurfaceView(remoteView)
@@ -158,8 +158,8 @@ internal class WebRTCClientImpl @Inject constructor(
         videoCapture = getVideoCapture(context)
     }
 
-    private fun initPeerConnectionFactory(context: Application) {
-        val options = PeerConnectionFactory.InitializationOptions.builder(context)
+    private fun initPeerConnectionFactory() {
+        val options = PeerConnectionFactory.InitializationOptions.builder(application)
             .setEnableInternalTracer(true)
             .setFieldTrials(FIELD_TRIALS)
             .createInitializationOptions()
