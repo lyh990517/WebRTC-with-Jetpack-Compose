@@ -29,6 +29,11 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object WebRtcModule {
 
+    private const val LOCAL_VIDEO_TRACK = "local_track_video"
+    private const val LOCAL_AUDIO_TRACK = "local_track_audio"
+    private const val LOCAL_MEDIA_STREAM = "local_track_stream"
+    private const val FIELD_TRIAL = "WebRTC-H264HighProfile/Enabled/"
+
     @Provides
     @Singleton
     fun providesRootEglBase(): EglBase = EglBase.create()
@@ -78,7 +83,7 @@ object WebRtcModule {
     ): PeerConnectionFactory {
         val options = PeerConnectionFactory.InitializationOptions.builder(application)
             .setEnableInternalTracer(true)
-            .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
+            .setFieldTrials(FIELD_TRIAL)
             .createInitializationOptions()
 
         PeerConnectionFactory.initialize(options)
@@ -116,7 +121,7 @@ object WebRtcModule {
         peerConnectionFactory: PeerConnectionFactory,
         videoSource: VideoSource,
     ): VideoTrack {
-        val localVideoTrack = peerConnectionFactory.createVideoTrack("local_track", videoSource)
+        val localVideoTrack = peerConnectionFactory.createVideoTrack(LOCAL_VIDEO_TRACK, videoSource)
 
         localVideoTrack.addSink(localSurface)
 
@@ -129,7 +134,7 @@ object WebRtcModule {
         peerConnectionFactory: PeerConnectionFactory,
         audioSource: AudioSource,
     ): AudioTrack =
-        peerConnectionFactory.createAudioTrack("local_track_audio", audioSource)
+        peerConnectionFactory.createAudioTrack(LOCAL_AUDIO_TRACK, audioSource)
 
     @Provides
     @Singleton
@@ -138,7 +143,7 @@ object WebRtcModule {
         videoTrack: VideoTrack,
         audioTrack: AudioTrack,
     ): MediaStream {
-        val mediaStream = peerConnectionFactory.createLocalMediaStream("local_track")
+        val mediaStream = peerConnectionFactory.createLocalMediaStream(LOCAL_MEDIA_STREAM)
 
         mediaStream.addTrack(videoTrack)
         mediaStream.addTrack(audioTrack)
