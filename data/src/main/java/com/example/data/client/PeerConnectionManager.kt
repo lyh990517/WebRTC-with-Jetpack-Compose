@@ -4,10 +4,13 @@ import com.example.domain.RemoteSurface
 import com.example.domain.repository.FireStoreRepository
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
+import org.webrtc.MediaConstraints
 import org.webrtc.MediaStream
 import org.webrtc.PeerConnection
 import org.webrtc.PeerConnectionFactory
 import org.webrtc.RtpReceiver
+import org.webrtc.SdpObserver
+import org.webrtc.SessionDescription
 import org.webrtc.SurfaceViewRenderer
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,6 +25,10 @@ class PeerConnectionManager @Inject constructor(
     private val iceServer =
         listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
 
+    private val constraints = MediaConstraints().apply {
+        mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
+    }
+
     private lateinit var peerConnection: PeerConnection
 
     fun connectToPeer(isHost: Boolean, roomID: String) {
@@ -33,15 +40,52 @@ class PeerConnectionManager @Inject constructor(
         }
     }
 
-    fun addStream() {
-        peerConnection.addStream(localMediaStream)
+    fun createOffer(roomID: String) {
+        val sdpObserver = createSdpObserver { sdp, observer ->
+            peerConnection.setLocalDescription(observer, sdp)
+            fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
+        }
+
+        peerConnection.createOffer(sdpObserver, constraints)
+    }
+
+    fun createAnswer(roomID: String) {
+        val sdpObserver = createSdpObserver { sdp, observer ->
+            peerConnection.setLocalDescription(observer, sdp)
+            fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
+        }
+
+        peerConnection.createAnswer(sdpObserver, constraints)
     }
 
     fun closeConnection() {
         peerConnection.close()
     }
 
-    fun getPeerConnection() = peerConnection
+    fun addStream() {
+        peerConnection.addStream(localMediaStream)
+    }
+
+    fun setRemoteDescription(sdp: SessionDescription) {
+        val sdpObserver = createSdpObserver()
+
+        peerConnection.setRemoteDescription(sdpObserver, sdp)
+    }
+
+    fun addIceCandidate(iceCandidate: IceCandidate) {
+        peerConnection.addIceCandidate(iceCandidate)
+    }
+
+    private fun createSdpObserver(setLocalDescription: ((SessionDescription, SdpObserver) -> Unit)? = null) =
+        object : SdpObserver {
+            override fun onCreateSuccess(p0: SessionDescription?) {
+                setLocalDescription?.let { function -> p0?.let { sdp -> function(sdp, this) } }
+            }
+
+            override fun onSetSuccess() {}
+            override fun onCreateFailure(p0: String?) {}
+            override fun onSetFailure(p0: String?) {}
+        }
 
     private fun createPeerConnectionObserver(
         isHost: Boolean,
