@@ -14,16 +14,17 @@ import javax.inject.Singleton
 
 @Singleton
 class PeerConnectionManager @Inject constructor(
+    @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
     private val fireStoreRepository: FireStoreRepository,
     private val peerConnectionFactory: PeerConnectionFactory,
-    @RemoteSurface private val remoteSurface: SurfaceViewRenderer
+    private val localMediaStream: MediaStream,
 ) {
     private val iceServer =
         listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
 
     private lateinit var peerConnection: PeerConnection
 
-    fun initializePeerConnection(isHost: Boolean, roomID: String) {
+    fun connectToPeer(isHost: Boolean, roomID: String) {
         peerConnectionFactory.createPeerConnection(
             iceServer,
             createPeerConnectionObserver(isHost, roomID)
@@ -32,11 +33,19 @@ class PeerConnectionManager @Inject constructor(
         }
     }
 
+    fun addStream() {
+        peerConnection.addStream(localMediaStream)
+    }
+
+    fun closeConnection() {
+        peerConnection.close()
+    }
+
     fun getPeerConnection() = peerConnection
 
     private fun createPeerConnectionObserver(
         isHost: Boolean,
-        roomID: String
+        roomID: String,
     ): PeerConnection.Observer =
         object : PeerConnection.Observer {
             override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}

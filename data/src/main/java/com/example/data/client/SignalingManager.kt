@@ -28,7 +28,7 @@ class SignalingManager @Inject constructor(
     private val signalingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val peerConnection get() =  peerConnectionManager.getPeerConnection()
 
-    fun startSignaling(isHost: Boolean, roomID: String) {
+    fun observeSignaling(isHost: Boolean, roomID: String) {
         signalingScope.launch {
             if (isHost) sendOfferToGuest(roomID)
 
