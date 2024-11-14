@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    setNamespace("com.yunho.designsystem")
+    setNamespace("core.designsystem")
 }
 
 dependencies {

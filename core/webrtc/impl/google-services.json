@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:311562133773:android:8016e2eaef7ccc4c7a9044",
         "android_client_info": {
-          "package_name": "com.example.build_logic.com.example.webrtc.impl"
+          "package_name": "com.yunho.webrtc.core.webrtc.impl"
         }
       },
       "oauth_client": [],

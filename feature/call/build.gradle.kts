@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    setNamespace("com.example.call")
+    setNamespace("feature.call")
 }
 
 dependencies {

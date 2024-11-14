@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    setNamespace("com.example.home")
+    setNamespace("feature.home")
 }
 
 dependencies {

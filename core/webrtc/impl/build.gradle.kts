@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    setNamespace("com.example.webrtc.impl")
+    setNamespace("core.webrtc.impl")
 }
 
 dependencies {

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    setNamespace("com.example.util")
+    setNamespace("core.util")
 }
 
 dependencies {

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    setNamespace("com.example.main")
+    setNamespace("feature.main")
 }
 
 dependencies {

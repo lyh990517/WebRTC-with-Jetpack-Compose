@@ -1,9 +1,11 @@
+import com.example.build_logic.setNamespace
+
 plugins {
     id("app")
 }
 
 android {
-    namespace = "com.example.webrtc"
+    setNamespace("app")
 }
 
 dependencies {
