@@ -27,6 +27,7 @@
             <option value="$PROJECT_DIR$/core/firestore" />
             <option value="$PROJECT_DIR$/core/firestore/api" />
             <option value="$PROJECT_DIR$/core/firestore/impl" />
+            <option value="$PROJECT_DIR$/core/model" />
             <option value="$PROJECT_DIR$/core/webrtc" />
             <option value="$PROJECT_DIR$/core/webrtc/api" />
             <option value="$PROJECT_DIR$/core/webrtc/impl" />

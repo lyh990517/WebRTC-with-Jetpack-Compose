@@ -13,8 +13,6 @@ android {
 dependencies {
     implementation(projects.feature.home)
     implementation(projects.feature.call)
-    implementation(projects.core.webrtc.api)
-    implementation(projects.core.firestore.api)
 
     implementation(libs.google.webrtc)
 }
