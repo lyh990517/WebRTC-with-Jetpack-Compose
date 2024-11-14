@@ -11,7 +11,6 @@ android {
 
 dependencies {
     implementation(projects.core.webrtc.api)
-    implementation(projects.core.firestore.api)
 
     implementation(libs.google.webrtc)
 }

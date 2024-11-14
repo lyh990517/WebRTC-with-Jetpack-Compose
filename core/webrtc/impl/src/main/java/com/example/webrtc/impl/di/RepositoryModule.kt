@@ -1,7 +1,7 @@
-package com.example.impl.di
+package com.example.webrtc.impl.di
 
-import com.example.api.FireStoreRepository
-import com.example.impl.repository.FireStoreRepositoryImpl
+import com.example.webrtc.api.FireStoreRepository
+import com.example.webrtc.impl.FireStoreRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

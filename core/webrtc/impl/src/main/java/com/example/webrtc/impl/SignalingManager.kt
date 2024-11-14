@@ -1,12 +1,11 @@
 package com.example.webrtc.impl
 
-import com.example.api.FireStoreRepository
-import com.example.model.Packet
 import com.example.model.Packet.Companion.isAnswer
 import com.example.model.Packet.Companion.isOffer
 import com.example.model.Packet.Companion.toAnswerSdp
 import com.example.model.Packet.Companion.toIceCandidate
 import com.example.model.Packet.Companion.toOfferSdp
+import com.example.webrtc.api.FireStoreRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

@@ -1,7 +1,7 @@
 package com.example.webrtc.impl
 
-import com.example.api.FireStoreRepository
 import com.example.model.RemoteSurface
+import com.example.webrtc.api.FireStoreRepository
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaConstraints
@@ -17,7 +17,7 @@ import javax.inject.Singleton
 
 @Singleton
 class PeerConnectionManager @Inject constructor(
-    @com.example.model.RemoteSurface private val remoteSurface: SurfaceViewRenderer,
+    @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
     private val fireStoreRepository: FireStoreRepository,
     private val peerConnectionFactory: PeerConnectionFactory,
     private val localMediaStream: MediaStream,

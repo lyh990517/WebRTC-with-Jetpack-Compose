@@ -10,7 +10,6 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.firestore.api)
     implementation(projects.core.webrtc.api)
 
     implementation(libs.google.webrtc)

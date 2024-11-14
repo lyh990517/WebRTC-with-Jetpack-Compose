@@ -1,11 +1,9 @@
-package com.example.impl.repository
+package com.example.webrtc.impl
 
 import android.util.Log
-import com.example.model.Candidate
-import com.example.api.FireStoreRepository
-import com.example.model.Packet
-import com.example.api.parseData
-import com.example.api.parseDate
+import com.example.webrtc.api.FireStoreRepository
+import com.example.webrtc.api.parseData
+import com.example.webrtc.api.parseDate
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
