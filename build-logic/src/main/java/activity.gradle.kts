@@ -1,0 +1,3 @@
+import com.example.build_logic.configureAndroidActivity
+
+configureAndroidActivity()
