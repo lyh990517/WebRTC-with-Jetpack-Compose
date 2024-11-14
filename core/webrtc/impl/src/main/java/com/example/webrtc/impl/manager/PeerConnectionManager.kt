@@ -37,6 +37,8 @@ internal class PeerConnectionManager @Inject constructor(
         )?.let { connection ->
             peerConnection = connection
         }
+
+        peerConnection.addStream(localMediaStream)
     }
 
     fun createOffer(roomID: String) {
@@ -65,10 +67,6 @@ internal class PeerConnectionManager @Inject constructor(
 
     fun closeConnection() {
         peerConnection.close()
-    }
-
-    fun addStream() {
-        peerConnection.addStream(localMediaStream)
     }
 
     fun setRemoteDescription(sdp: SessionDescription) {
