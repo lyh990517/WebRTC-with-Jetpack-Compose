@@ -24,7 +24,7 @@ internal class WebRtcClientImpl @Inject constructor(
     override fun connect(roomID: String, isHost: Boolean) {
         peerConnectionManager.connectToPeer(isHost, roomID)
 
-        videoCapturer.startCapture(320, 240, 60)
+        videoCapturer.startCapture(1920, 1080, 60)
 
         signalingManager.observeSignaling(isHost, roomID)
     }
