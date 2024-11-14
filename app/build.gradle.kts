@@ -1,6 +1,5 @@
 plugins {
     id("app")
-    id("firebase")
 }
 
 android {
