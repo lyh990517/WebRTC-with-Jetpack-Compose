@@ -1,60 +1,40 @@
 package com.example.main
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import com.example.api.HomeState
-import com.example.home.view.MainScreen
-import com.example.home.viewmodel.HomeViewModel
+import com.example.webrtc.api.LocalSurface
+import com.example.webrtc.api.RemoteSurface
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
+import org.webrtc.SurfaceViewRenderer
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private val viewModel: HomeViewModel by viewModels()
+
+    @Inject
+    @RemoteSurface
+    lateinit var remoteSurface: SurfaceViewRenderer
+
+    @Inject
+    @LocalSurface
+    lateinit var localSurface: SurfaceViewRenderer
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         checkCameraAndAudioPermission()
         setContent {
-            MainScreen(viewModel = viewModel)
-        }
-        collectState()
-    }
-
-    private fun collectState() {
-        lifecycleScope.launch {
-            viewModel.state.collect {
-                when (it) {
-                    is HomeState.EnterRoom -> {
-                        val intent =
-                            Intent(this@MainActivity, WebRTCConnectActivity::class.java).apply {
-                                putExtra("roomID", it.roomId)
-                                putExtra("isHost", it.isHost)
-                                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                        startActivity(intent)
-                    }
-
-                    is HomeState.RoomAlreadyEnded -> {
-                        Toast.makeText(this@MainActivity,"이미 사용된 방입니다.",Toast.LENGTH_SHORT).show()
-                    }
-
-                    is HomeState.Idle -> {
-
-                    }
-                }
-            }
+            AppGraph(
+                remoteSurface = remoteSurface,
+                localSurface = localSurface
+            )
         }
     }
 

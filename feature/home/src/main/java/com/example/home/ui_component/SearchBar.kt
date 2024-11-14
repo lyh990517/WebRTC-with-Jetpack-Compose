@@ -8,13 +8,13 @@ import androidx.compose.ui.Modifier
 @Composable
 fun SearchBar(
     modifier: Modifier = Modifier,
-    state: State<String>,
+    state: () -> String,
     onValueChange: (String) -> Unit,
     label: @Composable (() -> Unit)? = null
 ) {
     OutlinedTextField(
         modifier = modifier,
-        value = state.value,
+        value = state(),
         onValueChange = onValueChange,
         label = label
     )

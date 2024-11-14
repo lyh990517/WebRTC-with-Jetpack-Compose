@@ -1,4 +1,4 @@
-package com.example.home.viewmodel
+package com.example.call
 
 import android.app.Application
 import android.util.Log
@@ -17,8 +17,8 @@ class ConnectionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : AndroidViewModel(application) {
 
-    private val roomId = savedStateHandle["roomID"] ?: ""
-    private val isHost = savedStateHandle["isHost"] ?: false
+    private val roomId = savedStateHandle.get<String>(roomIdArg) ?: ""
+    private val isHost = savedStateHandle.get<Boolean>(isHostArg) ?: false
 
     fun connect() = viewModelScope.launch {
         webRTCClient.connect(roomId, isHost)

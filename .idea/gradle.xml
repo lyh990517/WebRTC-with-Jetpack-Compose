@@ -31,6 +31,7 @@
             <option value="$PROJECT_DIR$/core/webrtc/api" />
             <option value="$PROJECT_DIR$/core/webrtc/impl" />
             <option value="$PROJECT_DIR$/feature" />
+            <option value="$PROJECT_DIR$/feature/call" />
             <option value="$PROJECT_DIR$/feature/home" />
             <option value="$PROJECT_DIR$/feature/main" />
           </set>
