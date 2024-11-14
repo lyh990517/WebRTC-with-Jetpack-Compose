@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    setNamespace("com.example.model")
+    setNamespace("com.example.util")
 }
 
 dependencies {

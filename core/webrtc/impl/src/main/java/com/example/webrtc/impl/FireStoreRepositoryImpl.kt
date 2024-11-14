@@ -2,8 +2,8 @@ package com.example.webrtc.impl
 
 import android.util.Log
 import com.example.webrtc.api.FireStoreRepository
-import com.example.webrtc.api.parseData
-import com.example.webrtc.api.parseDate
+import com.example.util.parseData
+import com.example.util.parseDate
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
