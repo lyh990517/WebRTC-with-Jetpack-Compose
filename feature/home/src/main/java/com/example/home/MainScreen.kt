@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.example.build_logic.com.example.home.R
+import com.example.build_logic.com.yunho.designsystem.R
 import com.example.home.ui.SearchBar
 import com.example.home.viewmodel.HomeViewModel
 
