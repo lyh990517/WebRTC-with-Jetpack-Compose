@@ -9,3 +9,7 @@ plugins {
 configureKotlinAndroid()
 configureCoroutineAndroid()
 configureHiltAndroid()
+
+dependencies {
+    implementation(project(":core:model"))
+}

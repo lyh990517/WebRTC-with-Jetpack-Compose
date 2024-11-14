@@ -1,9 +1,9 @@
 package com.example.impl.repository
 
 import android.util.Log
-import com.example.api.Candidate
+import com.example.model.Candidate
 import com.example.api.FireStoreRepository
-import com.example.api.Packet
+import com.example.model.Packet
 import com.example.api.parseData
 import com.example.api.parseDate
 import com.google.firebase.firestore.DocumentSnapshot
@@ -38,7 +38,7 @@ class FireStoreRepositoryImpl @Inject constructor(
     override fun sendIceCandidateToRoom(candidate: IceCandidate?, isHost: Boolean, roomId: String) {
         if (candidate == null) return
 
-        val type = if (isHost) Candidate.OFFER else Candidate.ANSWER
+        val type = if (isHost) com.example.model.Candidate.OFFER else com.example.model.Candidate.ANSWER
 
         val parsedIceCandidate = candidate.parseDate(type.value)
 
@@ -76,7 +76,7 @@ class FireStoreRepositoryImpl @Inject constructor(
             if (snapshot != null && snapshot.exists()) {
                 fireStoreScope.launch {
                     val data = snapshot.data
-                    data?.let { send(Packet(it)) }
+                    data?.let { send(com.example.model.Packet(it)) }
                 }
             }
         }
@@ -92,7 +92,7 @@ class FireStoreRepositoryImpl @Inject constructor(
                 if (snapshot != null && snapshot.isEmpty.not()) {
                     snapshot.forEach { dataSnapshot ->
                         fireStoreScope.launch {
-                            send(Packet(dataSnapshot.data))
+                            send(com.example.model.Packet(dataSnapshot.data))
                         }
                     }
                 }
@@ -100,8 +100,8 @@ class FireStoreRepositoryImpl @Inject constructor(
         awaitClose { }
     }
 
-    private suspend fun ProducerScope<Packet>.sendError(e: Exception) {
-        send(Packet(mapOf("error" to e)))
+    private suspend fun ProducerScope<com.example.model.Packet>.sendError(e: Exception) {
+        send(com.example.model.Packet(mapOf("error" to e)))
     }
 
     private fun getRoom(roomId: String) = firestore

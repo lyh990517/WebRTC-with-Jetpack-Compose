@@ -1,12 +1,11 @@
 import com.example.build_logic.setNamespace
 
 plugins {
-    id("core")
-    id("firebase")
+    id("core.model")
 }
 
 android {
-    setNamespace("com.example.webrtc.api")
+    setNamespace("com.example.model")
 }
 
 dependencies {

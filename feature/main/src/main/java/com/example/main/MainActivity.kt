@@ -10,8 +10,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.webrtc.api.LocalSurface
-import com.example.webrtc.api.RemoteSurface
+import com.example.model.LocalSurface
+import com.example.model.RemoteSurface
 import dagger.hilt.android.AndroidEntryPoint
 import org.webrtc.SurfaceViewRenderer
 import javax.inject.Inject

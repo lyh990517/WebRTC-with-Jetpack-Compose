@@ -2,8 +2,8 @@ package com.example.webrtc.impl.di
 
 import android.app.Application
 import android.content.Context
-import com.example.webrtc.api.LocalSurface
-import com.example.webrtc.api.RemoteSurface
+import com.example.model.LocalSurface
+import com.example.model.RemoteSurface
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,7 +40,7 @@ object WebRtcComponentModule {
 
     @Provides
     @Singleton
-    @RemoteSurface
+    @com.example.model.RemoteSurface
     fun providesRemoveSurface(
         @ApplicationContext context: Context,
         rootEglBase: EglBase,
@@ -54,7 +54,7 @@ object WebRtcComponentModule {
 
     @Provides
     @Singleton
-    @LocalSurface
+    @com.example.model.LocalSurface
     fun providesLocalSurface(
         @ApplicationContext context: Context,
         rootEglBase: EglBase,
@@ -117,7 +117,7 @@ object WebRtcComponentModule {
     @Provides
     @Singleton
     fun providesVideoTrack(
-        @LocalSurface localSurface: SurfaceViewRenderer,
+        @com.example.model.LocalSurface localSurface: SurfaceViewRenderer,
         peerConnectionFactory: PeerConnectionFactory,
         videoSource: VideoSource,
     ): VideoTrack {
@@ -160,7 +160,7 @@ object WebRtcComponentModule {
     @Singleton
     fun providesVideoCapturer(
         application: Application,
-        @LocalSurface localSurface: SurfaceViewRenderer,
+        @com.example.model.LocalSurface localSurface: SurfaceViewRenderer,
         surfaceTextureHelper: SurfaceTextureHelper,
         localVideoSource: VideoSource,
     ): VideoCapturer {

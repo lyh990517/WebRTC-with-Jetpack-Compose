@@ -6,8 +6,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.call.connectionScreen
 import com.example.call.navigateToConnection
-import com.example.home.view.homeRoute
-import com.example.home.view.mainScreen
+import com.example.home.homeRoute
+import com.example.home.mainScreen
 import org.webrtc.SurfaceViewRenderer
 
 @Composable

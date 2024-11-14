@@ -1,8 +1,7 @@
-package com.example.home.ui_component
+package com.example.home.ui
 
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 
 @Composable

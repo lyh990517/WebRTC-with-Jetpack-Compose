@@ -1,12 +1,12 @@
 package com.example.webrtc.impl
 
 import com.example.api.FireStoreRepository
-import com.example.api.Packet
-import com.example.api.Packet.Companion.isAnswer
-import com.example.api.Packet.Companion.isOffer
-import com.example.api.Packet.Companion.toAnswerSdp
-import com.example.api.Packet.Companion.toIceCandidate
-import com.example.api.Packet.Companion.toOfferSdp
+import com.example.model.Packet
+import com.example.model.Packet.Companion.isAnswer
+import com.example.model.Packet.Companion.isOffer
+import com.example.model.Packet.Companion.toAnswerSdp
+import com.example.model.Packet.Companion.toIceCandidate
+import com.example.model.Packet.Companion.toOfferSdp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,19 +38,19 @@ class SignalingManager @Inject constructor(
         }
     }
 
-    private fun handleIceCandidate(packet: Packet) {
+    private fun handleIceCandidate(packet: com.example.model.Packet) {
         val iceCandidate = packet.toIceCandidate()
 
         peerConnectionManager.addIceCandidate(iceCandidate)
     }
 
-    private fun handleAnswer(packet: Packet) {
+    private fun handleAnswer(packet: com.example.model.Packet) {
         val sdp = packet.toAnswerSdp()
 
         peerConnectionManager.setRemoteDescription(sdp)
     }
 
-    private fun handleOffer(packet: Packet, roomID: String) {
+    private fun handleOffer(packet: com.example.model.Packet, roomID: String) {
         val sdp = packet.toOfferSdp()
 
         peerConnectionManager.setRemoteDescription(sdp)

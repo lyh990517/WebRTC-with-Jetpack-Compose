@@ -1,4 +1,4 @@
-package com.example.api
+package com.example.model
 
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription

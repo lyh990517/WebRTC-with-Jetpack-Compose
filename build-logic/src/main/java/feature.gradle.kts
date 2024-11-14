@@ -2,7 +2,7 @@ import com.example.build_logic.configureHiltAndroid
 import com.example.build_logic.libs
 
 plugins {
-    id("library")
+    id("core")
     id("compose")
 }
 
@@ -21,6 +21,9 @@ configureHiltAndroid()
 
 dependencies {
     val libs = project.extensions.libs
+
+    implementation(project(":core:model"))
+
     implementation(libs.findLibrary("hilt.navigation.compose").get())
     implementation(libs.findLibrary("androidx.compose.navigation").get())
     androidTestImplementation(libs.findLibrary("androidx.compose.navigation.test").get())

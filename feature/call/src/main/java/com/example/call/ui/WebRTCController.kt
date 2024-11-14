@@ -1,4 +1,4 @@
-package com.example.call
+package com.example.call.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.call.viewmodel.ConnectionViewModel
 
 @Composable
 fun WebRTCController(

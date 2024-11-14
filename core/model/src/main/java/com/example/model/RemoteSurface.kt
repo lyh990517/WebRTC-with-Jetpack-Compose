@@ -1,4 +1,4 @@
-package com.example.webrtc.api
+package com.example.model
 
 import javax.inject.Qualifier
 

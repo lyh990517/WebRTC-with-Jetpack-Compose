@@ -1,4 +1,4 @@
-package com.example.api
+package com.example.model
 
 enum class Candidate(val value: String) {
     OFFER("offerCandidate"),

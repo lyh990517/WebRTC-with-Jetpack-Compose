@@ -1,7 +1,7 @@
 import com.example.build_logic.setNamespace
 
 plugins {
-    id("library")
+    id("core")
     id("firebase")
 }
 
