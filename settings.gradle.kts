@@ -23,8 +23,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "WebRTC"
 include(":app")
-include(":data")
-include(":domain")
 include(":feature")
 include(":core")
 include(":feature:main")

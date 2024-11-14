@@ -13,15 +13,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.example.domain.state.FireStoreState
-import com.example.presentaion.view.MainScreen
-import com.example.presentaion.viewmodel.FireStoreViewModel
+import com.example.api.HomeState
+import com.example.home.view.MainScreen
+import com.example.home.viewmodel.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private val viewModel: FireStoreViewModel by viewModels()
+    private val viewModel: HomeViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         checkCameraAndAudioPermission()
@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.state.collect {
                 when (it) {
-                    is FireStoreState.EnterRoom -> {
+                    is HomeState.EnterRoom -> {
                         val intent =
                             Intent(this@MainActivity, WebRTCConnectActivity::class.java).apply {
                                 putExtra("roomID", it.roomId)
@@ -46,11 +46,11 @@ class MainActivity : AppCompatActivity() {
                         startActivity(intent)
                     }
 
-                    is FireStoreState.RoomAlreadyEnded -> {
+                    is HomeState.RoomAlreadyEnded -> {
                         Toast.makeText(this@MainActivity,"이미 사용된 방입니다.",Toast.LENGTH_SHORT).show()
                     }
 
-                    is FireStoreState.Idle -> {
+                    is HomeState.Idle -> {
 
                     }
                 }

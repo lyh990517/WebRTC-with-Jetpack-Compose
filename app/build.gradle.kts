@@ -1,5 +1,6 @@
 plugins {
     id("app")
+    id("firebase")
 }
 
 android {
@@ -36,4 +37,6 @@ android {
 
 dependencies {
     implementation(project(":feature:main"))
+    implementation(project(":core:firestore:impl"))
+    implementation(project(":core:webrtc:impl"))
 }

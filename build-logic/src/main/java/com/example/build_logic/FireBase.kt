@@ -5,6 +5,11 @@ import org.gradle.kotlin.dsl.dependencies
 
 internal fun Project.configureFirebase() {
     val libs = extensions.libs
+
+    with(plugins){
+        apply("com.google.gms.google-services")
+    }
+
     androidExtension.apply {
         dependencies {
             add("implementation", platform(libs.findLibrary("firebase.bom").get()))

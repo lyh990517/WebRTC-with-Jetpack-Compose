@@ -1,4 +1,4 @@
-package com.example.presentaion.ui_component
+package com.example.home.ui_component
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face

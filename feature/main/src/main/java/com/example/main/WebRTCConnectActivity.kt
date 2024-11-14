@@ -15,10 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.domain.LocalSurface
-import com.example.domain.RemoteSurface
-import com.example.presentaion.ui_component.WebRTCController
-import com.example.presentaion.viewmodel.ConnectionViewModel
+import com.example.home.ui_component.WebRTCController
+import com.example.home.viewmodel.ConnectionViewModel
+import com.example.webrtc.api.LocalSurface
+import com.example.webrtc.api.RemoteSurface
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import org.webrtc.SurfaceViewRenderer

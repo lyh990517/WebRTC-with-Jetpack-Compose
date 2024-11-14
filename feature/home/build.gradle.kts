@@ -10,6 +10,6 @@ android {
 }
 
 dependencies {
-    api(project(":domain"))
-    implementation(project(":data"))
+    implementation(project(":core:firestore:api"))
+    implementation(project(":core:webrtc:api"))
 }

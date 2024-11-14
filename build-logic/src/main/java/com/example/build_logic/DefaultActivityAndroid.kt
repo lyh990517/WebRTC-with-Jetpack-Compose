@@ -13,6 +13,7 @@ internal fun Project.configureAndroidActivity() {
             add("implementation", libs.findLibrary("androidx.lifecycle.runtimeCompose").get())
             add("implementation", libs.findLibrary("androidx.lifecycle.viewModelCompose").get())
             add("implementation", libs.findLibrary("kotlinx.immutable").get())
+            add("implementation", libs.findLibrary("material").get())
             add("androidTestImplementation", libs.findLibrary("hilt.android.testing").get())
             add("kspAndroidTest", libs.findLibrary("hilt.android.compiler").get())
         }

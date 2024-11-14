@@ -1,11 +1,11 @@
-package com.example.presentaion.viewmodel
+package com.example.home.viewmodel
 
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.example.domain.client.WebRtcClient
+import com.example.webrtc.api.WebRtcClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject

@@ -1,9 +1,9 @@
-package com.example.presentaion.viewmodel
+package com.example.home.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.domain.state.FireStoreState
-import com.example.domain.usecase.GetRoomInfoUseCase
+import com.example.api.FireStoreRepository
+import com.example.api.HomeState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,17 +11,17 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class FireStoreViewModel @Inject constructor(
-    private val getRoomInfoUseCase: GetRoomInfoUseCase
+class HomeViewModel @Inject constructor(
+    private val fireStoreRepository: FireStoreRepository
 ) : ViewModel() {
-    private val _state = MutableStateFlow<FireStoreState>(FireStoreState.Idle)
+    private val _state = MutableStateFlow<HomeState>(HomeState.Idle)
     val state = _state.asStateFlow()
     fun getRoomInfo(roomId: String, isHost: Boolean) = viewModelScope.launch {
-        getRoomInfoUseCase(roomId).collect { snapshot ->
+        fireStoreRepository.getRoomInfo(roomId).collect { snapshot ->
             if (snapshot["type"] == "END_CALL") {
-                _state.emit(FireStoreState.RoomAlreadyEnded)
+                _state.emit(HomeState.RoomAlreadyEnded)
             } else {
-                _state.emit(FireStoreState.EnterRoom(roomId, isHost))
+                _state.emit(HomeState.EnterRoom(roomId, isHost))
             }
         }
     }

@@ -1,4 +1,4 @@
-package com.example.presentaion.view
+package com.example.home.view
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -26,13 +26,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.build_logic.com.example.home.R
-import com.example.presentaion.ui_component.SearchBar
-import com.example.presentaion.viewmodel.FireStoreViewModel
+import com.example.home.ui_component.SearchBar
+import com.example.home.viewmodel.HomeViewModel
 
 @Composable
-fun MainScreen(viewModel: FireStoreViewModel) {
+fun MainScreen(viewModel: HomeViewModel = hiltViewModel()) {
     val roomId = remember { mutableStateOf("") }
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -63,7 +64,7 @@ fun LogoImage() {
 @Composable
 private fun InputContent(
     roomId: MutableState<String>,
-    viewModel: FireStoreViewModel
+    viewModel: HomeViewModel
 ) {
     SearchBar(modifier = Modifier
         .fillMaxWidth()
