@@ -1,4 +1,4 @@
-package com.example.webrtc
+package com.example.main
 
 import android.Manifest
 import android.content.Intent
