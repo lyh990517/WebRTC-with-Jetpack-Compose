@@ -1,9 +1,9 @@
 package com.example.webrtc.impl.manager
 
 import android.util.Log
+import com.example.model.RoomStatus
 import com.example.util.parseData
 import com.example.util.parseDate
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,12 +21,15 @@ internal class FireStoreManager @Inject constructor(
 ) {
     private val fireStoreScope = CoroutineScope(Dispatchers.IO)
 
-    fun getRoomInfo(roomID: String): Flow<DocumentSnapshot> = callbackFlow {
+    fun getRoomStatus(roomID: String): Flow<RoomStatus> = callbackFlow {
         getRoom(roomID)
             .get()
-            .addOnSuccessListener {
+            .addOnSuccessListener { data ->
                 fireStoreScope.launch {
-                    send(it)
+                    val isRoomEnded = data["type"] == "END_CALL"
+                    val roomStatus = if (isRoomEnded) RoomStatus.TERMINATED else RoomStatus.NEW
+
+                    send(roomStatus)
                 }
             }
         awaitClose {}
@@ -35,7 +38,8 @@ internal class FireStoreManager @Inject constructor(
     fun sendIceCandidateToRoom(candidate: IceCandidate?, isHost: Boolean, roomId: String) {
         if (candidate == null) return
 
-        val type = if (isHost) com.example.model.Candidate.OFFER else com.example.model.Candidate.ANSWER
+        val type =
+            if (isHost) com.example.model.Candidate.OFFER else com.example.model.Candidate.ANSWER
 
         val parsedIceCandidate = candidate.parseDate(type.value)
 

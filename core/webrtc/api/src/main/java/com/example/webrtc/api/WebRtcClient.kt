@@ -1,10 +1,9 @@
 package com.example.webrtc.api
 
-import com.google.firebase.firestore.DocumentSnapshot
-import kotlinx.coroutines.flow.Flow
+import com.example.model.RoomStatus
 
 interface WebRtcClient {
-    fun getRoomInformation(roomID: String): Flow<DocumentSnapshot>
+    suspend fun getRoomStatus(roomID: String): RoomStatus
 
     fun toggleVoice()
 
