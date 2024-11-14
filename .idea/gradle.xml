@@ -24,11 +24,14 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/build-logic" />
             <option value="$PROJECT_DIR$/core" />
+            <option value="$PROJECT_DIR$/core/firestore" />
+            <option value="$PROJECT_DIR$/core/firestore/api" />
+            <option value="$PROJECT_DIR$/core/firestore/impl" />
             <option value="$PROJECT_DIR$/data" />
             <option value="$PROJECT_DIR$/domain" />
             <option value="$PROJECT_DIR$/feature" />
+            <option value="$PROJECT_DIR$/feature/home" />
             <option value="$PROJECT_DIR$/feature/main" />
-            <option value="$PROJECT_DIR$/presentaion" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />
