@@ -1,10 +1,6 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("com.google.gms.google-services")
-    id("kotlin-kapt")
-    id("dagger.hilt.android.plugin")
-    id("org.jetbrains.kotlin.plugin.compose")
+    id("app")
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
@@ -37,12 +33,6 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-    viewBinding {
-        enable = true
-    }
-    dataBinding {
-        enable = true
-    }
     buildFeatures {
         compose = true
     }
@@ -50,6 +40,7 @@ android {
 
 dependencies {
     implementation(project(":presentaion"))
+    implementation(project(":feature:main"))
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
@@ -63,8 +54,6 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
 
-    implementation("com.google.dagger:hilt-android:2.52")
-    kapt("com.google.dagger:hilt-android-compiler:2.52")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.activity:activity-ktx:1.9.3")
