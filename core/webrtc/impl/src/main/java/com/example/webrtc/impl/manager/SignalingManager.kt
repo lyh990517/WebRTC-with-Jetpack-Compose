@@ -2,9 +2,9 @@ package com.example.webrtc.impl.manager
 
 import com.example.model.Packet.Companion.isAnswer
 import com.example.model.Packet.Companion.isOffer
-import com.example.model.Packet.Companion.toAnswerSdp
-import com.example.model.Packet.Companion.toIceCandidate
-import com.example.model.Packet.Companion.toOfferSdp
+import com.example.util.toAnswerSdp
+import com.example.util.toIceCandidate
+import com.example.util.toOfferSdp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
