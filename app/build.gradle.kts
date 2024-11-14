@@ -36,7 +36,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":feature:main"))
-    implementation(project(":core:firestore:impl"))
-    implementation(project(":core:webrtc:impl"))
+    implementation(projects.feature.main)
+
+    runtimeOnly(projects.core.firestore.impl)
+    runtimeOnly(projects.core.webrtc.impl)
 }

@@ -11,9 +11,9 @@ android {
 }
 
 dependencies {
-    implementation(project(":feature:home"))
-    implementation(project(":core:webrtc:api"))
-    implementation(project(":core:firestore:api"))
+    implementation(projects.feature.home)
+    implementation(projects.core.webrtc.api)
+    implementation(projects.core.firestore.api)
 
     implementation(libs.google.webrtc)
 }

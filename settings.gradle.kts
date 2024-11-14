@@ -22,6 +22,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "WebRTC"
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
 include(":feature")
 include(":core")

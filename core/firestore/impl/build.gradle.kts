@@ -10,6 +10,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:firestore:api"))
+    implementation(projects.core.firestore.api)
+
     implementation(libs.google.webrtc)
 }
