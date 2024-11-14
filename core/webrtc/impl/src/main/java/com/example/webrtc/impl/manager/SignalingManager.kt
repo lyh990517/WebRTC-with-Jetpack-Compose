@@ -1,4 +1,4 @@
-package com.example.webrtc.impl
+package com.example.webrtc.impl.manager
 
 import com.example.model.Packet.Companion.isAnswer
 import com.example.model.Packet.Companion.isOffer

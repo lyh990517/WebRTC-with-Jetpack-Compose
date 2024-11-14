@@ -1,4 +1,4 @@
-package com.example.webrtc.impl
+package com.example.webrtc.impl.manager
 
 import com.example.model.RemoteSurface
 import org.webrtc.DataChannel
