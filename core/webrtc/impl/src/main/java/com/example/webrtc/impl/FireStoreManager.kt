@@ -1,7 +1,6 @@
 package com.example.webrtc.impl
 
 import android.util.Log
-import com.example.webrtc.api.FireStoreRepository
 import com.example.util.parseData
 import com.example.util.parseDate
 import com.google.firebase.firestore.DocumentSnapshot
@@ -17,12 +16,12 @@ import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
 import javax.inject.Inject
 
-class FireStoreRepositoryImpl @Inject constructor(
+class FireStoreManager @Inject constructor(
     private val firestore: FirebaseFirestore,
-) : FireStoreRepository {
+) {
     private val fireStoreScope = CoroutineScope(Dispatchers.IO)
 
-    override fun getRoomInfo(roomID: String): Flow<DocumentSnapshot> = callbackFlow {
+    fun getRoomInfo(roomID: String): Flow<DocumentSnapshot> = callbackFlow {
         getRoom(roomID)
             .get()
             .addOnSuccessListener {
@@ -33,7 +32,7 @@ class FireStoreRepositoryImpl @Inject constructor(
         awaitClose {}
     }
 
-    override fun sendIceCandidateToRoom(candidate: IceCandidate?, isHost: Boolean, roomId: String) {
+    fun sendIceCandidateToRoom(candidate: IceCandidate?, isHost: Boolean, roomId: String) {
         if (candidate == null) return
 
         val type = if (isHost) com.example.model.Candidate.OFFER else com.example.model.Candidate.ANSWER
@@ -50,14 +49,14 @@ class FireStoreRepositoryImpl @Inject constructor(
             }
     }
 
-    override fun sendSdpToRoom(sdp: SessionDescription, roomId: String) {
+    fun sendSdpToRoom(sdp: SessionDescription, roomId: String) {
         val parsedSdp = sdp.parseData()
 
         getRoom(roomId)
             .set(parsedSdp)
     }
 
-    override fun getRoomUpdates(roomID: String) = callbackFlow {
+    fun getRoomUpdates(roomID: String) = callbackFlow {
         firestore.enableNetwork().addOnFailureListener { e ->
             fireStoreScope.launch {
                 sendError(e)

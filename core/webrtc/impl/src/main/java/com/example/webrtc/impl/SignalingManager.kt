@@ -5,7 +5,6 @@ import com.example.model.Packet.Companion.isOffer
 import com.example.model.Packet.Companion.toAnswerSdp
 import com.example.model.Packet.Companion.toIceCandidate
 import com.example.model.Packet.Companion.toOfferSdp
-import com.example.webrtc.api.FireStoreRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -16,7 +15,7 @@ import javax.inject.Singleton
 
 @Singleton
 class SignalingManager @Inject constructor(
-    private val fireStoreRepository: FireStoreRepository,
+    private val fireStoreManager: FireStoreManager,
     private val peerConnectionManager: PeerConnectionManager,
 ) {
     private val signalingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -27,7 +26,7 @@ class SignalingManager @Inject constructor(
                 peerConnectionManager.createOffer(roomID)
             }
 
-            fireStoreRepository.getRoomUpdates(roomID).collect { packet ->
+            fireStoreManager.getRoomUpdates(roomID).collect { packet ->
                 when {
                     packet.isOffer() -> handleOffer(packet, roomID)
                     packet.isAnswer() -> handleAnswer(packet)

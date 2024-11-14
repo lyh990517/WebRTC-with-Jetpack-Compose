@@ -1,6 +1,8 @@
 package com.example.webrtc.impl
 
 import com.example.webrtc.api.WebRtcClient
+import com.google.firebase.firestore.DocumentSnapshot
+import kotlinx.coroutines.flow.Flow
 import org.webrtc.AudioTrack
 import org.webrtc.VideoCapturer
 import org.webrtc.VideoTrack
@@ -11,6 +13,7 @@ import javax.inject.Singleton
 internal class WebRtcClientImpl @Inject constructor(
     private val signalingManager: SignalingManager,
     private val peerConnectionManager: PeerConnectionManager,
+    private val fireStoreManager: FireStoreManager,
     private val localAudioTrack: AudioTrack,
     private val localVideoTrack: VideoTrack,
     private val videoCapturer: VideoCapturer,
@@ -24,6 +27,9 @@ internal class WebRtcClientImpl @Inject constructor(
 
         signalingManager.observeSignaling(isHost, roomID)
     }
+
+    override fun getRoomInformation(roomID: String): Flow<DocumentSnapshot> =
+        fireStoreManager.getRoomInfo(roomID)
 
     override fun toggleVoice() {
         localAudioTrack.setEnabled(!localAudioTrack.enabled())

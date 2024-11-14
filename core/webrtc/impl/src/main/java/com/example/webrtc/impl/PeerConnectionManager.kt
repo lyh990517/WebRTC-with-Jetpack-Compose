@@ -1,7 +1,6 @@
 package com.example.webrtc.impl
 
 import com.example.model.RemoteSurface
-import com.example.webrtc.api.FireStoreRepository
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaConstraints
@@ -18,7 +17,7 @@ import javax.inject.Singleton
 @Singleton
 class PeerConnectionManager @Inject constructor(
     @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
-    private val fireStoreRepository: FireStoreRepository,
+    private val fireStoreManager: FireStoreManager,
     private val peerConnectionFactory: PeerConnectionFactory,
     private val localMediaStream: MediaStream,
 ) {
@@ -45,7 +44,7 @@ class PeerConnectionManager @Inject constructor(
             onSdpCreationSuccess = { sdp, observer ->
                 peerConnection.setLocalDescription(observer, sdp)
 
-                fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
+                fireStoreManager.sendSdpToRoom(sdp = sdp, roomId = roomID)
             }
         )
 
@@ -57,7 +56,7 @@ class PeerConnectionManager @Inject constructor(
             onSdpCreationSuccess = { sdp, observer ->
                 peerConnection.setLocalDescription(observer, sdp)
 
-                fireStoreRepository.sendSdpToRoom(sdp = sdp, roomId = roomID)
+                fireStoreManager.sendSdpToRoom(sdp = sdp, roomId = roomID)
             }
         )
 
@@ -104,7 +103,7 @@ class PeerConnectionManager @Inject constructor(
             override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
             override fun onIceCandidate(p0: IceCandidate?) {
                 p0?.let {
-                    fireStoreRepository.sendIceCandidateToRoom(it, isHost, roomID)
+                    fireStoreManager.sendIceCandidateToRoom(it, isHost, roomID)
                     peerConnection.addIceCandidate(it)
                 }
             }
