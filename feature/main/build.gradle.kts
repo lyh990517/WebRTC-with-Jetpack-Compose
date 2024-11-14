@@ -11,7 +11,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":presentaion"))
+    implementation(project(":feature:home"))
 
     implementation(libs.google.webrtc)
 }

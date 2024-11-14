@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    setNamespace("com.example.presentaion")
+    setNamespace("com.example.home")
 }
 
 dependencies {

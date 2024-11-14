@@ -27,7 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.build_logic.com.example.presentaion.R
+import com.example.build_logic.com.example.home.R
 import com.example.presentaion.ui_component.SearchBar
 import com.example.presentaion.viewmodel.FireStoreViewModel
 
