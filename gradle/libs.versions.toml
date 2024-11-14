@@ -57,7 +57,7 @@ retrofit = "2.11.0"
 
 ## Kotlin
 # https://github.com/JetBrains/kotlin
-kotlin = "2.0.0"
+kotlin = "2.0.21"
 # https://github.com/Kotlin/kotlinx.serialization
 kotlinxSerializationJson = "1.7.0"
 # https://github.com/Kotlin/kotlinx-datetime/releases
@@ -101,6 +101,7 @@ kotest = "5.9.0"
 detekt = "1.23.6"
 # https://mockk.io/
 mockk = "1.13.11"
+material = "1.12.0"
 
 [libraries]
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
@@ -185,6 +186,7 @@ oss-licenses-plugin = { group = "com.google.android.gms", name = "oss-licenses-p
 androidx-glance = { group = "androidx.glance", name = "glance", version.ref = "androidxGlance" }
 androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "androidxGlance" }
 glance-tools-appwidget-host = { group = "com.google.android.glance.tools", name = "appwidget-host", version.ref = "glanceExperimentalTools" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 [bundles]
 
