@@ -1,6 +1,6 @@
 package com.example.presentaion.ui_component
 
-import androidx.compose.material.OutlinedTextField
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier

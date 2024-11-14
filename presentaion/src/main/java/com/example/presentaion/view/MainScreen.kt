@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -79,7 +79,7 @@ private fun InputContent(
             .height(50.dp)
             .padding(horizontal = 40.dp),
         onClick = { viewModel.getRoomInfo(roomId.value, true) },
-        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue)
+        colors = ButtonDefaults.buttonColors(Color.Blue)
     ) {
         Icon(imageVector = Icons.Filled.Send, contentDescription = "", tint = Color.White)
         Text(text = "Create Room", color = Color.White, fontSize = 20.sp)
@@ -89,7 +89,7 @@ private fun InputContent(
         .fillMaxWidth()
         .height(50.dp)
         .padding(horizontal = 40.dp),
-        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue),
+        colors = ButtonDefaults.buttonColors(Color.Blue),
         onClick = { viewModel.getRoomInfo(roomId.value, false) }) {
         Text(text = "Join", color = Color.White, fontSize = 20.sp)
     }
