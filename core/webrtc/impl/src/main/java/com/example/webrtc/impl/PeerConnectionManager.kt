@@ -15,7 +15,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PeerConnectionManager @Inject constructor(
+internal class PeerConnectionManager @Inject constructor(
     @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
     private val fireStoreManager: FireStoreManager,
     private val peerConnectionFactory: PeerConnectionFactory,

@@ -16,7 +16,7 @@ import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
 import javax.inject.Inject
 
-class FireStoreManager @Inject constructor(
+internal class FireStoreManager @Inject constructor(
     private val firestore: FirebaseFirestore,
 ) {
     private val fireStoreScope = CoroutineScope(Dispatchers.IO)

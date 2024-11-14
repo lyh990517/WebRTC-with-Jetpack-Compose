@@ -27,7 +27,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object WebRtcComponentModule {
+internal object WebRtcComponentModule {
 
     private const val LOCAL_VIDEO_TRACK = "local_track_video"
     private const val LOCAL_AUDIO_TRACK = "local_track_audio"

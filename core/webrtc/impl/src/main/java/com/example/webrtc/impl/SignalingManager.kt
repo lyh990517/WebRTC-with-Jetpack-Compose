@@ -14,7 +14,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SignalingManager @Inject constructor(
+internal class SignalingManager @Inject constructor(
     private val fireStoreManager: FireStoreManager,
     private val peerConnectionManager: PeerConnectionManager,
 ) {
