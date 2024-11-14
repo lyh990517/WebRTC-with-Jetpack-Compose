@@ -7,14 +7,6 @@
 
     <application>
         <activity
-            android:name="com.example.main.WebRTCConnectActivity"
-            android:exported="false">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
-
-        <activity
             android:name="com.example.main.MainActivity"
             android:exported="true">
             <intent-filter>
