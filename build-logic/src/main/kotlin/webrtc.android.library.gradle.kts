@@ -5,6 +5,7 @@ import com.example.webrtc.configureKotlinAndroid
 
 plugins {
     id("com.android.library")
+    `kotlin-parcelize`
 }
 
 configureKotlinAndroid()

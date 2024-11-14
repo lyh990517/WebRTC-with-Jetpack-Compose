@@ -1,4 +1,4 @@
-import com.example.webrtc.configureFirebase
+import com.example.webrtc.configureCircuit
 import com.example.webrtc.configureHiltAndroid
 import com.example.webrtc.libs
 
@@ -6,6 +6,7 @@ import com.example.webrtc.libs
 plugins {
     id("webrtc.android.library")
     id("webrtc.android.compose")
+    `kotlin-parcelize`
 }
 
 android {
@@ -17,10 +18,12 @@ android {
 }
 
 configureHiltAndroid()
-configureFirebase()
-
+configureCircuit()
 
 dependencies {
+    implementation(project(":core:designsystem"))
+    implementation(project(":common:screen"))
+    implementation(project(":common:circuit"))
     implementation(project(":data"))
     implementation(project(":domain"))
 

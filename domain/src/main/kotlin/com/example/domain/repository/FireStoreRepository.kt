@@ -1,8 +1,7 @@
 package com.example.domain.repository
 
-import com.google.firebase.firestore.DocumentSnapshot
-import kotlinx.coroutines.flow.Flow
+import com.google.firebase.firestore.DocumentReference
 
 interface FireStoreRepository {
-    fun getRoomInfo(roomID: String): Flow<DocumentSnapshot>
+    val roomInfo : (roomId : String) -> DocumentReference
 }

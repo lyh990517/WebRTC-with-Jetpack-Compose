@@ -3,6 +3,11 @@ plugins {
     id("webrtc.android.hilt")
 }
 
+if (file("google-services.json").exists()) {
+    apply(plugin = libs.plugins.gms.googleServices.get().pluginId)
+}
+
+
 android {
     namespace = "com.example.webrtc"
 
@@ -27,27 +32,9 @@ android {
             )
         }
     }
-
-    buildFeatures {
-        viewBinding = true
-    }
 }
 
 dependencies {
-    implementation(project(":presentaion"))
-    implementation(project(":domain"))
-    implementation(project(":data"))
-    implementation("androidx.core:core-ktx:1.10.1")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.9.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-
-    implementation("org.webrtc:google-webrtc:1.0.30039@aar")
-
-    implementation(libs.androidx.activity.compose)
-
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
-    implementation("androidx.activity:activity-ktx:1.7.2")
-
+    implementation(projects.feature.main)
+    implementation(projects.core.designsystem)
 }

@@ -1,7 +1,7 @@
 package com.example.domain.repository
 
-import kotlinx.coroutines.flow.Flow
+import com.google.firebase.firestore.DocumentReference
 
 interface SignalRepository {
-    fun connect(roomID: String) : Flow<Map<String, Any>>
+    val connect : (roomId : String) -> DocumentReference
 }
