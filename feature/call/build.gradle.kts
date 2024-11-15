@@ -10,6 +10,4 @@ android {
 
 dependencies {
     implementation(projects.core.webrtc.api)
-
-    implementation(libs.google.webrtc)
 }

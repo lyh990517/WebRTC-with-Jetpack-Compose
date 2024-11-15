@@ -12,8 +12,6 @@ import org.webrtc.SurfaceViewRenderer
 
 @Composable
 fun AppGraph(
-    remoteSurface: SurfaceViewRenderer,
-    localSurface: SurfaceViewRenderer,
     navHostController: NavHostController = rememberNavController()
 ) {
     NavHost(navController = navHostController, startDestination = homeRoute) {
@@ -21,6 +19,6 @@ fun AppGraph(
             navHostController.navigateToConnection(roomId, isHost)
         }
 
-        connectionScreen(remoteSurface = remoteSurface, localSurface = localSurface)
+        connectionScreen()
     }
 }

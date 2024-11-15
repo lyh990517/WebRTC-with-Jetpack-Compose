@@ -13,12 +13,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.call.viewmodel.ConnectionViewModel
 
 @Composable
-fun WebRTCController(
+fun ControllerUi(
     modifier: Modifier = Modifier,
-    viewModel: ConnectionViewModel
+    onToggleVoice: () -> Unit,
+    onToggleVideo: () -> Unit,
+    onDisconnect: () -> Unit
 ) {
     val isCallClicked = rememberSaveable { mutableStateOf(false) }
     val isVideoClicked = rememberSaveable { mutableStateOf(false) }
@@ -35,7 +36,7 @@ fun WebRTCController(
             state = isCallClicked
         ) {
             isCallClicked.value = !isCallClicked.value
-            viewModel.toggleVoice()
+            onToggleVoice()
         }
         MenuButton(
             imageVector = Icons.Default.Face,
@@ -44,14 +45,14 @@ fun WebRTCController(
             state = isVideoClicked
         ) {
             isVideoClicked.value = !isVideoClicked.value
-            viewModel.toggleVideo()
+            onToggleVideo()
         }
         MenuButton(
             imageVector = Icons.Default.Close,
             description = "Close",
             defaultBackgroundColor = Color.Red
         ) {
-            viewModel.disconnect()
+            onDisconnect()
         }
     }
 }
