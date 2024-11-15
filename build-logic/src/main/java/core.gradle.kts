@@ -1,14 +1,10 @@
-import  com.example.build_logic.configureCoroutineAndroid
-import  com.example.build_logic.configureHiltAndroid
-import  com.example.build_logic.configureKotlinAndroid
+import com.example.build_logic.configureCoroutineAndroid
 
 plugins {
-    id("com.android.library")
+    id("core.base")
 }
 
-configureKotlinAndroid()
 configureCoroutineAndroid()
-configureHiltAndroid()
 
 dependencies {
     implementation(project(":core:model"))

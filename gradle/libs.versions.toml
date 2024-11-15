@@ -67,6 +67,8 @@ kotlinxDatetime = "0.6.0"
 # https://github.com/Kotlin/kotlinx.collections.immutable
 kotlinxImmutable = "0.3.7"
 
+gms = "4.3.2"
+
 ## Coroutine
 # https://github.com/cashapp/turbine
 turbine = "1.1.0"
@@ -206,6 +208,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 verify-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-service = { id = "com.google.gms.google-services", version.ref = "gms" }
 android-test = { id = "com.android.test", version.ref = "androidGradlePlugin" }
 baselineprofile = { id = "androidx.baselineprofile", version.ref = "baselineprofile" }
 roborazzi-plugin = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }

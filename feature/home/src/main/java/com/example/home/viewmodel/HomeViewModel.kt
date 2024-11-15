@@ -19,7 +19,7 @@ class HomeViewModel @Inject constructor(
     fun connect(roomId: String, isHost: Boolean) = viewModelScope.launch {
         val status = webRtcClient.getRoomStatus(roomId)
 
-        when(status){
+        when (status) {
             RoomStatus.NEW -> effect.emit(HomeSideEffect.EnterRoom(roomId, isHost))
             RoomStatus.TERMINATED -> effect.emit(HomeSideEffect.RoomAlreadyEnded)
         }
