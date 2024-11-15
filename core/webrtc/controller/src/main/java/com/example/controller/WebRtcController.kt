@@ -116,24 +116,24 @@ internal class WebRtcController @Inject constructor(
             override fun onIceConnectionReceivingChange(p0: Boolean) {}
             override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
             override fun onIceCandidate(p0: IceCandidate?) {
-                p0?.let {
+                p0?.let { ice ->
                     webRtcScope.launch {
                         if (isHost) {
                             eventFlow.emit(
                                 WebRtcEvent.Host.SendIceToGuest(
-                                    ice = it,
+                                    ice = ice,
                                     roomId = roomID
                                 )
                             )
-                            eventFlow.emit(WebRtcEvent.Host.SetLocalIce(ice = it))
+                            eventFlow.emit(WebRtcEvent.Host.SetLocalIce(ice = ice))
                         } else {
                             eventFlow.emit(
                                 WebRtcEvent.Guest.SendIceToHost(
-                                    ice = it,
+                                    ice = ice,
                                     roomId = roomID
                                 )
                             )
-                            eventFlow.emit(WebRtcEvent.Guest.SetLocalIce(ice = it))
+                            eventFlow.emit(WebRtcEvent.Guest.SetLocalIce(ice = ice))
                         }
                     }
                 }
