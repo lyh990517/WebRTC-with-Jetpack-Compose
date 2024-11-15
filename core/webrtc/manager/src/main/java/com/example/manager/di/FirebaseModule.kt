@@ -1,4 +1,4 @@
-package com.example.webrtc.impl.di
+package com.example.manager.di
 
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase

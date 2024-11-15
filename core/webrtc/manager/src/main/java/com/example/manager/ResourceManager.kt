@@ -1,11 +1,11 @@
-package com.example.webrtc.impl.manager
+package com.example.manager
 
 import org.webrtc.AudioTrack
 import org.webrtc.VideoCapturer
 import org.webrtc.VideoTrack
 import javax.inject.Inject
 
-internal class ResourceManager @Inject constructor(
+class ResourceManager @Inject constructor(
     private val localVideoTrack: VideoTrack,
     private val localAudioTrack: AudioTrack,
     private val videoCapturer: VideoCapturer,

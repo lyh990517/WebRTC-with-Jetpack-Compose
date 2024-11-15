@@ -1,4 +1,4 @@
-package com.example.webrtc.impl.manager
+package com.example.manager
 
 import android.util.Log
 import com.example.model.Candidate
@@ -10,14 +10,9 @@ import com.example.util.parseDate
 import com.example.util.toAnswerSdp
 import com.example.util.toIceCandidate
 import com.example.util.toOfferSdp
-import com.example.webrtc.impl.GuestEvent
-import com.example.webrtc.impl.HostEvent
-import com.example.webrtc.impl.guestEvent
-import com.example.webrtc.impl.hostEvent
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
@@ -28,7 +23,7 @@ import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
 import javax.inject.Inject
 
-internal class FireStoreManager @Inject constructor(
+class FireStoreManager @Inject constructor(
     private val firestore: FirebaseFirestore,
 ) {
     private val fireStoreScope = CoroutineScope(Dispatchers.IO)

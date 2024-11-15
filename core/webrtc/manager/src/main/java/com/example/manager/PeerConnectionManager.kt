@@ -1,10 +1,6 @@
-package com.example.webrtc.impl.manager
+package com.example.manager
 
 import com.example.model.RemoteSurface
-import com.example.webrtc.impl.GuestEvent
-import com.example.webrtc.impl.HostEvent
-import com.example.webrtc.impl.guestEvent
-import com.example.webrtc.impl.hostEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,7 +18,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class PeerConnectionManager @Inject constructor(
+class PeerConnectionManager @Inject constructor(
     @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
     private val peerConnectionFactory: PeerConnectionFactory,
     private val localMediaStream: MediaStream,

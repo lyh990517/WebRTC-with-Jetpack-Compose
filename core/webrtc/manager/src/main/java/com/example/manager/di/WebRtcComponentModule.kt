@@ -1,4 +1,4 @@
-package com.example.webrtc.impl.di
+package com.example.manager.di
 
 import android.app.Application
 import android.content.Context
