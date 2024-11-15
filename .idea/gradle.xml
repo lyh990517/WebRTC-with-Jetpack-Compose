@@ -29,8 +29,8 @@
             <option value="$PROJECT_DIR$/core/util" />
             <option value="$PROJECT_DIR$/core/webrtc" />
             <option value="$PROJECT_DIR$/core/webrtc/api" />
+            <option value="$PROJECT_DIR$/core/webrtc/client" />
             <option value="$PROJECT_DIR$/core/webrtc/event" />
-            <option value="$PROJECT_DIR$/core/webrtc/impl" />
             <option value="$PROJECT_DIR$/core/webrtc/manager" />
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/call" />

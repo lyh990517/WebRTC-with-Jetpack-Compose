@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    setNamespace("core.webrtc.impl")
+    setNamespace("core.webrtc.client")
 }
 
 dependencies {
