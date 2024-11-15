@@ -23,12 +23,8 @@ internal class SignalingManager @Inject constructor(
 ) {
     private val signalingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    fun observeSignaling(isHost: Boolean, roomID: String) {
+    fun observeSignaling(roomID: String) {
         signalingScope.launch {
-            if (isHost) {
-                hostEvent.emit(HostEvent.SendOffer(roomID))
-            }
-
             fireStoreManager.getRoomUpdates(roomID).collect { packet ->
                 when {
                     packet.isOffer() -> handleOffer(packet, roomID)
@@ -49,14 +45,14 @@ internal class SignalingManager @Inject constructor(
     private fun handleAnswer(packet: com.example.model.Packet) = signalingScope.launch {
         val sdp = packet.toAnswerSdp()
 
-        hostEvent.emit(HostEvent.SetRemoteSdp(sdp))
+        hostEvent.emit(HostEvent.ReceiveAnswer(sdp))
     }
 
     private fun handleOffer(packet: com.example.model.Packet, roomID: String) =
         signalingScope.launch {
             val sdp = packet.toOfferSdp()
 
-            guestEvent.emit(GuestEvent.SetRemoteSdp(sdp))
+            guestEvent.emit(GuestEvent.ReceiveOffer(sdp))
 
             guestEvent.emit(GuestEvent.SendAnswer(roomID))
         }

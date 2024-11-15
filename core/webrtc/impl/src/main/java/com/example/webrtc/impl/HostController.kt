@@ -1,10 +1,10 @@
 package com.example.webrtc.impl
 
+import com.example.model.Candidate
 import com.example.webrtc.impl.manager.FireStoreManager
 import com.example.webrtc.impl.manager.PeerConnectionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,12 +22,16 @@ internal class HostController @Inject constructor(
                         peerConnectionManager.createOffer(it.roomId)
                     }
 
-                    is HostEvent.SetRemoteSdp -> {
+                    is HostEvent.ReceiveAnswer -> {
                         peerConnectionManager.setRemoteDescription(it.sdp)
                     }
 
                     is HostEvent.SendIceToGuest -> {
-                        fireStoreManager.sendOfferIceCandidateToRoom(it.ice, it.roomId)
+                        fireStoreManager.sendIceCandidateToRoom(
+                            candidate = it.ice,
+                            type = Candidate.OFFER,
+                            roomId = it.roomId
+                        )
                     }
 
                     is HostEvent.SendSdpToGuest -> {

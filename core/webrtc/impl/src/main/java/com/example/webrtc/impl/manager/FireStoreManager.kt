@@ -1,6 +1,7 @@
 package com.example.webrtc.impl.manager
 
 import android.util.Log
+import com.example.model.Candidate
 import com.example.model.RoomStatus
 import com.example.util.parseData
 import com.example.util.parseDate
@@ -35,27 +36,8 @@ internal class FireStoreManager @Inject constructor(
         awaitClose {}
     }
 
-    fun sendOfferIceCandidateToRoom(candidate: IceCandidate?, roomId: String) {
+    fun sendIceCandidateToRoom(candidate: IceCandidate?, type: Candidate, roomId: String) {
         if (candidate == null) return
-
-        val type = com.example.model.Candidate.OFFER
-
-        val parsedIceCandidate = candidate.parseDate(type.value)
-
-        getRoom(roomId)
-            .collection(ICE_CANDIDATE)
-            .document(type.value)
-            .set(parsedIceCandidate).addOnSuccessListener {
-                Log.e("FireStore", "sendIceCandidate: Success")
-            }.addOnFailureListener {
-                Log.e("FireStore", "sendIceCandidate: Error $it")
-            }
-    }
-
-    fun sendAnswerIceCandidateToRoom(candidate: IceCandidate?, roomId: String) {
-        if (candidate == null) return
-
-        val type = com.example.model.Candidate.ANSWER
 
         val parsedIceCandidate = candidate.parseDate(type.value)
 

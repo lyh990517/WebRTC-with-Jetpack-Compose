@@ -23,7 +23,11 @@ class ConnectionViewModel @Inject constructor(
     private val isHost = savedStateHandle.get<Boolean>(isHostArg) ?: false
 
     fun connect() = viewModelScope.launch {
-        webRTCClient.connect(roomId, isHost)
+        if (isHost) {
+            webRTCClient.connectAsHost(roomId)
+        } else {
+            webRTCClient.connectAsGuest(roomId)
+        }
     }
 
     fun toggleVoice() = viewModelScope.launch {

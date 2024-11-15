@@ -36,10 +36,21 @@ internal class PeerConnectionManager @Inject constructor(
 
     private lateinit var peerConnection: PeerConnection
 
-    fun connectToPeer(isHost: Boolean, roomID: String) {
+    fun connectToPeerAsHost(roomID: String) {
         peerConnectionFactory.createPeerConnection(
             iceServer,
-            createPeerConnectionObserver(isHost, roomID)
+            createPeerConnectionHostObserver(roomID)
+        )?.let { connection ->
+            peerConnection = connection
+        }
+
+        peerConnection.addStream(localMediaStream)
+    }
+
+    fun connectToPeerAsGuest(roomID: String) {
+        peerConnectionFactory.createPeerConnection(
+            iceServer,
+            createPeerConnectionGuestObserver(roomID)
         )?.let { connection ->
             peerConnection = connection
         }
@@ -102,8 +113,7 @@ internal class PeerConnectionManager @Inject constructor(
             override fun onSetFailure(p0: String?) {}
         }
 
-    private fun createPeerConnectionObserver(
-        isHost: Boolean,
+    private fun createPeerConnectionHostObserver(
         roomID: String,
     ): PeerConnection.Observer =
         object : PeerConnection.Observer {
@@ -114,13 +124,37 @@ internal class PeerConnectionManager @Inject constructor(
             override fun onIceCandidate(p0: IceCandidate?) {
                 p0?.let {
                     CoroutineScope(Dispatchers.IO).launch {
-                        if (isHost) {
-                            hostEvent.emit(HostEvent.SendIceToGuest(ice = it, roomId = roomID))
-                        } else {
-                            guestEvent.emit(GuestEvent.SendIceToHost(ice = it, roomId = roomID))
-                        }
-
+                        hostEvent.emit(HostEvent.SendIceToGuest(ice = it, roomId = roomID))
                         hostEvent.emit(HostEvent.SetLocalIce(ice = it))
+                    }
+                }
+            }
+
+            override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
+            override fun onAddStream(p0: MediaStream?) {
+                p0?.let { mediaStream ->
+                    mediaStream.videoTracks?.get(0)?.addSink(remoteSurface)
+                }
+            }
+
+            override fun onRemoveStream(p0: MediaStream?) {}
+            override fun onDataChannel(p0: DataChannel?) {}
+            override fun onRenegotiationNeeded() {}
+            override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
+        }
+
+    private fun createPeerConnectionGuestObserver(
+        roomID: String,
+    ): PeerConnection.Observer =
+        object : PeerConnection.Observer {
+            override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
+            override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
+            override fun onIceConnectionReceivingChange(p0: Boolean) {}
+            override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
+            override fun onIceCandidate(p0: IceCandidate?) {
+                p0?.let {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        guestEvent.emit(GuestEvent.SendIceToHost(ice = it, roomId = roomID))
                         guestEvent.emit(GuestEvent.SetLocalIce(ice = it))
                     }
                 }
@@ -138,6 +172,7 @@ internal class PeerConnectionManager @Inject constructor(
             override fun onRenegotiationNeeded() {}
             override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
         }
+
 
     companion object {
         private const val ICE_SERVER_URL = "stun:stun4.l.google.com:19302"

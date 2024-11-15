@@ -5,7 +5,10 @@ import com.example.webrtc.api.WebRtcClient
 import com.example.webrtc.impl.manager.FireStoreManager
 import com.example.webrtc.impl.manager.PeerConnectionManager
 import com.example.webrtc.impl.manager.SignalingManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.webrtc.AudioTrack
 import org.webrtc.VideoCapturer
 import org.webrtc.VideoTrack
@@ -23,15 +26,33 @@ internal class WebRtcClientImpl @Inject constructor(
     private val hostController: HostController,
     private val guestController: GuestController
 ) : WebRtcClient {
-    override fun connect(roomID: String, isHost: Boolean) {
-        hostController.start()
-        guestController.start()
 
-        peerConnectionManager.connectToPeer(isHost, roomID)
+    private val scope = CoroutineScope(Dispatchers.IO)
 
-        videoCapturer.startCapture(1920, 1080, 60)
+    override fun connectAsHost(roomID: String) {
+        scope.launch {
+            hostController.start()
 
-        signalingManager.observeSignaling(isHost, roomID)
+            peerConnectionManager.connectToPeerAsHost(roomID)
+
+            videoCapturer.startCapture(1920, 1080, 60)
+
+            hostEvent.emit(HostEvent.SendOffer(roomID))
+
+            signalingManager.observeSignaling(roomID)
+        }
+    }
+
+    override fun connectAsGuest(roomID: String) {
+        scope.launch {
+            guestController.start()
+
+            peerConnectionManager.connectToPeerAsGuest(roomID)
+
+            videoCapturer.startCapture(1920, 1080, 60)
+
+            signalingManager.observeSignaling(roomID)
+        }
     }
 
     override suspend fun getRoomStatus(roomID: String): RoomStatus =
