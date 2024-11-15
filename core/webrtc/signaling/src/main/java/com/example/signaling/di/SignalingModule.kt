@@ -1,7 +1,7 @@
 package com.example.signaling.di
 
-import com.example.webrtc.client.Signaling
 import com.example.signaling.SignalingImpl
+import com.example.webrtc.client.Signaling
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
