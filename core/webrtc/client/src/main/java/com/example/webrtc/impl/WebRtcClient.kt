@@ -22,11 +22,11 @@ internal class WebRtcClient @Inject constructor(
         webRtcScope.launch {
             eventHandler.start()
 
+            signaling.start(roomID)
+
             webRtcController.connect(roomID, isHost)
 
             localResourceController.startCapture()
-
-            signaling.start(roomID)
         }
     }
 
