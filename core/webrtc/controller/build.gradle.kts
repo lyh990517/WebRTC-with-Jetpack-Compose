@@ -9,7 +9,7 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.webrtc.event)
+    implementation(projects.core.webrtc.common)
 
     implementation(libs.google.webrtc)
 }

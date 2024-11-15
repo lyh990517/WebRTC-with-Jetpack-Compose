@@ -1,4 +1,4 @@
-package com.example.webrtc.impl.di
+package com.example.event.di
 
 import dagger.Module
 import dagger.Provides

@@ -8,7 +8,9 @@ import com.example.model.Candidate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 internal class EventHandler @Inject constructor(
     private val webRtcScope: CoroutineScope,
     private val webRtcController: Controller.WebRtc,
