@@ -3,7 +3,6 @@ package com.example.home.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.home.HomeSideEffect
-import com.example.model.HostWebRtcClient
 import com.example.model.RoomStatus
 import com.example.webrtc.api.WebRtcClient
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    @HostWebRtcClient private val webRtcClient: WebRtcClient
+    private val webRtcClient: WebRtcClient
 ) : ViewModel() {
     val effect = MutableSharedFlow<HomeSideEffect>()
 

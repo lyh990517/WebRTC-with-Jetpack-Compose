@@ -34,26 +34,19 @@ class WebRtcController @Inject constructor(
 
     private lateinit var peerConnection: PeerConnection
 
-    fun connectToPeerAsHost(roomID: String) {
+    fun connect(roomID: String, isHost: Boolean) = webRtcScope.launch {
         peerConnectionFactory.createPeerConnection(
             iceServer,
-            createPeerConnectionHostObserver(roomID)
+            createPeerConnectionHostObserver(roomID, isHost)
         )?.let { connection ->
             peerConnection = connection
         }
 
         peerConnection.addStream(localMediaStream)
-    }
 
-    fun connectToPeerAsGuest(roomID: String) {
-        peerConnectionFactory.createPeerConnection(
-            iceServer,
-            createPeerConnectionGuestObserver(roomID)
-        )?.let { connection ->
-            peerConnection = connection
+        if (isHost) {
+            eventFlow.emit(WebRtcEvent.Host.SendOffer(roomID))
         }
-
-        peerConnection.addStream(localMediaStream)
     }
 
     fun createOffer(roomID: String) {
@@ -113,6 +106,7 @@ class WebRtcController @Inject constructor(
 
     private fun createPeerConnectionHostObserver(
         roomID: String,
+        isHost: Boolean
     ): PeerConnection.Observer =
         object : PeerConnection.Observer {
             override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
@@ -122,38 +116,23 @@ class WebRtcController @Inject constructor(
             override fun onIceCandidate(p0: IceCandidate?) {
                 p0?.let {
                     webRtcScope.launch {
-                        eventFlow.emit(WebRtcEvent.Host.SendIceToGuest(ice = it, roomId = roomID))
-                        eventFlow.emit(WebRtcEvent.Host.SetLocalIce(ice = it))
-                    }
-                }
-            }
-
-            override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
-            override fun onAddStream(p0: MediaStream?) {
-                p0?.let { mediaStream ->
-                    mediaStream.videoTracks?.get(0)?.addSink(remoteSurface)
-                }
-            }
-
-            override fun onRemoveStream(p0: MediaStream?) {}
-            override fun onDataChannel(p0: DataChannel?) {}
-            override fun onRenegotiationNeeded() {}
-            override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
-        }
-
-    private fun createPeerConnectionGuestObserver(
-        roomID: String,
-    ): PeerConnection.Observer =
-        object : PeerConnection.Observer {
-            override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
-            override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
-            override fun onIceConnectionReceivingChange(p0: Boolean) {}
-            override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
-            override fun onIceCandidate(p0: IceCandidate?) {
-                p0?.let {
-                    webRtcScope.launch {
-                        eventFlow.emit(WebRtcEvent.Guest.SendIceToHost(ice = it, roomId = roomID))
-                        eventFlow.emit(WebRtcEvent.Guest.SetLocalIce(ice = it))
+                        if (isHost) {
+                            eventFlow.emit(
+                                WebRtcEvent.Host.SendIceToGuest(
+                                    ice = it,
+                                    roomId = roomID
+                                )
+                            )
+                            eventFlow.emit(WebRtcEvent.Host.SetLocalIce(ice = it))
+                        } else {
+                            eventFlow.emit(
+                                WebRtcEvent.Guest.SendIceToHost(
+                                    ice = it,
+                                    roomId = roomID
+                                )
+                            )
+                            eventFlow.emit(WebRtcEvent.Guest.SetLocalIce(ice = it))
+                        }
                     }
                 }
             }

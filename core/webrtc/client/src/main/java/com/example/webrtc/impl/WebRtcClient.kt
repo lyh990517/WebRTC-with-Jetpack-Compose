@@ -1,9 +1,7 @@
 package com.example.webrtc.impl
 
-import com.example.event.EventBus.eventFlow
-import com.example.event.WebRtcEvent
-import com.example.manager.WebRtcController
 import com.example.manager.LocalResourceController
+import com.example.manager.WebRtcController
 import com.example.model.RoomStatus
 import com.example.webrtc.api.WebRtcClient
 import kotlinx.coroutines.CoroutineScope
@@ -12,22 +10,20 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal class HostClient @Inject constructor(
+internal class WebRtcClient @Inject constructor(
     private val webRtcScope: CoroutineScope,
     private val eventController: EventController,
     private val webRtcController: WebRtcController,
     private val localResourceController: LocalResourceController,
     private val signalingManager: com.example.firestore.SignalingManager
 ) : WebRtcClient {
-    override fun connect(roomID: String) {
+    override fun connect(roomID: String, isHost: Boolean) {
         webRtcScope.launch {
             eventController.start()
 
-            webRtcController.connectToPeerAsHost(roomID)
+            webRtcController.connect(roomID, isHost)
 
             localResourceController.startCapture()
-
-            eventFlow.emit(WebRtcEvent.Host.SendOffer(roomID))
 
             signalingManager.observeSignaling(roomID)
         }
