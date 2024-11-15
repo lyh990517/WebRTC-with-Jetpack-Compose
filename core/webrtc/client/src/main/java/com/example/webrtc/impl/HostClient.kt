@@ -2,7 +2,6 @@ package com.example.webrtc.impl
 
 import com.example.event.EventBus.eventFlow
 import com.example.event.WebRtcEvent
-import com.example.firestore.FireStoreManager
 import com.example.manager.PeerConnectionManager
 import com.example.manager.ResourceManager
 import com.example.model.RoomStatus

@@ -1,6 +1,5 @@
 package com.example.webrtc.impl
 
-import com.example.firestore.FireStoreManager
 import com.example.manager.PeerConnectionManager
 import com.example.manager.ResourceManager
 import com.example.model.RoomStatus
