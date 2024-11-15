@@ -2,7 +2,7 @@ package com.example.webrtc.impl
 
 import com.example.event.EventBus.eventFlow
 import com.example.event.WebRtcEvent
-import com.example.model.Candidate
+import com.example.model.CandidateType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -37,8 +37,8 @@ internal class EventHandler @Inject constructor(
 
             is WebRtcEvent.Guest.SendIceToHost -> {
                 signaling.sendIce(
-                    candidate = event.ice,
-                    type = Candidate.ANSWER,
+                    ice = event.ice,
+                    type = CandidateType.ANSWER,
                     roomId = event.roomId
                 )
             }
@@ -76,8 +76,8 @@ internal class EventHandler @Inject constructor(
 
             is WebRtcEvent.Host.SendIceToGuest -> {
                 signaling.sendIce(
-                    candidate = event.ice,
-                    type = Candidate.OFFER,
+                    ice = event.ice,
+                    type = CandidateType.OFFER,
                     roomId = event.roomId
                 )
             }

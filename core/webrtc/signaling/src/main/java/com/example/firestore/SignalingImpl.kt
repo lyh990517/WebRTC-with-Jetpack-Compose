@@ -3,7 +3,7 @@ package com.example.firestore
 import android.util.Log
 import com.example.event.EventBus.eventFlow
 import com.example.event.WebRtcEvent
-import com.example.model.Candidate
+import com.example.model.CandidateType
 import com.example.model.Packet.Companion.isAnswer
 import com.example.model.Packet.Companion.isOffer
 import com.example.model.RoomStatus
@@ -44,10 +44,14 @@ internal class SignalingImpl @Inject constructor(
         awaitClose {}
     }
 
-    override fun sendIce(candidate: IceCandidate?, type: Candidate, roomId: String) {
-        if (candidate == null) return
+    override fun sendIce(
+        roomId: String,
+        ice: IceCandidate?,
+        type: CandidateType
+    ) {
+        if (ice == null) return
 
-        val parsedIceCandidate = candidate.parseDate(type.value)
+        val parsedIceCandidate = ice.parseDate(type.value)
 
         getRoom(roomId)
             .collection(ICE_CANDIDATE)
@@ -59,7 +63,10 @@ internal class SignalingImpl @Inject constructor(
             }
     }
 
-    override fun sendSdp(sdp: SessionDescription, roomId: String) {
+    override fun sendSdp(
+        roomId: String,
+        sdp: SessionDescription
+    ) {
         val parsedSdp = sdp.parseData()
 
         getRoom(roomId)

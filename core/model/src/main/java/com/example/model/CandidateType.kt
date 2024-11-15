@@ -1,6 +1,6 @@
 package com.example.model
 
-enum class Candidate(val value: String) {
+enum class CandidateType(val value: String) {
     OFFER("offerCandidate"),
     ANSWER("answerCandidate")
 }
