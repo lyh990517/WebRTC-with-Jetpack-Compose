@@ -2,7 +2,7 @@ package com.example.manager
 
 import android.util.Log
 import com.example.event.WebRtcEvent
-import com.example.event.eventFlow
+import com.example.event.EventBus.eventFlow
 import com.example.model.Candidate
 import com.example.model.Packet.Companion.isAnswer
 import com.example.model.Packet.Companion.isOffer

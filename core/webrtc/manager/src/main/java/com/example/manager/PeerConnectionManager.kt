@@ -1,7 +1,7 @@
 package com.example.manager
 
 import com.example.event.WebRtcEvent
-import com.example.event.eventFlow
+import com.example.event.EventBus.eventFlow
 import com.example.model.RemoteSurface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

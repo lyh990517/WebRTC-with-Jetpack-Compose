@@ -2,4 +2,6 @@ package com.example.event
 
 import kotlinx.coroutines.flow.MutableSharedFlow
 
-val eventFlow = MutableSharedFlow<WebRtcEvent>()
+object EventBus {
+    val eventFlow = MutableSharedFlow<WebRtcEvent>()
+}
