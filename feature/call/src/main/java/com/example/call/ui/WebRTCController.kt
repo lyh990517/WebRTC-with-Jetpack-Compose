@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun WebRTCController(
+fun ControllerUi(
     modifier: Modifier = Modifier,
     onToggleVoice: () -> Unit,
     onToggleVideo: () -> Unit,

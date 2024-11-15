@@ -19,7 +19,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.call.state.CallState
-import com.example.call.ui.WebRTCController
+import com.example.call.ui.ControllerUi
 import com.example.call.viewmodel.ConnectionViewModel
 import kotlinx.coroutines.delay
 
@@ -109,7 +109,7 @@ private fun CallContent(
                 .align(Alignment.BottomStart),
             factory = { state.local }
         )
-        WebRTCController(
+        ControllerUi(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
