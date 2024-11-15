@@ -6,18 +6,16 @@ import com.example.manager.FireStoreManager
 import com.example.manager.PeerConnectionManager
 import com.example.model.Candidate
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal class EventController @Inject constructor(
+    private val webRtcScope: CoroutineScope,
     private val peerConnectionManager: PeerConnectionManager,
     private val fireStoreManager: FireStoreManager
 ) {
-    private val scope = CoroutineScope(Dispatchers.IO)
-
     fun start() {
-        scope.launch {
+        webRtcScope.launch {
             eventFlow.collect { event ->
                 when (event) {
                     is WebRtcEvent.Host -> handleHostEvent(event)

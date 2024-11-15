@@ -9,20 +9,20 @@ import com.example.model.RoomStatus
 import com.example.webrtc.api.WebRtcClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal class HostClient @Inject constructor(
+    private val webRtcScope: CoroutineScope,
     private val eventController: EventController,
     private val peerConnectionManager: PeerConnectionManager,
     private val resourceManager: ResourceManager,
     private val fireStoreManager: FireStoreManager
 ) : WebRtcClient {
-    private val scope = CoroutineScope(Dispatchers.IO)
-
     override fun connect(roomID: String) {
-        scope.launch {
+        webRtcScope.launch {
             eventController.start()
 
             peerConnectionManager.connectToPeerAsHost(roomID)
@@ -47,7 +47,7 @@ internal class HostClient @Inject constructor(
         fireStoreManager.getRoomStatus(roomID).first()
 
     override fun disconnect() {
-        fireStoreManager.close()
+        webRtcScope.cancel()
         resourceManager.dispose()
         peerConnectionManager.closeConnection()
     }

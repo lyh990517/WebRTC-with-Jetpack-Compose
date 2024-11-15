@@ -27,14 +27,13 @@ import javax.inject.Inject
 
 class FireStoreManager @Inject constructor(
     private val firestore: FirebaseFirestore,
+    private val webRtcScope: CoroutineScope,
 ) {
-    private val fireStoreScope = CoroutineScope(Dispatchers.IO)
-
     fun getRoomStatus(roomID: String): Flow<RoomStatus> = callbackFlow {
         getRoom(roomID)
             .get()
             .addOnSuccessListener { data ->
-                fireStoreScope.launch {
+                webRtcScope.launch {
                     val isRoomEnded = data["type"] == "END_CALL"
                     val roomStatus = if (isRoomEnded) RoomStatus.TERMINATED else RoomStatus.NEW
 
@@ -67,7 +66,7 @@ class FireStoreManager @Inject constructor(
     }
 
     fun observeSignaling(roomID: String) {
-        fireStoreScope.launch {
+        webRtcScope.launch {
             getRoomUpdates(roomID).collect { packet ->
                 when {
                     packet.isOffer() -> handleOffer(packet, roomID)
@@ -80,20 +79,20 @@ class FireStoreManager @Inject constructor(
 
     private fun getRoomUpdates(roomID: String) = callbackFlow {
         firestore.enableNetwork().addOnFailureListener { e ->
-            fireStoreScope.launch {
+            webRtcScope.launch {
                 sendError(e)
             }
         }
 
         getRoom(roomID).addSnapshotListener { snapshot, e ->
             if (e != null) {
-                fireStoreScope.launch {
+                webRtcScope.launch {
                     sendError(e)
                 }
             }
 
             if (snapshot != null && snapshot.exists()) {
-                fireStoreScope.launch {
+                webRtcScope.launch {
                     val data = snapshot.data
                     data?.let { send(com.example.model.Packet(it)) }
                 }
@@ -103,14 +102,14 @@ class FireStoreManager @Inject constructor(
         getRoom(roomID).collection(ICE_CANDIDATE)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    fireStoreScope.launch {
+                    webRtcScope.launch {
                         sendError(e)
                     }
                 }
 
                 if (snapshot != null && snapshot.isEmpty.not()) {
                     snapshot.forEach { dataSnapshot ->
-                        fireStoreScope.launch {
+                        webRtcScope.launch {
                             send(com.example.model.Packet(dataSnapshot.data))
                         }
                     }
@@ -119,21 +118,21 @@ class FireStoreManager @Inject constructor(
         awaitClose { }
     }
 
-    private fun handleIceCandidate(packet: com.example.model.Packet) = fireStoreScope.launch {
+    private fun handleIceCandidate(packet: com.example.model.Packet) = webRtcScope.launch {
         val iceCandidate = packet.toIceCandidate()
 
         eventFlow.emit(WebRtcEvent.Guest.SetRemoteIce(iceCandidate))
         eventFlow.emit(WebRtcEvent.Host.SetRemoteIce(iceCandidate))
     }
 
-    private fun handleAnswer(packet: com.example.model.Packet) = fireStoreScope.launch {
+    private fun handleAnswer(packet: com.example.model.Packet) = webRtcScope.launch {
         val sdp = packet.toAnswerSdp()
 
         eventFlow.emit(WebRtcEvent.Host.ReceiveAnswer(sdp))
     }
 
     private fun handleOffer(packet: com.example.model.Packet, roomID: String) =
-        fireStoreScope.launch {
+        webRtcScope.launch {
             val sdp = packet.toOfferSdp()
 
             eventFlow.emit(WebRtcEvent.Guest.ReceiveOffer(sdp))
@@ -143,10 +142,6 @@ class FireStoreManager @Inject constructor(
 
     private suspend fun ProducerScope<com.example.model.Packet>.sendError(e: Exception) {
         send(com.example.model.Packet(mapOf("error" to e)))
-    }
-
-    fun close() {
-        fireStoreScope.cancel()
     }
 
     private fun getRoom(roomId: String) = firestore

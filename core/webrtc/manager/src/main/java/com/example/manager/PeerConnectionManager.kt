@@ -21,6 +21,7 @@ import javax.inject.Singleton
 
 @Singleton
 class PeerConnectionManager @Inject constructor(
+    private val webRtcScope: CoroutineScope,
     @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
     private val peerConnectionFactory: PeerConnectionFactory,
     private val localMediaStream: MediaStream,
@@ -59,7 +60,7 @@ class PeerConnectionManager @Inject constructor(
     fun createOffer(roomID: String) {
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
-                CoroutineScope(Dispatchers.IO).launch {
+                webRtcScope.launch {
                     eventFlow.emit(WebRtcEvent.Host.SetLocalSdp(observer, sdp))
                     eventFlow.emit(WebRtcEvent.Host.SendSdpToGuest(sdp = sdp, roomId = roomID))
                 }
@@ -72,9 +73,9 @@ class PeerConnectionManager @Inject constructor(
     fun createAnswer(roomID: String) {
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
-                CoroutineScope(Dispatchers.IO).launch {
-                     eventFlow.emit(WebRtcEvent.Guest.SetLocalSdp(observer, sdp))
-                     eventFlow.emit(WebRtcEvent.Guest.SendSdpToHost(sdp = sdp, roomId = roomID))
+                webRtcScope.launch {
+                    eventFlow.emit(WebRtcEvent.Guest.SetLocalSdp(observer, sdp))
+                    eventFlow.emit(WebRtcEvent.Guest.SendSdpToHost(sdp = sdp, roomId = roomID))
                 }
             }
         )
@@ -121,9 +122,9 @@ class PeerConnectionManager @Inject constructor(
             override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
             override fun onIceCandidate(p0: IceCandidate?) {
                 p0?.let {
-                    CoroutineScope(Dispatchers.IO).launch {
-                         eventFlow.emit(WebRtcEvent.Host.SendIceToGuest(ice = it, roomId = roomID))
-                         eventFlow.emit(WebRtcEvent.Host.SetLocalIce(ice = it))
+                    webRtcScope.launch {
+                        eventFlow.emit(WebRtcEvent.Host.SendIceToGuest(ice = it, roomId = roomID))
+                        eventFlow.emit(WebRtcEvent.Host.SetLocalIce(ice = it))
                     }
                 }
             }
@@ -151,9 +152,9 @@ class PeerConnectionManager @Inject constructor(
             override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
             override fun onIceCandidate(p0: IceCandidate?) {
                 p0?.let {
-                    CoroutineScope(Dispatchers.IO).launch {
-                         eventFlow.emit(WebRtcEvent.Guest.SendIceToHost(ice = it, roomId = roomID))
-                         eventFlow.emit(WebRtcEvent.Guest.SetLocalIce(ice = it))
+                    webRtcScope.launch {
+                        eventFlow.emit(WebRtcEvent.Guest.SendIceToHost(ice = it, roomId = roomID))
+                        eventFlow.emit(WebRtcEvent.Guest.SetLocalIce(ice = it))
                     }
                 }
             }
