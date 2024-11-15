@@ -5,7 +5,7 @@ import org.webrtc.VideoCapturer
 import org.webrtc.VideoTrack
 import javax.inject.Inject
 
-class ResourceManager @Inject constructor(
+class ResourceController @Inject constructor(
     private val localVideoTrack: VideoTrack,
     private val localAudioTrack: AudioTrack,
     private val videoCapturer: VideoCapturer,
