@@ -4,25 +4,27 @@ import org.webrtc.AudioTrack
 import org.webrtc.VideoCapturer
 import org.webrtc.VideoTrack
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class LocalResourceController @Inject constructor(
+@Singleton
+internal class LocalResourceController @Inject constructor(
     private val localVideoTrack: VideoTrack,
     private val localAudioTrack: AudioTrack,
     private val videoCapturer: VideoCapturer,
-) {
-    fun toggleVoice() {
+) : Controller.LocalResource {
+    override fun toggleVoice() {
         localAudioTrack.setEnabled(!localAudioTrack.enabled())
     }
 
-    fun toggleVideo() {
+    override fun toggleVideo() {
         localVideoTrack.setEnabled(!localVideoTrack.enabled())
     }
 
-    fun startCapture() {
+    override fun startCapture() {
         videoCapturer.startCapture(1920, 1080, 60)
     }
 
-    fun dispose() {
+    override fun dispose() {
         localAudioTrack.dispose()
         localVideoTrack.dispose()
         videoCapturer.dispose()

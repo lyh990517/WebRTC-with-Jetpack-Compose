@@ -19,12 +19,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class WebRtcController @Inject constructor(
+internal class WebRtcController @Inject constructor(
     private val webRtcScope: CoroutineScope,
     @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
     private val peerConnectionFactory: PeerConnectionFactory,
     private val localMediaStream: MediaStream,
-) {
+) : Controller.WebRtc {
     private val iceServer =
         listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
 
@@ -34,22 +34,24 @@ class WebRtcController @Inject constructor(
 
     private lateinit var peerConnection: PeerConnection
 
-    fun connect(roomID: String, isHost: Boolean) = webRtcScope.launch {
-        peerConnectionFactory.createPeerConnection(
-            iceServer,
-            createPeerConnectionHostObserver(roomID, isHost)
-        )?.let { connection ->
-            peerConnection = connection
-        }
+    override fun connect(roomID: String, isHost: Boolean) {
+        webRtcScope.launch {
+            peerConnectionFactory.createPeerConnection(
+                iceServer,
+                createPeerConnectionHostObserver(roomID, isHost)
+            )?.let { connection ->
+                peerConnection = connection
+            }
 
-        peerConnection.addStream(localMediaStream)
+            peerConnection.addStream(localMediaStream)
 
-        if (isHost) {
-            eventFlow.emit(WebRtcEvent.Host.SendOffer(roomID))
+            if (isHost) {
+                eventFlow.emit(WebRtcEvent.Host.SendOffer(roomID))
+            }
         }
     }
 
-    fun createOffer(roomID: String) {
+    override fun createOffer(roomID: String) {
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
                 webRtcScope.launch {
@@ -62,7 +64,7 @@ class WebRtcController @Inject constructor(
         peerConnection.createOffer(sdpObserver, constraints)
     }
 
-    fun createAnswer(roomID: String) {
+    override fun createAnswer(roomID: String) {
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
                 webRtcScope.launch {
@@ -75,21 +77,21 @@ class WebRtcController @Inject constructor(
         peerConnection.createAnswer(sdpObserver, constraints)
     }
 
-    fun closeConnection() {
+    override fun closeConnection() {
         peerConnection.close()
     }
 
-    fun setLocalDescription(sdp: SessionDescription, observer: SdpObserver) {
+    override fun setLocalDescription(sdp: SessionDescription, observer: SdpObserver) {
         peerConnection.setLocalDescription(observer, sdp)
     }
 
-    fun setRemoteDescription(sdp: SessionDescription) {
+    override fun setRemoteDescription(sdp: SessionDescription) {
         val sdpObserver = createSdpObserver()
 
         peerConnection.setRemoteDescription(sdpObserver, sdp)
     }
 
-    fun addIceCandidate(iceCandidate: IceCandidate) {
+    override fun addIceCandidate(iceCandidate: IceCandidate) {
         peerConnection.addIceCandidate(iceCandidate)
     }
 
