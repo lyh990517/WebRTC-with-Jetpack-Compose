@@ -11,7 +11,5 @@ interface WebRtcClient {
 
     fun disconnect()
 
-    fun connectAsHost(roomID: String)
-
-    fun connectAsGuest(roomID: String)
+    fun connect(roomID: String)
 }

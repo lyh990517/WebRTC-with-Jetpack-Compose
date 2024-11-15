@@ -7,6 +7,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.call.isHostArg
 import com.example.call.roomIdArg
+import com.example.model.GuestWebRtcClient
+import com.example.model.HostWebRtcClient
 import com.example.webrtc.api.WebRtcClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -15,7 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ConnectionViewModel @Inject constructor(
     application: Application,
-    private val webRTCClient: WebRtcClient,
+    @HostWebRtcClient private val hostClient: WebRtcClient,
+    @GuestWebRtcClient private val guestClient: WebRtcClient,
     savedStateHandle: SavedStateHandle
 ) : AndroidViewModel(application) {
 
@@ -24,23 +27,35 @@ class ConnectionViewModel @Inject constructor(
 
     fun connect() = viewModelScope.launch {
         if (isHost) {
-            webRTCClient.connectAsHost(roomId)
+            hostClient.connect(roomId)
         } else {
-            webRTCClient.connectAsGuest(roomId)
+            guestClient.connect(roomId)
         }
     }
 
     fun toggleVoice() = viewModelScope.launch {
-        webRTCClient.toggleVoice()
+        if (isHost) {
+            hostClient.toggleVoice()
+        } else {
+            guestClient.toggleVoice()
+        }
     }
 
     fun toggleVideo() = viewModelScope.launch {
-        webRTCClient.toggleVideo()
+        if (isHost) {
+            hostClient.toggleVideo()
+        } else {
+            guestClient.toggleVideo()
+        }
     }
 
     fun disconnect() = viewModelScope.launch {
         try {
-            webRTCClient.disconnect()
+            if (isHost) {
+                hostClient.disconnect()
+            } else {
+                guestClient.disconnect()
+            }
         } catch (e: Exception) {
             Log.e("error", "${e.message}")
         }

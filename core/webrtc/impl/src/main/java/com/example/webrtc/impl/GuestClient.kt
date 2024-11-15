@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal class HostClient @Inject constructor(
-    private val hostController: HostController,
+internal class GuestClient @Inject constructor(
+    private val guestController: GuestController,
     private val peerConnectionManager: PeerConnectionManager,
     private val resourceManager: ResourceManager,
     private val fireStoreManager: FireStoreManager
@@ -21,13 +21,11 @@ internal class HostClient @Inject constructor(
 
     override fun connect(roomID: String) {
         scope.launch {
-            hostController.start()
+            guestController.start()
 
-            peerConnectionManager.connectToPeerAsHost(roomID)
+            peerConnectionManager.connectToPeerAsGuest(roomID)
 
             resourceManager.startCapture()
-
-            hostEvent.emit(HostEvent.SendOffer(roomID))
 
             fireStoreManager.observeSignaling(roomID)
         }

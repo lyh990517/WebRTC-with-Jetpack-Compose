@@ -40,7 +40,7 @@ internal object WebRtcComponentModule {
 
     @Provides
     @Singleton
-    @com.example.model.RemoteSurface
+    @RemoteSurface
     fun providesRemoveSurface(
         @ApplicationContext context: Context,
         rootEglBase: EglBase,
@@ -54,7 +54,7 @@ internal object WebRtcComponentModule {
 
     @Provides
     @Singleton
-    @com.example.model.LocalSurface
+    @LocalSurface
     fun providesLocalSurface(
         @ApplicationContext context: Context,
         rootEglBase: EglBase,
@@ -117,7 +117,7 @@ internal object WebRtcComponentModule {
     @Provides
     @Singleton
     fun providesVideoTrack(
-        @com.example.model.LocalSurface localSurface: SurfaceViewRenderer,
+        @LocalSurface localSurface: SurfaceViewRenderer,
         peerConnectionFactory: PeerConnectionFactory,
         videoSource: VideoSource,
     ): VideoTrack {
@@ -160,7 +160,7 @@ internal object WebRtcComponentModule {
     @Singleton
     fun providesVideoCapturer(
         application: Application,
-        @com.example.model.LocalSurface localSurface: SurfaceViewRenderer,
+        @LocalSurface localSurface: SurfaceViewRenderer,
         surfaceTextureHelper: SurfaceTextureHelper,
         localVideoSource: VideoSource,
     ): VideoCapturer {
