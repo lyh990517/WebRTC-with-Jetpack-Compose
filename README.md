@@ -16,9 +16,9 @@ This project is a video call application built using WebRTC technology. With thi
 
 4. **Place `google-services.json` in Your Project**:
    - Copy the downloaded `google-services.json` file.
-   - Place it in the `core/webrtc/impl` directory of your project.
-  
-   ![image](https://github.com/user-attachments/assets/88bf386f-82b7-4694-b0d5-9f8fc982381a)
+   - Place it in the `core/webrtc/signaling` directory of your project.
+   
+  <img width="393" alt="스크린샷 2024-11-15 오후 6 05 45" src="https://github.com/user-attachments/assets/0aebd229-2e25-4f08-91f0-f82f648b9417">
 
 5. **Creating a Room**
 
@@ -33,8 +33,7 @@ This project is a video call application built using WebRTC technology. With thi
 With these simple steps, you can set up and enjoy video calls. Share the room number or word with other users to start a call together.
 
 # Modularization
-![module](https://github.com/user-attachments/assets/17506611-d25c-40ef-879b-15639fb4d633)
-
+<img width="704" alt="스크린샷 2024-11-15 오후 6 03 44" src="https://github.com/user-attachments/assets/8b883e02-430e-4b19-93bb-fa27b148db35">
 
 # App Preview
 
