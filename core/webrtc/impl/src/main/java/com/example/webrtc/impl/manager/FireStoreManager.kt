@@ -35,11 +35,27 @@ internal class FireStoreManager @Inject constructor(
         awaitClose {}
     }
 
-    fun sendIceCandidateToRoom(candidate: IceCandidate?, isHost: Boolean, roomId: String) {
+    fun sendOfferIceCandidateToRoom(candidate: IceCandidate?, roomId: String) {
         if (candidate == null) return
 
-        val type =
-            if (isHost) com.example.model.Candidate.OFFER else com.example.model.Candidate.ANSWER
+        val type = com.example.model.Candidate.OFFER
+
+        val parsedIceCandidate = candidate.parseDate(type.value)
+
+        getRoom(roomId)
+            .collection(ICE_CANDIDATE)
+            .document(type.value)
+            .set(parsedIceCandidate).addOnSuccessListener {
+                Log.e("FireStore", "sendIceCandidate: Success")
+            }.addOnFailureListener {
+                Log.e("FireStore", "sendIceCandidate: Error $it")
+            }
+    }
+
+    fun sendAnswerIceCandidateToRoom(candidate: IceCandidate?, roomId: String) {
+        if (candidate == null) return
+
+        val type = com.example.model.Candidate.ANSWER
 
         val parsedIceCandidate = candidate.parseDate(type.value)
 

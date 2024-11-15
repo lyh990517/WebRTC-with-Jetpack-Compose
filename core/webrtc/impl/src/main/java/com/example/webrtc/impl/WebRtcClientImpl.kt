@@ -20,8 +20,13 @@ internal class WebRtcClientImpl @Inject constructor(
     private val localAudioTrack: AudioTrack,
     private val localVideoTrack: VideoTrack,
     private val videoCapturer: VideoCapturer,
+    private val hostController: HostController,
+    private val guestController: GuestController
 ) : WebRtcClient {
     override fun connect(roomID: String, isHost: Boolean) {
+        hostController.start()
+        guestController.start()
+
         peerConnectionManager.connectToPeer(isHost, roomID)
 
         videoCapturer.startCapture(1920, 1080, 60)

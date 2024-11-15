@@ -5,6 +5,10 @@ import com.example.model.Packet.Companion.isOffer
 import com.example.util.toAnswerSdp
 import com.example.util.toIceCandidate
 import com.example.util.toOfferSdp
+import com.example.webrtc.impl.GuestEvent
+import com.example.webrtc.impl.HostEvent
+import com.example.webrtc.impl.guestEvent
+import com.example.webrtc.impl.hostEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -16,14 +20,13 @@ import javax.inject.Singleton
 @Singleton
 internal class SignalingManager @Inject constructor(
     private val fireStoreManager: FireStoreManager,
-    private val peerConnectionManager: PeerConnectionManager,
 ) {
     private val signalingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun observeSignaling(isHost: Boolean, roomID: String) {
         signalingScope.launch {
             if (isHost) {
-                peerConnectionManager.createOffer(roomID)
+                hostEvent.emit(HostEvent.SendOffer(roomID))
             }
 
             fireStoreManager.getRoomUpdates(roomID).collect { packet ->
@@ -36,25 +39,27 @@ internal class SignalingManager @Inject constructor(
         }
     }
 
-    private fun handleIceCandidate(packet: com.example.model.Packet) {
+    private fun handleIceCandidate(packet: com.example.model.Packet) = signalingScope.launch {
         val iceCandidate = packet.toIceCandidate()
 
-        peerConnectionManager.addIceCandidate(iceCandidate)
+        guestEvent.emit(GuestEvent.SetRemoteIce(iceCandidate))
+        hostEvent.emit(HostEvent.SetRemoteIce(iceCandidate))
     }
 
-    private fun handleAnswer(packet: com.example.model.Packet) {
+    private fun handleAnswer(packet: com.example.model.Packet) = signalingScope.launch {
         val sdp = packet.toAnswerSdp()
 
-        peerConnectionManager.setRemoteDescription(sdp)
+        hostEvent.emit(HostEvent.SetRemoteSdp(sdp))
     }
 
-    private fun handleOffer(packet: com.example.model.Packet, roomID: String) {
-        val sdp = packet.toOfferSdp()
+    private fun handleOffer(packet: com.example.model.Packet, roomID: String) =
+        signalingScope.launch {
+            val sdp = packet.toOfferSdp()
 
-        peerConnectionManager.setRemoteDescription(sdp)
+            guestEvent.emit(GuestEvent.SetRemoteSdp(sdp))
 
-        peerConnectionManager.createAnswer(roomID)
-    }
+            guestEvent.emit(GuestEvent.SendAnswer(roomID))
+        }
 
     fun close() = signalingScope.cancel()
 }

@@ -1,6 +1,13 @@
 package com.example.webrtc.impl.manager
 
 import com.example.model.RemoteSurface
+import com.example.webrtc.impl.GuestEvent
+import com.example.webrtc.impl.HostEvent
+import com.example.webrtc.impl.guestEvent
+import com.example.webrtc.impl.hostEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaConstraints
@@ -17,7 +24,6 @@ import javax.inject.Singleton
 @Singleton
 internal class PeerConnectionManager @Inject constructor(
     @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
-    private val fireStoreManager: FireStoreManager,
     private val peerConnectionFactory: PeerConnectionFactory,
     private val localMediaStream: MediaStream,
 ) {
@@ -44,9 +50,10 @@ internal class PeerConnectionManager @Inject constructor(
     fun createOffer(roomID: String) {
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
-                peerConnection.setLocalDescription(observer, sdp)
-
-                fireStoreManager.sendSdpToRoom(sdp = sdp, roomId = roomID)
+                CoroutineScope(Dispatchers.IO).launch {
+                    hostEvent.emit(HostEvent.SetLocalSdp(observer, sdp))
+                    hostEvent.emit(HostEvent.SendSdpToGuest(sdp = sdp, roomId = roomID))
+                }
             }
         )
 
@@ -56,9 +63,10 @@ internal class PeerConnectionManager @Inject constructor(
     fun createAnswer(roomID: String) {
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
-                peerConnection.setLocalDescription(observer, sdp)
-
-                fireStoreManager.sendSdpToRoom(sdp = sdp, roomId = roomID)
+                CoroutineScope(Dispatchers.IO).launch {
+                    guestEvent.emit(GuestEvent.SetLocalSdp(observer, sdp))
+                    guestEvent.emit(GuestEvent.SendSdpToHost(sdp = sdp, roomId = roomID))
+                }
             }
         )
 
@@ -67,6 +75,10 @@ internal class PeerConnectionManager @Inject constructor(
 
     fun closeConnection() {
         peerConnection.close()
+    }
+
+    fun setLocalDescription(sdp: SessionDescription, observer: SdpObserver) {
+        peerConnection.setLocalDescription(observer, sdp)
     }
 
     fun setRemoteDescription(sdp: SessionDescription) {
@@ -101,8 +113,16 @@ internal class PeerConnectionManager @Inject constructor(
             override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
             override fun onIceCandidate(p0: IceCandidate?) {
                 p0?.let {
-                    fireStoreManager.sendIceCandidateToRoom(it, isHost, roomID)
-                    peerConnection.addIceCandidate(it)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        if (isHost) {
+                            hostEvent.emit(HostEvent.SendIceToGuest(ice = it, roomId = roomID))
+                        } else {
+                            guestEvent.emit(GuestEvent.SendIceToHost(ice = it, roomId = roomID))
+                        }
+
+                        hostEvent.emit(HostEvent.SetLocalIce(ice = it))
+                        guestEvent.emit(GuestEvent.SetLocalIce(ice = it))
+                    }
                 }
             }
 

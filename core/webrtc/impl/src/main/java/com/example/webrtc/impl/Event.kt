@@ -1,37 +1,41 @@
 package com.example.webrtc.impl
 
+import kotlinx.coroutines.flow.MutableSharedFlow
+import org.webrtc.IceCandidate
+import org.webrtc.SdpObserver
+import org.webrtc.SessionDescription
+
+val hostEvent = MutableSharedFlow<HostEvent>()
+val guestEvent = MutableSharedFlow<GuestEvent>()
+
 sealed interface HostEvent {
-    data object SendOffer : HostEvent
+    data class SendOffer(val roomId: String) : HostEvent
 
-    data object ReceiveAnswer : HostEvent
+    data class SetLocalSdp(val observer: SdpObserver, val sdp: SessionDescription) : HostEvent
 
-    data object SetLocalSdp: HostEvent
-    
-    data object SetLocalIce: HostEvent
+    data class SetLocalIce(val ice: IceCandidate) : HostEvent
 
-    data object SendSdpToGuest : HostEvent
+    data class SendSdpToGuest(val sdp: SessionDescription, val roomId: String) : HostEvent
 
-    data object SendIceToGuest : HostEvent
+    data class SendIceToGuest(val ice: IceCandidate, val roomId: String) : HostEvent
 
-    data object SetRemoteSdp : HostEvent
+    data class SetRemoteSdp(val sdp: SessionDescription) : HostEvent
 
-    data object SetRemoteIce : HostEvent
+    data class SetRemoteIce(val ice: IceCandidate) : HostEvent
 }
 
 sealed interface GuestEvent {
-    data object ReceiveOffer : GuestEvent
+    data class SendAnswer(val roomId: String) : GuestEvent
 
-    data object SendAnswer : GuestEvent
+    data class SetLocalSdp(val observer: SdpObserver, val sdp: SessionDescription) : GuestEvent
 
-    data object SetLocalSdp: GuestEvent
+    data class SetLocalIce(val ice: IceCandidate) : GuestEvent
 
-    data object SetLocalIce: GuestEvent
+    data class SendSdpToHost(val sdp: SessionDescription, val roomId: String) : GuestEvent
 
-    data object SendSdpToHost : GuestEvent
+    data class SendIceToHost(val ice: IceCandidate, val roomId: String) : GuestEvent
 
-    data object SendIceToHost : GuestEvent
+    data class SetRemoteSdp(val sdp: SessionDescription) : GuestEvent
 
-    data object SetRemoteSdp : GuestEvent
-
-    data object SetRemoteIce : GuestEvent
+    data class SetRemoteIce(val ice: IceCandidate) : GuestEvent
 }
