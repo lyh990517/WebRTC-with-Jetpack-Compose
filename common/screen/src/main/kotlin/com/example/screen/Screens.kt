@@ -7,8 +7,12 @@ import kotlinx.parcelize.Parcelize
 data object ConfigScreen : Screen
 
 @Parcelize
-data class ConnectScreen(val accessCode : String, val type : ConnectType) : Screen {
-    enum class ConnectType {
-        CREATE, JOIN
+data class ConnectScreen(val accessCode : String, val type : ConnectType) : Screen
+
+enum class ConnectType {
+    CREATE, JOIN;
+
+    companion object{
+        fun isJoin(type : ConnectType) = type == JOIN
     }
 }

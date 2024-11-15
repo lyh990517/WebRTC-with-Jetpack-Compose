@@ -6,3 +6,7 @@ plugins {
 android {
     namespace = "com.example.designsystem"
 }
+
+dependencies {
+    api(libs.google.webrtc)
+}

@@ -21,16 +21,13 @@ configureHiltAndroid()
 configureCircuit()
 
 dependencies {
-    implementation(project(":core:designsystem"))
     implementation(project(":common:screen"))
     implementation(project(":common:circuit"))
-    implementation(project(":data"))
+
+    implementation(project(":core:designsystem"))
+
+    implementation(project(":data:firebase"))
+    implementation(project(":data:interactor"))
+
     implementation(project(":domain"))
-
-    val libs = project.extensions.libs
-    implementation(libs.findLibrary("hilt.navigation.compose").get())
-    implementation(libs.findLibrary("androidx.compose.navigation").get())
-
-    implementation(libs.findLibrary("androidx.lifecycle.viewModelCompose").get())
-    implementation(libs.findLibrary("androidx.lifecycle.runtimeCompose").get())
 }

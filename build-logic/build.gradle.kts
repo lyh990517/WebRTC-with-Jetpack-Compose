@@ -19,5 +19,9 @@ gradlePlugin {
             id = "webrtc.kotlin.hilt"
             implementationClass = "com.example.webrtc.HiltKotlinPlugin"
         }
+        register("firebase") {
+            id = "webrtc.firebase"
+            implementationClass = "com.example.webrtc.FirebasePlugin"
+        }
     }
 }

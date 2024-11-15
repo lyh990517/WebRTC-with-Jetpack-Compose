@@ -1,6 +1,7 @@
 plugins {
     id("webrtc.android.application")
     id("webrtc.android.hilt")
+    id("webrtc.firebase")
 }
 
 if (file("google-services.json").exists()) {

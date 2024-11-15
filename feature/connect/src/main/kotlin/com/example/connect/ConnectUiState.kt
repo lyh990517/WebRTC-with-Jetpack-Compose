@@ -2,17 +2,13 @@ package com.example.connect
 
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
+import org.webrtc.SurfaceViewRenderer
 
 
 data class ConnectUiState(
+    val localSurfaceView: SurfaceViewRenderer? = null,
+    val remoteSurfaceView: SurfaceViewRenderer? = null,
     val eventSink: (ConnectUiEvent) -> Unit = {}
 ) : CircuitUiState
 
-sealed interface ConnectUiEvent : CircuitUiEvent {
-    data class InputAccessCode(val code: String) : ConnectUiEvent
-
-    sealed interface Route : ConnectUiEvent {
-        data object CreateRoom : Route
-        data object JoinRoom : Route
-    }
-}
+sealed interface ConnectUiEvent : CircuitUiEvent

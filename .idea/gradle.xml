@@ -22,9 +22,20 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/build-logic" />
+            <option value="$PROJECT_DIR$/common" />
+            <option value="$PROJECT_DIR$/common/circuit" />
+            <option value="$PROJECT_DIR$/common/screen" />
+            <option value="$PROJECT_DIR$/common/util" />
+            <option value="$PROJECT_DIR$/core" />
+            <option value="$PROJECT_DIR$/core/designsystem" />
             <option value="$PROJECT_DIR$/data" />
+            <option value="$PROJECT_DIR$/data/firebase" />
+            <option value="$PROJECT_DIR$/data/interactor" />
             <option value="$PROJECT_DIR$/domain" />
-            <option value="$PROJECT_DIR$/presentaion" />
+            <option value="$PROJECT_DIR$/feature" />
+            <option value="$PROJECT_DIR$/feature/config" />
+            <option value="$PROJECT_DIR$/feature/connect" />
+            <option value="$PROJECT_DIR$/feature/main" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

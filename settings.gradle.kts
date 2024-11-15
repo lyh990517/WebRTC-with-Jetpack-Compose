@@ -25,12 +25,33 @@ dependencyResolutionManagement {
 }
 rootProject.name = "WebRTC"
 include(":app")
-include(":presentaion")
-include(":data")
-include(":domain")
-include(":feature:config")
-include(":feature:connect")
-include(":feature:main")
-include(":core:designsystem")
-include(":common:screen")
-include(":common:circuit")
+
+//Data
+include(
+    ":data:interactor",
+    ":data:firebase"
+)
+
+//Domain
+include(
+    ":domain"
+)
+
+//Feature
+include(
+    ":feature:main",
+    ":feature:config",
+    ":feature:connect"
+)
+
+//Core
+include(
+    ":core:designsystem"
+)
+
+//Common
+include(
+    ":common:circuit",
+    ":common:screen",
+    ":common:util",
+)

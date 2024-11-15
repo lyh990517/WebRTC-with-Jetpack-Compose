@@ -8,10 +8,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.circuit.wrapEventSink
 import com.example.designsystem.ext.showToast
-import com.example.domain.usecase.CheckRookResultType
-import com.example.domain.usecase.CheckRoomUseCase
+import com.example.domain.usecase.firebase.CheckRookResultType
+import com.example.domain.usecase.firebase.CheckRoomUseCase
 import com.example.screen.ConfigScreen
 import com.example.screen.ConnectScreen
+import com.example.screen.ConnectType
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
@@ -53,8 +54,8 @@ class ConfigPresenter @AssistedInject constructor(
 
                             CheckRookResultType.NotExistRoom -> {
                                 val type = when (event) {
-                                    ConfigUiEvent.Route.CreateRoom -> ConnectScreen.ConnectType.CREATE
-                                    ConfigUiEvent.Route.JoinRoom -> ConnectScreen.ConnectType.JOIN
+                                    ConfigUiEvent.Route.CreateRoom -> ConnectType.CREATE
+                                    ConfigUiEvent.Route.JoinRoom -> ConnectType.JOIN
                                 }
                                 navigator.goTo(ConnectScreen(accessCode, type))
                             }

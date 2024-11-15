@@ -13,4 +13,5 @@ ksp {
 dependencies {
     implementation(projects.feature.config)
     implementation(projects.feature.connect)
+    api(libs.androidx.activity.compose)
 }
