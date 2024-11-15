@@ -10,7 +10,7 @@ android {
 
 dependencies {
     implementation(projects.core.webrtc.api)
-    implementation(projects.core.webrtc.manager)
+    implementation(projects.core.webrtc.controller)
     implementation(projects.core.webrtc.event)
     implementation(projects.core.webrtc.signaling)
 

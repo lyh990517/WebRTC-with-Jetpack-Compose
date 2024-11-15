@@ -19,7 +19,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PeerConnectionManager @Inject constructor(
+class WebRtcController @Inject constructor(
     private val webRtcScope: CoroutineScope,
     @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
     private val peerConnectionFactory: PeerConnectionFactory,

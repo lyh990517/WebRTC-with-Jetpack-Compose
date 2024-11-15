@@ -1,7 +1,7 @@
 package com.example.webrtc.impl
 
-import com.example.manager.PeerConnectionManager
-import com.example.manager.ResourceController
+import com.example.manager.WebRtcController
+import com.example.manager.LocalResourceController
 import com.example.model.RoomStatus
 import com.example.webrtc.api.WebRtcClient
 import kotlinx.coroutines.CoroutineScope
@@ -13,8 +13,8 @@ import javax.inject.Inject
 internal class GuestClient @Inject constructor(
     private val webRtcScope: CoroutineScope,
     private val eventController: EventController,
-    private val peerConnectionManager: PeerConnectionManager,
-    private val resourceController: ResourceController,
+    private val webRtcController: WebRtcController,
+    private val localResourceController: LocalResourceController,
     private val signalingManager: com.example.firestore.SignalingManager
 ) : WebRtcClient {
 
@@ -22,20 +22,20 @@ internal class GuestClient @Inject constructor(
         webRtcScope.launch {
             eventController.start()
 
-            peerConnectionManager.connectToPeerAsGuest(roomID)
+            webRtcController.connectToPeerAsGuest(roomID)
 
-            resourceController.startCapture()
+            localResourceController.startCapture()
 
             signalingManager.observeSignaling(roomID)
         }
     }
 
     override fun toggleVoice() {
-        resourceController.toggleVoice()
+        localResourceController.toggleVoice()
     }
 
     override fun toggleVideo() {
-        resourceController.toggleVideo()
+        localResourceController.toggleVideo()
     }
 
     override suspend fun getRoomStatus(roomID: String): RoomStatus =
@@ -43,7 +43,7 @@ internal class GuestClient @Inject constructor(
 
     override fun disconnect() {
         webRtcScope.cancel()
-        resourceController.dispose()
-        peerConnectionManager.closeConnection()
+        localResourceController.dispose()
+        webRtcController.closeConnection()
     }
 }

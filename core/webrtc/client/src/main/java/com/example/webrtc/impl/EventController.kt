@@ -3,7 +3,7 @@ package com.example.webrtc.impl
 import com.example.event.EventBus.eventFlow
 import com.example.event.WebRtcEvent
 import com.example.firestore.SignalingManager
-import com.example.manager.PeerConnectionManager
+import com.example.manager.WebRtcController
 import com.example.model.Candidate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 internal class EventController @Inject constructor(
     private val webRtcScope: CoroutineScope,
-    private val peerConnectionManager: PeerConnectionManager,
+    private val webRtcController: WebRtcController,
     private val signalingManager: SignalingManager
 ) {
     fun start() {
@@ -28,11 +28,11 @@ internal class EventController @Inject constructor(
     private fun handleGuestEvent(event: WebRtcEvent.Guest) {
         when (event) {
             is WebRtcEvent.Guest.ReceiveOffer -> {
-                peerConnectionManager.setRemoteDescription(event.sdp)
+                webRtcController.setRemoteDescription(event.sdp)
             }
 
             is WebRtcEvent.Guest.SendAnswer -> {
-                peerConnectionManager.createAnswer(event.roomId)
+                webRtcController.createAnswer(event.roomId)
             }
 
             is WebRtcEvent.Guest.SendIceToHost -> {
@@ -51,15 +51,15 @@ internal class EventController @Inject constructor(
             }
 
             is WebRtcEvent.Guest.SetLocalIce -> {
-                peerConnectionManager.addIceCandidate(event.ice)
+                webRtcController.addIceCandidate(event.ice)
             }
 
             is WebRtcEvent.Guest.SetLocalSdp -> {
-                peerConnectionManager.setLocalDescription(event.sdp, event.observer)
+                webRtcController.setLocalDescription(event.sdp, event.observer)
             }
 
             is WebRtcEvent.Guest.SetRemoteIce -> {
-                peerConnectionManager.addIceCandidate(event.ice)
+                webRtcController.addIceCandidate(event.ice)
             }
         }
     }
@@ -67,11 +67,11 @@ internal class EventController @Inject constructor(
     private fun handleHostEvent(event: WebRtcEvent.Host) {
         when (event) {
             is WebRtcEvent.Host.SendOffer -> {
-                peerConnectionManager.createOffer(event.roomId)
+                webRtcController.createOffer(event.roomId)
             }
 
             is WebRtcEvent.Host.ReceiveAnswer -> {
-                peerConnectionManager.setRemoteDescription(event.sdp)
+                webRtcController.setRemoteDescription(event.sdp)
             }
 
             is WebRtcEvent.Host.SendIceToGuest -> {
@@ -90,15 +90,15 @@ internal class EventController @Inject constructor(
             }
 
             is WebRtcEvent.Host.SetLocalIce -> {
-                peerConnectionManager.addIceCandidate(event.ice)
+                webRtcController.addIceCandidate(event.ice)
             }
 
             is WebRtcEvent.Host.SetLocalSdp -> {
-                peerConnectionManager.setLocalDescription(event.sdp, event.observer)
+                webRtcController.setLocalDescription(event.sdp, event.observer)
             }
 
             is WebRtcEvent.Host.SetRemoteIce -> {
-                peerConnectionManager.addIceCandidate(event.ice)
+                webRtcController.addIceCandidate(event.ice)
             }
         }
     }
