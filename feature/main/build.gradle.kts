@@ -12,6 +12,4 @@ android {
 dependencies {
     implementation(projects.feature.home)
     implementation(projects.feature.call)
-
-    implementation(libs.google.webrtc)
 }

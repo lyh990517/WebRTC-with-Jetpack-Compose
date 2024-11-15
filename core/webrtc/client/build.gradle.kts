@@ -12,6 +12,4 @@ dependencies {
     api(projects.core.webrtc.common)
 
     implementation(projects.core.webrtc.api)
-
-    implementation(libs.google.webrtc)
 }
