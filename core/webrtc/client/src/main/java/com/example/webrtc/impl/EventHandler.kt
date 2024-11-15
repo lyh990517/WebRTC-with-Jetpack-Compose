@@ -2,17 +2,17 @@ package com.example.webrtc.impl
 
 import com.example.event.EventBus.eventFlow
 import com.example.event.WebRtcEvent
-import com.example.firestore.SignalingManager
+import com.example.firestore.Signaling
 import com.example.manager.WebRtcController
 import com.example.model.Candidate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal class EventController @Inject constructor(
+internal class EventHandler @Inject constructor(
     private val webRtcScope: CoroutineScope,
     private val webRtcController: WebRtcController,
-    private val signalingManager: SignalingManager
+    private val signaling: Signaling
 ) {
     fun start() {
         webRtcScope.launch {
@@ -36,7 +36,7 @@ internal class EventController @Inject constructor(
             }
 
             is WebRtcEvent.Guest.SendIceToHost -> {
-                signalingManager.sendIceCandidateToRoom(
+                signaling.sendIceCandidateToRoom(
                     candidate = event.ice,
                     type = Candidate.ANSWER,
                     roomId = event.roomId
@@ -44,7 +44,7 @@ internal class EventController @Inject constructor(
             }
 
             is WebRtcEvent.Guest.SendSdpToHost -> {
-                signalingManager.sendSdpToRoom(
+                signaling.sendSdpToRoom(
                     sdp = event.sdp,
                     roomId = event.roomId
                 )
@@ -75,7 +75,7 @@ internal class EventController @Inject constructor(
             }
 
             is WebRtcEvent.Host.SendIceToGuest -> {
-                signalingManager.sendIceCandidateToRoom(
+                signaling.sendIceCandidateToRoom(
                     candidate = event.ice,
                     type = Candidate.OFFER,
                     roomId = event.roomId
@@ -83,7 +83,7 @@ internal class EventController @Inject constructor(
             }
 
             is WebRtcEvent.Host.SendSdpToGuest -> {
-                signalingManager.sendSdpToRoom(
+                signaling.sendSdpToRoom(
                     sdp = event.sdp,
                     roomId = event.roomId
                 )

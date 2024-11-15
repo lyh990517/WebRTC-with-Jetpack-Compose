@@ -1,5 +1,6 @@
 package com.example.webrtc.impl
 
+import com.example.firestore.Signaling
 import com.example.manager.LocalResourceController
 import com.example.manager.WebRtcController
 import com.example.model.RoomStatus
@@ -12,20 +13,20 @@ import javax.inject.Inject
 
 internal class WebRtcClient @Inject constructor(
     private val webRtcScope: CoroutineScope,
-    private val eventController: EventController,
+    private val eventHandler: EventHandler,
     private val webRtcController: WebRtcController,
     private val localResourceController: LocalResourceController,
-    private val signalingManager: com.example.firestore.SignalingManager
+    private val signaling: Signaling
 ) : WebRtcClient {
     override fun connect(roomID: String, isHost: Boolean) {
         webRtcScope.launch {
-            eventController.start()
+            eventHandler.start()
 
             webRtcController.connect(roomID, isHost)
 
             localResourceController.startCapture()
 
-            signalingManager.observeSignaling(roomID)
+            signaling.start(roomID)
         }
     }
 
@@ -38,7 +39,7 @@ internal class WebRtcClient @Inject constructor(
     }
 
     override suspend fun getRoomStatus(roomID: String): RoomStatus =
-        signalingManager.getRoomStatus(roomID).first()
+        signaling.getRoomStatus(roomID).first()
 
     override fun disconnect() {
         webRtcScope.cancel()

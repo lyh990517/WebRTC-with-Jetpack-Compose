@@ -23,7 +23,7 @@ import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
 import javax.inject.Inject
 
-class SignalingManager @Inject constructor(
+class Signaling @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val webRtcScope: CoroutineScope,
 ) {
@@ -63,7 +63,7 @@ class SignalingManager @Inject constructor(
             .set(parsedSdp)
     }
 
-    fun observeSignaling(roomID: String) {
+    fun start(roomID: String) {
         webRtcScope.launch {
             getRoomUpdates(roomID).collect { packet ->
                 when {
