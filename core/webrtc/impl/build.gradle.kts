@@ -11,6 +11,7 @@ android {
 dependencies {
     implementation(projects.core.webrtc.api)
     implementation(projects.core.webrtc.manager)
+    implementation(projects.core.webrtc.event)
 
     implementation(libs.google.webrtc)
 }

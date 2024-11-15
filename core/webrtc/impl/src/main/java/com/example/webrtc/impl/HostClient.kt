@@ -1,10 +1,10 @@
 package com.example.webrtc.impl
 
+import com.example.event.WebRtcEvent
+import com.example.event.eventFlow
 import com.example.manager.FireStoreManager
-import com.example.manager.HostEvent
 import com.example.manager.PeerConnectionManager
 import com.example.manager.ResourceManager
-import com.example.manager.hostEvent
 import com.example.model.RoomStatus
 import com.example.webrtc.api.WebRtcClient
 import kotlinx.coroutines.CoroutineScope
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal class HostClient @Inject constructor(
-    private val hostController: HostController,
+    private val eventController: EventController,
     private val peerConnectionManager: PeerConnectionManager,
     private val resourceManager: ResourceManager,
     private val fireStoreManager: FireStoreManager
@@ -23,13 +23,13 @@ internal class HostClient @Inject constructor(
 
     override fun connect(roomID: String) {
         scope.launch {
-            hostController.start()
+            eventController.start()
 
             peerConnectionManager.connectToPeerAsHost(roomID)
 
             resourceManager.startCapture()
 
-            hostEvent.emit(HostEvent.SendOffer(roomID))
+            eventFlow.emit(WebRtcEvent.Host.SendOffer(roomID))
 
             fireStoreManager.observeSignaling(roomID)
         }

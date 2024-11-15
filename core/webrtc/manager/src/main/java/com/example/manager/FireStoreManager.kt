@@ -1,6 +1,8 @@
 package com.example.manager
 
 import android.util.Log
+import com.example.event.WebRtcEvent
+import com.example.event.eventFlow
 import com.example.model.Candidate
 import com.example.model.Packet.Companion.isAnswer
 import com.example.model.Packet.Companion.isOffer
@@ -120,23 +122,23 @@ class FireStoreManager @Inject constructor(
     private fun handleIceCandidate(packet: com.example.model.Packet) = fireStoreScope.launch {
         val iceCandidate = packet.toIceCandidate()
 
-        guestEvent.emit(GuestEvent.SetRemoteIce(iceCandidate))
-        hostEvent.emit(HostEvent.SetRemoteIce(iceCandidate))
+        eventFlow.emit(WebRtcEvent.Guest.SetRemoteIce(iceCandidate))
+        eventFlow.emit(WebRtcEvent.Host.SetRemoteIce(iceCandidate))
     }
 
     private fun handleAnswer(packet: com.example.model.Packet) = fireStoreScope.launch {
         val sdp = packet.toAnswerSdp()
 
-        hostEvent.emit(HostEvent.ReceiveAnswer(sdp))
+        eventFlow.emit(WebRtcEvent.Host.ReceiveAnswer(sdp))
     }
 
     private fun handleOffer(packet: com.example.model.Packet, roomID: String) =
         fireStoreScope.launch {
             val sdp = packet.toOfferSdp()
 
-            guestEvent.emit(GuestEvent.ReceiveOffer(sdp))
+            eventFlow.emit(WebRtcEvent.Guest.ReceiveOffer(sdp))
 
-            guestEvent.emit(GuestEvent.SendAnswer(roomID))
+            eventFlow.emit(WebRtcEvent.Guest.SendAnswer(roomID))
         }
 
     private suspend fun ProducerScope<com.example.model.Packet>.sendError(e: Exception) {

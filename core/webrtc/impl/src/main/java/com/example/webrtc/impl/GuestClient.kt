@@ -5,30 +5,24 @@ import com.example.manager.PeerConnectionManager
 import com.example.manager.ResourceManager
 import com.example.model.RoomStatus
 import com.example.webrtc.api.WebRtcClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal class GuestClient @Inject constructor(
-    private val guestController: GuestController,
+    private val eventController: EventController,
     private val peerConnectionManager: PeerConnectionManager,
     private val resourceManager: ResourceManager,
     private val fireStoreManager: FireStoreManager
 ) : WebRtcClient {
-    private val scope = CoroutineScope(Dispatchers.IO)
 
     override fun connect(roomID: String) {
-        scope.launch {
-            guestController.start()
+        eventController.start()
 
-            peerConnectionManager.connectToPeerAsGuest(roomID)
+        peerConnectionManager.connectToPeerAsGuest(roomID)
 
-            resourceManager.startCapture()
+        resourceManager.startCapture()
 
-            fireStoreManager.observeSignaling(roomID)
-        }
+        fireStoreManager.observeSignaling(roomID)
     }
 
     override fun toggleVoice() {

@@ -1,5 +1,7 @@
 package com.example.manager
 
+import com.example.event.WebRtcEvent
+import com.example.event.eventFlow
 import com.example.model.RemoteSurface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -58,8 +60,8 @@ class PeerConnectionManager @Inject constructor(
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
                 CoroutineScope(Dispatchers.IO).launch {
-                    hostEvent.emit(HostEvent.SetLocalSdp(observer, sdp))
-                    hostEvent.emit(HostEvent.SendSdpToGuest(sdp = sdp, roomId = roomID))
+                    eventFlow.emit(WebRtcEvent.Host.SetLocalSdp(observer, sdp))
+                    eventFlow.emit(WebRtcEvent.Host.SendSdpToGuest(sdp = sdp, roomId = roomID))
                 }
             }
         )
@@ -71,8 +73,8 @@ class PeerConnectionManager @Inject constructor(
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
                 CoroutineScope(Dispatchers.IO).launch {
-                    guestEvent.emit(GuestEvent.SetLocalSdp(observer, sdp))
-                    guestEvent.emit(GuestEvent.SendSdpToHost(sdp = sdp, roomId = roomID))
+                     eventFlow.emit(WebRtcEvent.Guest.SetLocalSdp(observer, sdp))
+                     eventFlow.emit(WebRtcEvent.Guest.SendSdpToHost(sdp = sdp, roomId = roomID))
                 }
             }
         )
@@ -120,8 +122,8 @@ class PeerConnectionManager @Inject constructor(
             override fun onIceCandidate(p0: IceCandidate?) {
                 p0?.let {
                     CoroutineScope(Dispatchers.IO).launch {
-                        hostEvent.emit(HostEvent.SendIceToGuest(ice = it, roomId = roomID))
-                        hostEvent.emit(HostEvent.SetLocalIce(ice = it))
+                         eventFlow.emit(WebRtcEvent.Host.SendIceToGuest(ice = it, roomId = roomID))
+                         eventFlow.emit(WebRtcEvent.Host.SetLocalIce(ice = it))
                     }
                 }
             }
@@ -150,8 +152,8 @@ class PeerConnectionManager @Inject constructor(
             override fun onIceCandidate(p0: IceCandidate?) {
                 p0?.let {
                     CoroutineScope(Dispatchers.IO).launch {
-                        guestEvent.emit(GuestEvent.SendIceToHost(ice = it, roomId = roomID))
-                        guestEvent.emit(GuestEvent.SetLocalIce(ice = it))
+                         eventFlow.emit(WebRtcEvent.Guest.SendIceToHost(ice = it, roomId = roomID))
+                         eventFlow.emit(WebRtcEvent.Guest.SetLocalIce(ice = it))
                     }
                 }
             }
