@@ -12,7 +12,7 @@ dependencies {
     implementation(projects.core.webrtc.api)
     implementation(projects.core.webrtc.manager)
     implementation(projects.core.webrtc.event)
-    implementation(projects.core.webrtc.firestore)
+    implementation(projects.core.webrtc.signaling)
 
     implementation(libs.google.webrtc)
 }

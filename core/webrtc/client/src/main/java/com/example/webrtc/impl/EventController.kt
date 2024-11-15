@@ -2,7 +2,7 @@ package com.example.webrtc.impl
 
 import com.example.event.EventBus.eventFlow
 import com.example.event.WebRtcEvent
-import com.example.firestore.FireStoreManager
+import com.example.firestore.SignalingManager
 import com.example.manager.PeerConnectionManager
 import com.example.model.Candidate
 import kotlinx.coroutines.CoroutineScope
@@ -12,7 +12,7 @@ import javax.inject.Inject
 internal class EventController @Inject constructor(
     private val webRtcScope: CoroutineScope,
     private val peerConnectionManager: PeerConnectionManager,
-    private val fireStoreManager: FireStoreManager
+    private val signalingManager: SignalingManager
 ) {
     fun start() {
         webRtcScope.launch {
@@ -36,7 +36,7 @@ internal class EventController @Inject constructor(
             }
 
             is WebRtcEvent.Guest.SendIceToHost -> {
-                fireStoreManager.sendIceCandidateToRoom(
+                signalingManager.sendIceCandidateToRoom(
                     candidate = event.ice,
                     type = Candidate.ANSWER,
                     roomId = event.roomId
@@ -44,7 +44,7 @@ internal class EventController @Inject constructor(
             }
 
             is WebRtcEvent.Guest.SendSdpToHost -> {
-                fireStoreManager.sendSdpToRoom(
+                signalingManager.sendSdpToRoom(
                     sdp = event.sdp,
                     roomId = event.roomId
                 )
@@ -75,7 +75,7 @@ internal class EventController @Inject constructor(
             }
 
             is WebRtcEvent.Host.SendIceToGuest -> {
-                fireStoreManager.sendIceCandidateToRoom(
+                signalingManager.sendIceCandidateToRoom(
                     candidate = event.ice,
                     type = Candidate.OFFER,
                     roomId = event.roomId
@@ -83,7 +83,7 @@ internal class EventController @Inject constructor(
             }
 
             is WebRtcEvent.Host.SendSdpToGuest -> {
-                fireStoreManager.sendSdpToRoom(
+                signalingManager.sendSdpToRoom(
                     sdp = event.sdp,
                     roomId = event.roomId
                 )

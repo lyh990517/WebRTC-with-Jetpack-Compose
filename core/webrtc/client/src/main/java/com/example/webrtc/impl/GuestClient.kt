@@ -15,7 +15,7 @@ internal class GuestClient @Inject constructor(
     private val eventController: EventController,
     private val peerConnectionManager: PeerConnectionManager,
     private val resourceManager: ResourceManager,
-    private val fireStoreManager: com.example.firestore.FireStoreManager
+    private val signalingManager: com.example.firestore.SignalingManager
 ) : WebRtcClient {
 
     override fun connect(roomID: String) {
@@ -26,7 +26,7 @@ internal class GuestClient @Inject constructor(
 
             resourceManager.startCapture()
 
-            fireStoreManager.observeSignaling(roomID)
+            signalingManager.observeSignaling(roomID)
         }
     }
 
@@ -39,7 +39,7 @@ internal class GuestClient @Inject constructor(
     }
 
     override suspend fun getRoomStatus(roomID: String): RoomStatus =
-        fireStoreManager.getRoomStatus(roomID).first()
+        signalingManager.getRoomStatus(roomID).first()
 
     override fun disconnect() {
         webRtcScope.cancel()

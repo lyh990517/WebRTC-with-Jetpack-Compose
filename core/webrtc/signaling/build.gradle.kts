@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    setNamespace("core.webrtc.firestore")
+    setNamespace("core.webrtc.signaling")
 }
 
 dependencies {

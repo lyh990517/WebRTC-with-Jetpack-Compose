@@ -23,7 +23,7 @@ import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
 import javax.inject.Inject
 
-class FireStoreManager @Inject constructor(
+class SignalingManager @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val webRtcScope: CoroutineScope,
 ) {
