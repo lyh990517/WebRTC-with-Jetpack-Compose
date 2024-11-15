@@ -2,17 +2,15 @@ import com.example.build_logic.setNamespace
 
 plugins {
     id("core")
+    id("firebase")
 }
 
 android {
-    setNamespace("core.webrtc.client")
+    setNamespace("core.webrtc.firestore")
 }
 
 dependencies {
-    implementation(projects.core.webrtc.api)
-    implementation(projects.core.webrtc.manager)
     implementation(projects.core.webrtc.event)
-    implementation(projects.core.webrtc.firestore)
 
     implementation(libs.google.webrtc)
 }

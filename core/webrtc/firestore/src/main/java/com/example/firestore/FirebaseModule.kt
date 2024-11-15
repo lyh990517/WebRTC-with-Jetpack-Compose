@@ -1,4 +1,4 @@
-package com.example.manager.di
+package com.example.firestore
 
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase

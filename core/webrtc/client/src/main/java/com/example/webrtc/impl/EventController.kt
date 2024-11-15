@@ -1,8 +1,8 @@
 package com.example.webrtc.impl
 
-import com.example.event.WebRtcEvent
 import com.example.event.EventBus.eventFlow
-import com.example.manager.FireStoreManager
+import com.example.event.WebRtcEvent
+import com.example.firestore.FireStoreManager
 import com.example.manager.PeerConnectionManager
 import com.example.model.Candidate
 import kotlinx.coroutines.CoroutineScope

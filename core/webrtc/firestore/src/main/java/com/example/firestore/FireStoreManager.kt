@@ -1,4 +1,4 @@
-package com.example.manager
+package com.example.firestore
 
 import android.util.Log
 import com.example.event.WebRtcEvent
@@ -14,8 +14,6 @@ import com.example.util.toIceCandidate
 import com.example.util.toOfferSdp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

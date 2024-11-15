@@ -2,7 +2,7 @@ package com.example.webrtc.impl
 
 import com.example.event.EventBus.eventFlow
 import com.example.event.WebRtcEvent
-import com.example.manager.FireStoreManager
+import com.example.firestore.FireStoreManager
 import com.example.manager.PeerConnectionManager
 import com.example.manager.ResourceManager
 import com.example.model.RoomStatus
@@ -18,7 +18,7 @@ internal class HostClient @Inject constructor(
     private val eventController: EventController,
     private val peerConnectionManager: PeerConnectionManager,
     private val resourceManager: ResourceManager,
-    private val fireStoreManager: FireStoreManager
+    private val fireStoreManager: com.example.firestore.FireStoreManager
 ) : WebRtcClient {
     override fun connect(roomID: String) {
         webRtcScope.launch {
