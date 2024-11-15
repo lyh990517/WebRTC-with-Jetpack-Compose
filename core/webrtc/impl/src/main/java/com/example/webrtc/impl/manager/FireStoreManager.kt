@@ -8,6 +8,7 @@ import com.example.util.parseDate
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -101,6 +102,10 @@ internal class FireStoreManager @Inject constructor(
 
     private suspend fun ProducerScope<com.example.model.Packet>.sendError(e: Exception) {
         send(com.example.model.Packet(mapOf("error" to e)))
+    }
+
+    fun close() {
+        fireStoreScope.cancel()
     }
 
     private fun getRoom(roomId: String) = firestore
