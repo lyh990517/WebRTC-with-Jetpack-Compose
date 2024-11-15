@@ -1,4 +1,4 @@
-package com.example.manager
+package com.example.webrtc.impl
 
 import org.webrtc.IceCandidate
 import org.webrtc.SdpObserver

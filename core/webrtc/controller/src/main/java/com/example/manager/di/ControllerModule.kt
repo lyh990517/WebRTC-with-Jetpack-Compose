@@ -1,8 +1,8 @@
 package com.example.manager.di
 
-import com.example.manager.Controller
 import com.example.manager.LocalResourceController
 import com.example.manager.WebRtcController
+import com.example.webrtc.impl.Controller
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

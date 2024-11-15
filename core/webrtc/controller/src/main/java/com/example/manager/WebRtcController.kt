@@ -3,6 +3,7 @@ package com.example.manager
 import com.example.event.EventBus.eventFlow
 import com.example.event.WebRtcEvent
 import com.example.model.RemoteSurface
+import com.example.webrtc.impl.Controller
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.webrtc.DataChannel

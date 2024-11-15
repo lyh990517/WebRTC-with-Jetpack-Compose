@@ -1,6 +1,6 @@
 package com.example.firestore.di
 
-import com.example.firestore.Signaling
+import com.example.webrtc.impl.Signaling
 import com.example.firestore.SignalingImpl
 import dagger.Binds
 import dagger.Module
