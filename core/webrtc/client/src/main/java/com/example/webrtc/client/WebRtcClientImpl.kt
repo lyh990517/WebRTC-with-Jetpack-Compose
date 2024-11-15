@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.webrtc.SurfaceViewRenderer
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -39,6 +40,12 @@ internal class WebRtcClientImpl @Inject constructor(
 
     override suspend fun getRoomStatus(roomID: String): RoomStatus =
         signaling.getRoomStatus(roomID).first()
+
+    override fun getLocalSurface(): SurfaceViewRenderer =
+        localResourceController.getLocalSurface()
+
+    override fun getRemoteSurface(): SurfaceViewRenderer =
+        localResourceController.getRemoteSurface()
 
     override fun disconnect() {
         webRtcScope.cancel()
