@@ -9,8 +9,10 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import javax.inject.Singleton
 
-internal class WebRtcClient @Inject constructor(
+@Singleton
+internal class WebRtcClientImpl @Inject constructor(
     private val webRtcScope: CoroutineScope,
     private val eventHandler: EventHandler,
     private val webRtcController: Controller.WebRtc,
