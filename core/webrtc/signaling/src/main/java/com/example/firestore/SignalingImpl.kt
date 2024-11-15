@@ -44,7 +44,7 @@ internal class SignalingImpl @Inject constructor(
         awaitClose {}
     }
 
-    override fun sendIceCandidateToRoom(candidate: IceCandidate?, type: Candidate, roomId: String) {
+    override fun sendIce(candidate: IceCandidate?, type: Candidate, roomId: String) {
         if (candidate == null) return
 
         val parsedIceCandidate = candidate.parseDate(type.value)
@@ -59,7 +59,7 @@ internal class SignalingImpl @Inject constructor(
             }
     }
 
-    override fun sendSdpToRoom(sdp: SessionDescription, roomId: String) {
+    override fun sendSdp(sdp: SessionDescription, roomId: String) {
         val parsedSdp = sdp.parseData()
 
         getRoom(roomId)

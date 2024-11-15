@@ -36,7 +36,7 @@ internal class EventHandler @Inject constructor(
             }
 
             is WebRtcEvent.Guest.SendIceToHost -> {
-                signaling.sendIceCandidateToRoom(
+                signaling.sendIce(
                     candidate = event.ice,
                     type = Candidate.ANSWER,
                     roomId = event.roomId
@@ -44,7 +44,7 @@ internal class EventHandler @Inject constructor(
             }
 
             is WebRtcEvent.Guest.SendSdpToHost -> {
-                signaling.sendSdpToRoom(
+                signaling.sendSdp(
                     sdp = event.sdp,
                     roomId = event.roomId
                 )
@@ -75,7 +75,7 @@ internal class EventHandler @Inject constructor(
             }
 
             is WebRtcEvent.Host.SendIceToGuest -> {
-                signaling.sendIceCandidateToRoom(
+                signaling.sendIce(
                     candidate = event.ice,
                     type = Candidate.OFFER,
                     roomId = event.roomId
@@ -83,7 +83,7 @@ internal class EventHandler @Inject constructor(
             }
 
             is WebRtcEvent.Host.SendSdpToGuest -> {
-                signaling.sendSdpToRoom(
+                signaling.sendSdp(
                     sdp = event.sdp,
                     roomId = event.roomId
                 )
