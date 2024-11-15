@@ -2,7 +2,6 @@ package com.example.controller
 
 import com.example.common.EventBus.eventFlow
 import com.example.common.WebRtcEvent
-import com.example.model.RemoteSurface
 import com.example.webrtc.client.Controller
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -15,16 +14,14 @@ import org.webrtc.PeerConnectionFactory
 import org.webrtc.RtpReceiver
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
-import org.webrtc.SurfaceViewRenderer
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 internal class WebRtcController @Inject constructor(
     private val webRtcScope: CoroutineScope,
-    @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
     private val peerConnectionFactory: PeerConnectionFactory,
-    private val localMediaStream: MediaStream,
+    private val localResourceController: Controller.LocalResource,
 ) : Controller.WebRtc {
     private val iceServer =
         listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
@@ -43,6 +40,8 @@ internal class WebRtcController @Inject constructor(
             )?.let { connection ->
                 peerConnection = connection
             }
+
+            val localMediaStream = localResourceController.getLocalMediaStream()
 
             peerConnection.addStream(localMediaStream)
 
@@ -142,8 +141,8 @@ internal class WebRtcController @Inject constructor(
 
             override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
             override fun onAddStream(p0: MediaStream?) {
-                p0?.let { mediaStream ->
-                    mediaStream.videoTracks?.get(0)?.addSink(remoteSurface)
+                p0?.let { remoteMediaStream ->
+                    localResourceController.sinkToRemoteSurface(remoteMediaStream)
                 }
             }
 
