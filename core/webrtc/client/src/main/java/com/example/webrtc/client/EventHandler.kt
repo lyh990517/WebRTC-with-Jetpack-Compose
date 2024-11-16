@@ -1,8 +1,8 @@
 package com.example.webrtc.client
 
-import com.example.common.EventBus.eventFlow
 import com.example.common.WebRtcEvent
 import com.example.model.CandidateType
+import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -12,7 +12,10 @@ internal class EventHandler @Inject constructor(
     private val signaling: Signaling
 ) {
     suspend fun start() {
-        eventFlow.collect { event ->
+        merge(
+            webRtcController.getEvent(),
+            signaling.getEvent()
+        ).collect { event ->
             when (event) {
                 is WebRtcEvent.Host -> handleHostEvent(event)
                 is WebRtcEvent.Guest -> handleGuestEvent(event)

@@ -1,6 +1,5 @@
 package com.example.signaling
 
-import com.example.common.EventBus.eventFlow
 import com.example.common.WebRtcEvent
 import com.example.model.CandidateType
 import com.example.model.Packet
@@ -16,8 +15,10 @@ import com.example.webrtc.client.Signaling
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
@@ -28,6 +29,8 @@ import javax.inject.Singleton
 internal class SignalingImpl @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : Signaling {
+    private val signalingEvent = MutableSharedFlow<WebRtcEvent>()
+
     override suspend fun getRoomStatus(roomID: String): RoomStatus {
         val data = getRoom(roomID)
             .get()
@@ -74,6 +77,8 @@ internal class SignalingImpl @Inject constructor(
         }
     }
 
+    override fun getEvent(): SharedFlow<WebRtcEvent> = signalingEvent.asSharedFlow()
+
     private fun getRoomUpdates(roomID: String) = callbackFlow {
         firestore.enableNetwork().addOnFailureListener { e ->
             sendError(e)
@@ -108,22 +113,22 @@ internal class SignalingImpl @Inject constructor(
     private suspend fun handleIceCandidate(packet: Packet) {
         val iceCandidate = packet.toIceCandidate()
 
-        eventFlow.emit(WebRtcEvent.Guest.SetRemoteIce(iceCandidate))
-        eventFlow.emit(WebRtcEvent.Host.SetRemoteIce(iceCandidate))
+        signalingEvent.emit(WebRtcEvent.Guest.SetRemoteIce(iceCandidate))
+        signalingEvent.emit(WebRtcEvent.Host.SetRemoteIce(iceCandidate))
     }
 
     private suspend fun handleAnswer(packet: Packet) {
         val sdp = packet.toAnswerSdp()
 
-        eventFlow.emit(WebRtcEvent.Host.ReceiveAnswer(sdp))
+        signalingEvent.emit(WebRtcEvent.Host.ReceiveAnswer(sdp))
     }
 
     private suspend fun handleOffer(packet: Packet, roomID: String) {
         val sdp = packet.toOfferSdp()
 
-        eventFlow.emit(WebRtcEvent.Guest.ReceiveOffer(sdp))
+        signalingEvent.emit(WebRtcEvent.Guest.ReceiveOffer(sdp))
 
-        eventFlow.emit(WebRtcEvent.Guest.SendAnswer(roomID))
+        signalingEvent.emit(WebRtcEvent.Guest.SendAnswer(roomID))
     }
 
     private fun ProducerScope<Packet>.sendError(e: Exception) {
