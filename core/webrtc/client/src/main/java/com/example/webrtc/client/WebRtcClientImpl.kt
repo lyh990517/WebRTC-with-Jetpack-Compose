@@ -21,7 +21,7 @@ internal class WebRtcClientImpl @Inject constructor(
         webRtcScope.launch {
             launch { eventHandler.start() }
 
-            launch { signaling.start(roomID) }
+            launch { signaling.start(roomID, isHost) }
 
             webRtcController.connect(roomID, isHost)
 

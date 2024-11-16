@@ -1,5 +1,6 @@
 package com.example.signaling
 
+import android.util.Log
 import com.example.common.WebRtcEvent
 import com.example.model.CandidateType
 import com.example.model.Packet
@@ -13,12 +14,14 @@ import com.example.util.toIceCandidate
 import com.example.util.toOfferSdp
 import com.example.webrtc.client.Signaling
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
@@ -27,7 +30,8 @@ import javax.inject.Singleton
 
 @Singleton
 internal class SignalingImpl @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val webrtcScope: CoroutineScope
 ) : Signaling {
     private val signalingEvent = MutableSharedFlow<WebRtcEvent>()
 
@@ -64,37 +68,58 @@ internal class SignalingImpl @Inject constructor(
         val parsedSdp = sdp.parseData()
 
         getRoom(roomId)
+            .collection(SDP)
+            .document(sdp.type.name)
             .set(parsedSdp)
     }
 
-    override suspend fun start(roomID: String) {
-        getRoomUpdates(roomID).collect { packet ->
-            when {
-                packet.isOffer() -> handleOffer(packet, roomID)
-                packet.isAnswer() -> handleAnswer(packet)
-                else -> handleIceCandidate(packet)
+    override suspend fun start(roomID: String, isHost: Boolean) {
+        firestore.enableNetwork()
+
+        webrtcScope.launch {
+            getSdpUpdate(roomID, isHost).collect { packet ->
+                when {
+                    packet.isOffer() -> handleOffer(packet, roomID)
+                    packet.isAnswer() -> handleAnswer(packet)
+                }
+            }
+        }
+
+        webrtcScope.launch {
+            getIceUpdate(roomID).collect { packet ->
+                handleIceCandidate(packet)
             }
         }
     }
 
     override fun getEvent(): SharedFlow<WebRtcEvent> = signalingEvent.asSharedFlow()
 
-    private fun getRoomUpdates(roomID: String) = callbackFlow {
-        firestore.enableNetwork().addOnFailureListener { e ->
-            sendError(e)
-        }
-
-        getRoom(roomID).addSnapshotListener { snapshot, e ->
+    private fun getSdpUpdate(roomID: String, isHost: Boolean) = callbackFlow {
+        getRoom(roomID).collection(SDP).addSnapshotListener { snapshot, e ->
             if (e != null) {
                 sendError(e)
             }
 
-            if (snapshot != null && snapshot.exists()) {
-                val data = snapshot.data
-                data?.let { trySend(Packet(it)) }
+            if (snapshot != null && snapshot.isEmpty.not()) {
+                snapshot.forEach { dataSnapshot ->
+                    val packet = Packet(dataSnapshot.data)
+
+                    when {
+                        isHost && packet.isAnswer() -> {
+                            trySend(packet)
+                        }
+
+                        !isHost && packet.isOffer() -> {
+                            trySend(packet)
+                        }
+                    }
+                }
             }
         }
+        awaitClose { }
+    }
 
+    private fun getIceUpdate(roomID: String) = callbackFlow {
         getRoom(roomID).collection(ICE_CANDIDATE)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
@@ -142,5 +167,6 @@ internal class SignalingImpl @Inject constructor(
     companion object {
         private const val ROOT = "calls"
         private const val ICE_CANDIDATE = "candidates"
+        private const val SDP = "sdp"
     }
 }
