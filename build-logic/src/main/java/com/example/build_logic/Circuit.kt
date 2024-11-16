@@ -10,7 +10,7 @@ internal fun Project.configureCircuit() {
     val libs = extensions.libs
     androidExtension.apply {
         dependencies {
-            add("implementation", libs.findBundle("circuit").get())
+            add("api", libs.findBundle("circuit").get())
             add("api",libs.findLibrary("circuit.codegen.annotation").get())
             add("ksp", libs.findLibrary("circuit.codegen.ksp").get())
         }

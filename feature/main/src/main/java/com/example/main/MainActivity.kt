@@ -11,17 +11,36 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.circuit.HomeScreen
+import com.slack.circuit.backstack.rememberSaveableBackStack
+import com.slack.circuit.foundation.Circuit
+import com.slack.circuit.foundation.CircuitCompositionLocals
+import com.slack.circuit.foundation.NavigableCircuitContent
+import com.slack.circuit.foundation.rememberCircuitNavigator
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var circuit: Circuit
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         checkCameraAndAudioPermission()
+
         enableEdgeToEdge()
 
         setContent {
-            AppGraph()
+            val backStack = rememberSaveableBackStack(root = HomeScreen())
+            val navigator = rememberCircuitNavigator(backStack)
+            CircuitCompositionLocals(circuit) {
+                NavigableCircuitContent(
+                    navigator = navigator,
+                    backStack = backStack
+                )
+            }
         }
     }
 

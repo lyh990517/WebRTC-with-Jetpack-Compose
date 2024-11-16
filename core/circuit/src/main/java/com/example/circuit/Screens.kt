@@ -4,7 +4,7 @@ import com.slack.circuit.runtime.screen.Screen
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data object HomeScreen : Screen
+data class HomeScreen(val roomId: String = "", val isHost: Boolean = false) : Screen
 
 @Parcelize
 data class ConnectScreen(val roomId: String, val isHost: Boolean) : Screen
