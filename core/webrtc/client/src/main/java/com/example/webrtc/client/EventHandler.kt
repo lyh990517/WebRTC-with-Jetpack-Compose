@@ -3,29 +3,24 @@ package com.example.webrtc.client
 import com.example.common.EventBus.eventFlow
 import com.example.common.WebRtcEvent
 import com.example.model.CandidateType
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 internal class EventHandler @Inject constructor(
-    private val webRtcScope: CoroutineScope,
     private val webRtcController: Controller.WebRtc,
     private val signaling: Signaling
 ) {
-    fun start() {
-        webRtcScope.launch {
-            eventFlow.collect { event ->
-                when (event) {
-                    is WebRtcEvent.Host -> handleHostEvent(event)
-                    is WebRtcEvent.Guest -> handleGuestEvent(event)
-                }
+    suspend fun start() {
+        eventFlow.collect { event ->
+            when (event) {
+                is WebRtcEvent.Host -> handleHostEvent(event)
+                is WebRtcEvent.Guest -> handleGuestEvent(event)
             }
         }
     }
 
-    private fun handleGuestEvent(event: WebRtcEvent.Guest) {
+    private suspend fun handleGuestEvent(event: WebRtcEvent.Guest) {
         when (event) {
             is WebRtcEvent.Guest.ReceiveOffer -> {
                 webRtcController.setRemoteDescription(event.sdp)
@@ -64,7 +59,7 @@ internal class EventHandler @Inject constructor(
         }
     }
 
-    private fun handleHostEvent(event: WebRtcEvent.Host) {
+    private suspend fun handleHostEvent(event: WebRtcEvent.Host) {
         when (event) {
             is WebRtcEvent.Host.SendOffer -> {
                 webRtcController.createOffer(event.roomId)

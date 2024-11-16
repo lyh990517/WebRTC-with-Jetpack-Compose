@@ -1,9 +1,9 @@
 package com.example.signaling
 
-import android.util.Log
 import com.example.common.EventBus.eventFlow
 import com.example.common.WebRtcEvent
 import com.example.model.CandidateType
+import com.example.model.Packet
 import com.example.model.Packet.Companion.isAnswer
 import com.example.model.Packet.Companion.isOffer
 import com.example.model.RoomStatus
@@ -14,10 +14,8 @@ import com.example.util.toIceCandidate
 import com.example.util.toOfferSdp
 import com.example.webrtc.client.Signaling
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -28,8 +26,7 @@ import javax.inject.Singleton
 
 @Singleton
 internal class SignalingImpl @Inject constructor(
-    private val firestore: FirebaseFirestore,
-    private val webRtcScope: CoroutineScope,
+    private val firestore: FirebaseFirestore
 ) : Signaling {
     override suspend fun getRoomStatus(roomID: String): RoomStatus {
         val data = getRoom(roomID)
@@ -42,7 +39,7 @@ internal class SignalingImpl @Inject constructor(
         return roomStatus
     }
 
-    override fun sendIce(
+    override suspend fun sendIce(
         roomId: String,
         ice: IceCandidate?,
         type: CandidateType
@@ -57,7 +54,7 @@ internal class SignalingImpl @Inject constructor(
             .set(parsedIceCandidate)
     }
 
-    override fun sendSdp(
+    override suspend fun sendSdp(
         roomId: String,
         sdp: SessionDescription
     ) {
@@ -67,83 +64,70 @@ internal class SignalingImpl @Inject constructor(
             .set(parsedSdp)
     }
 
-    override fun start(roomID: String) {
-        webRtcScope.launch {
-            getRoomUpdates(roomID).collect { packet ->
-                when {
-                    packet.isOffer() -> handleOffer(packet, roomID)
-                    packet.isAnswer() -> handleAnswer(packet)
-                    else -> handleIceCandidate(packet)
-                }
+    override suspend fun start(roomID: String) {
+        getRoomUpdates(roomID).collect { packet ->
+            when {
+                packet.isOffer() -> handleOffer(packet, roomID)
+                packet.isAnswer() -> handleAnswer(packet)
+                else -> handleIceCandidate(packet)
             }
         }
     }
 
     private fun getRoomUpdates(roomID: String) = callbackFlow {
         firestore.enableNetwork().addOnFailureListener { e ->
-            webRtcScope.launch {
-                sendError(e)
-            }
+            sendError(e)
         }
 
         getRoom(roomID).addSnapshotListener { snapshot, e ->
             if (e != null) {
-                webRtcScope.launch {
-                    sendError(e)
-                }
+                sendError(e)
             }
 
             if (snapshot != null && snapshot.exists()) {
-                webRtcScope.launch {
-                    val data = snapshot.data
-                    data?.let { send(com.example.model.Packet(it)) }
-                }
+                val data = snapshot.data
+                data?.let { trySend(Packet(it)) }
             }
         }
 
         getRoom(roomID).collection(ICE_CANDIDATE)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    webRtcScope.launch {
-                        sendError(e)
-                    }
+                    sendError(e)
                 }
 
                 if (snapshot != null && snapshot.isEmpty.not()) {
                     snapshot.forEach { dataSnapshot ->
-                        webRtcScope.launch {
-                            send(com.example.model.Packet(dataSnapshot.data))
-                        }
+                        trySend(Packet(dataSnapshot.data))
                     }
                 }
             }
         awaitClose { }
     }
 
-    private fun handleIceCandidate(packet: com.example.model.Packet) = webRtcScope.launch {
+    private suspend fun handleIceCandidate(packet: Packet) {
         val iceCandidate = packet.toIceCandidate()
 
         eventFlow.emit(WebRtcEvent.Guest.SetRemoteIce(iceCandidate))
         eventFlow.emit(WebRtcEvent.Host.SetRemoteIce(iceCandidate))
     }
 
-    private fun handleAnswer(packet: com.example.model.Packet) = webRtcScope.launch {
+    private suspend fun handleAnswer(packet: Packet) {
         val sdp = packet.toAnswerSdp()
 
         eventFlow.emit(WebRtcEvent.Host.ReceiveAnswer(sdp))
     }
 
-    private fun handleOffer(packet: com.example.model.Packet, roomID: String) =
-        webRtcScope.launch {
-            val sdp = packet.toOfferSdp()
+    private suspend fun handleOffer(packet: Packet, roomID: String) {
+        val sdp = packet.toOfferSdp()
 
-            eventFlow.emit(WebRtcEvent.Guest.ReceiveOffer(sdp))
+        eventFlow.emit(WebRtcEvent.Guest.ReceiveOffer(sdp))
 
-            eventFlow.emit(WebRtcEvent.Guest.SendAnswer(roomID))
-        }
+        eventFlow.emit(WebRtcEvent.Guest.SendAnswer(roomID))
+    }
 
-    private suspend fun ProducerScope<com.example.model.Packet>.sendError(e: Exception) {
-        send(com.example.model.Packet(mapOf("error" to e)))
+    private fun ProducerScope<Packet>.sendError(e: Exception) {
+        trySend(Packet(mapOf("error" to e)))
     }
 
     private fun getRoom(roomId: String) = firestore

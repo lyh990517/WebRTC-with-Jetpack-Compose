@@ -20,9 +20,9 @@ internal class WebRtcClientImpl @Inject constructor(
 ) : WebRtcClient {
     override fun connect(roomID: String, isHost: Boolean) {
         webRtcScope.launch {
-            eventHandler.start()
+            launch { eventHandler.start() }
 
-            signaling.start(roomID)
+            launch { signaling.start(roomID) }
 
             webRtcController.connect(roomID, isHost)
 
