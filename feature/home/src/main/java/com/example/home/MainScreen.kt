@@ -1,6 +1,5 @@
 package com.example.home
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,28 +16,23 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.circuit.HomeScreen
 import com.example.home.ui.SearchBar
-import com.example.home.viewmodel.HomeViewModel
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.yunho.webrtc.core.designsystem.R
 import dagger.hilt.android.components.ActivityRetainedComponent
 
-@CircuitInject(HomeScreen::class, ActivityRetainedComponent::class)
 @Composable
-fun MainScreen(
+@CircuitInject(HomeScreen::class, ActivityRetainedComponent::class)
+fun HomeScreen(
     state: HomeUiState,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),

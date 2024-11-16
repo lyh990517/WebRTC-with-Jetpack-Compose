@@ -4,6 +4,7 @@ import com.example.build_logic.libs
 plugins {
     id("core")
     id("compose")
+    id("circuit")
 }
 
 android {

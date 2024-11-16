@@ -1,4 +1,4 @@
-package com.example.circuit
+package com.example.main
 
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.runtime.presenter.Presenter
