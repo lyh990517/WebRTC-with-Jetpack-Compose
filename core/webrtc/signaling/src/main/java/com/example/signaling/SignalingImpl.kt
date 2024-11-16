@@ -86,7 +86,7 @@ internal class SignalingImpl @Inject constructor(
         }
 
         webrtcScope.launch {
-            getIceUpdate(roomID).collect { packet ->
+            getIceUpdate(roomID, isHost).collect { packet ->
                 handleIceCandidate(packet)
             }
         }
@@ -126,19 +126,22 @@ internal class SignalingImpl @Inject constructor(
         awaitClose { }
     }
 
-    private fun getIceUpdate(roomID: String) = callbackFlow {
-        getRoom(roomID).collection(ICE_CANDIDATE)
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    sendError(e)
-                }
+    private fun getIceUpdate(roomID: String, isHost: Boolean) = callbackFlow {
+        val collection = getRoom(roomID).collection(ICE_CANDIDATE)
+        val candidate = if (isHost) CandidateType.ANSWER else CandidateType.OFFER
 
-                if (snapshot != null && snapshot.isEmpty.not()) {
-                    snapshot.forEach { dataSnapshot ->
-                        trySend(Packet(dataSnapshot.data))
-                    }
+        collection
+            .document(candidate.value)
+            .addSnapshotListener { snapshot, e ->
+                val data = snapshot?.data
+
+                if (data != null) {
+                    val packet = Packet(data)
+
+                    trySend(packet)
                 }
             }
+
         awaitClose { }
     }
 
