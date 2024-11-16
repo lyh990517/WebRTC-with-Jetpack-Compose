@@ -140,7 +140,6 @@ internal class WebRtcController @Inject constructor(
                                     roomId = roomID
                                 )
                             )
-                            controllerEvent.emit(WebRtcEvent.Host.SetLocalIce(ice = ice))
                         } else {
                             controllerEvent.emit(
                                 WebRtcEvent.Guest.SendIceToHost(
@@ -148,7 +147,6 @@ internal class WebRtcController @Inject constructor(
                                     roomId = roomID
                                 )
                             )
-                            controllerEvent.emit(WebRtcEvent.Guest.SetLocalIce(ice = ice))
                         }
                     }
                 }

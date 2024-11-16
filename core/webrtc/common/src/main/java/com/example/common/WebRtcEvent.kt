@@ -12,8 +12,6 @@ sealed interface WebRtcEvent {
 
         data class SetLocalSdp(val observer: SdpObserver, val sdp: SessionDescription) : Host
 
-        data class SetLocalIce(val ice: IceCandidate) : Host
-
         data class SendSdpToGuest(val sdp: SessionDescription, val roomId: String) : Host
 
         data class SendIceToGuest(val ice: IceCandidate, val roomId: String) : Host
@@ -27,8 +25,6 @@ sealed interface WebRtcEvent {
         data class SendAnswer(val roomId: String) : Guest
 
         data class SetLocalSdp(val observer: SdpObserver, val sdp: SessionDescription) : Guest
-
-        data class SetLocalIce(val ice: IceCandidate) : Guest
 
         data class SendSdpToHost(val sdp: SessionDescription, val roomId: String) : Guest
 

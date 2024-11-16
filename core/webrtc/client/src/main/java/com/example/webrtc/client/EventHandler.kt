@@ -48,10 +48,6 @@ internal class EventHandler @Inject constructor(
                 )
             }
 
-            is WebRtcEvent.Guest.SetLocalIce -> {
-                webRtcController.addIceCandidate(event.ice)
-            }
-
             is WebRtcEvent.Guest.SetLocalSdp -> {
                 webRtcController.setLocalDescription(event.sdp, event.observer)
             }
@@ -85,10 +81,6 @@ internal class EventHandler @Inject constructor(
                     sdp = event.sdp,
                     roomId = event.roomId
                 )
-            }
-
-            is WebRtcEvent.Host.SetLocalIce -> {
-                webRtcController.addIceCandidate(event.ice)
             }
 
             is WebRtcEvent.Host.SetLocalSdp -> {
