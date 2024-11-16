@@ -7,7 +7,7 @@ import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
 
 interface Signaling {
-    fun getRoomStatus(roomID: String): Flow<RoomStatus>
+    suspend fun getRoomStatus(roomID: String): RoomStatus
     fun sendIce(roomId: String, ice: IceCandidate?, type: CandidateType)
     fun sendSdp(roomId: String, sdp: SessionDescription)
     fun start(roomID: String)

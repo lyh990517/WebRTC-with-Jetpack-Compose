@@ -39,7 +39,7 @@ internal class WebRtcClientImpl @Inject constructor(
     }
 
     override suspend fun getRoomStatus(roomID: String): RoomStatus =
-        signaling.getRoomStatus(roomID).first()
+        signaling.getRoomStatus(roomID)
 
     override fun getLocalSurface(): SurfaceViewRenderer =
         localResourceController.getLocalSurface()

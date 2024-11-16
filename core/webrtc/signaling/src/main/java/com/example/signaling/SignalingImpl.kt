@@ -20,6 +20,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
 import javax.inject.Inject
@@ -30,18 +31,15 @@ internal class SignalingImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val webRtcScope: CoroutineScope,
 ) : Signaling {
-    override fun getRoomStatus(roomID: String): Flow<RoomStatus> = callbackFlow {
-        getRoom(roomID)
+    override suspend fun getRoomStatus(roomID: String): RoomStatus {
+        val data = getRoom(roomID)
             .get()
-            .addOnSuccessListener { data ->
-                webRtcScope.launch {
-                    val isRoomEnded = data["type"] == "END_CALL"
-                    val roomStatus = if (isRoomEnded) RoomStatus.TERMINATED else RoomStatus.NEW
+            .await()
 
-                    send(roomStatus)
-                }
-            }
-        awaitClose {}
+        val isRoomEnded = data["type"] == "END_CALL"
+        val roomStatus = if (isRoomEnded) RoomStatus.TERMINATED else RoomStatus.NEW
+
+        return roomStatus
     }
 
     override fun sendIce(
@@ -56,11 +54,7 @@ internal class SignalingImpl @Inject constructor(
         getRoom(roomId)
             .collection(ICE_CANDIDATE)
             .document(type.value)
-            .set(parsedIceCandidate).addOnSuccessListener {
-                Log.e("FireStore", "sendIceCandidate: Success")
-            }.addOnFailureListener {
-                Log.e("FireStore", "sendIceCandidate: Error $it")
-            }
+            .set(parsedIceCandidate)
     }
 
     override fun sendSdp(
