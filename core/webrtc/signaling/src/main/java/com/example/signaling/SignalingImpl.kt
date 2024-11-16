@@ -76,6 +76,7 @@ internal class SignalingImpl @Inject constructor(
     override suspend fun start(roomID: String, isHost: Boolean) {
         firestore.enableNetwork()
 
+        // TODO answer sdp 무한정 보내는 버그 수정
         webrtcScope.launch {
             getSdpUpdate(roomID, isHost).collect { packet ->
                 when {
