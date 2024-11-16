@@ -33,6 +33,10 @@ internal class EventHandler @Inject constructor(
                 webRtcController.createAnswer(event.roomId)
             }
 
+            is WebRtcEvent.Guest.SetLocalSdp -> {
+                webRtcController.setLocalDescription(event.sdp, event.observer)
+            }
+
             is WebRtcEvent.Guest.SendIceToHost -> {
                 signaling.sendIce(
                     ice = event.ice,
@@ -48,10 +52,6 @@ internal class EventHandler @Inject constructor(
                 )
             }
 
-            is WebRtcEvent.Guest.SetLocalSdp -> {
-                webRtcController.setLocalDescription(event.sdp, event.observer)
-            }
-
             is WebRtcEvent.Guest.SetRemoteIce -> {
                 webRtcController.addIceCandidate(event.ice)
             }
@@ -62,6 +62,10 @@ internal class EventHandler @Inject constructor(
         when (event) {
             is WebRtcEvent.Host.SendOffer -> {
                 webRtcController.createOffer(event.roomId)
+            }
+
+            is WebRtcEvent.Host.SetLocalSdp -> {
+                webRtcController.setLocalDescription(event.sdp, event.observer)
             }
 
             is WebRtcEvent.Host.ReceiveAnswer -> {
@@ -81,10 +85,6 @@ internal class EventHandler @Inject constructor(
                     sdp = event.sdp,
                     roomId = event.roomId
                 )
-            }
-
-            is WebRtcEvent.Host.SetLocalSdp -> {
-                webRtcController.setLocalDescription(event.sdp, event.observer)
             }
 
             is WebRtcEvent.Host.SetRemoteIce -> {
