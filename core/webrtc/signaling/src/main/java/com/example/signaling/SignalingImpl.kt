@@ -1,6 +1,5 @@
 package com.example.signaling
 
-import android.util.Log
 import com.example.common.WebRtcEvent
 import com.example.model.CandidateType
 import com.example.model.Packet
@@ -21,6 +20,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.webrtc.IceCandidate
@@ -76,13 +76,12 @@ internal class SignalingImpl @Inject constructor(
     override suspend fun start(roomID: String, isHost: Boolean) {
         firestore.enableNetwork()
 
-        // TODO answer sdp 무한정 보내는 버그 수정
         webrtcScope.launch {
-            getSdpUpdate(roomID, isHost).collect { packet ->
-                when {
-                    packet.isOffer() -> handleOffer(packet, roomID)
-                    packet.isAnswer() -> handleAnswer(packet)
-                }
+            val packet = getSdpUpdate(roomID, isHost).first()
+
+            when {
+                packet.isOffer() -> handleOffer(packet, roomID)
+                packet.isAnswer() -> handleAnswer(packet)
             }
         }
 
@@ -96,27 +95,34 @@ internal class SignalingImpl @Inject constructor(
     override fun getEvent(): SharedFlow<WebRtcEvent> = signalingEvent.asSharedFlow()
 
     private fun getSdpUpdate(roomID: String, isHost: Boolean) = callbackFlow {
-        getRoom(roomID).collection(SDP).addSnapshotListener { snapshot, e ->
-            if (e != null) {
-                sendError(e)
-            }
+        val collection = getRoom(roomID).collection(SDP)
 
-            if (snapshot != null && snapshot.isEmpty.not()) {
-                snapshot.forEach { dataSnapshot ->
-                    val packet = Packet(dataSnapshot.data)
+        if (isHost) {
+            collection
+                .document("ANSWER")
+                .addSnapshotListener { snapshot, _ ->
 
-                    when {
-                        isHost && packet.isAnswer() -> {
-                            trySend(packet)
-                        }
+                    val data = snapshot?.data
 
-                        !isHost && packet.isOffer() -> {
-                            trySend(packet)
-                        }
+                    if (data != null) {
+                        val packet = Packet(data)
+
+                        trySend(packet)
                     }
                 }
-            }
+        } else {
+            val snapshot = collection
+                .document("OFFER")
+                .get()
+                .await()
+
+            val data = snapshot.data ?: throw Exception("no packet")
+
+            val packet = Packet(data)
+
+            trySend(packet)
         }
+
         awaitClose { }
     }
 
