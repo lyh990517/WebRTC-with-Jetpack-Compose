@@ -22,6 +22,8 @@ configureHiltAndroid()
 dependencies {
     val libs = project.extensions.libs
 
+    implementation(project(":core:circuit"))
+
     implementation(libs.findLibrary("hilt.navigation.compose").get())
     implementation(libs.findLibrary("androidx.compose.navigation").get())
     androidTestImplementation(libs.findLibrary("androidx.compose.navigation.test").get())
