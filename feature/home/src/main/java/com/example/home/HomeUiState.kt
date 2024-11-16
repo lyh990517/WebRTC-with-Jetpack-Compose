@@ -6,7 +6,7 @@ import com.slack.circuit.runtime.CircuitUiState
 
 data class HomeUiState(
     val roomId: String,
-    val eventSink: suspend (HomeEvent) -> Unit = {}
+    val eventSink: (HomeEvent) -> Unit = {}
 ) : CircuitUiState
 
 sealed interface HomeEvent : CircuitUiEvent {

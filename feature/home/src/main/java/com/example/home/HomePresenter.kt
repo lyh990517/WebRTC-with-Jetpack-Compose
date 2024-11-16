@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.example.circuit.ConnectScreen
 import com.example.circuit.HomeScreen
@@ -16,6 +17,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.components.ActivityRetainedComponent
+import kotlinx.coroutines.launch
 
 class HomePresenter @AssistedInject constructor(
     @Assisted private val navigator: Navigator,
@@ -25,6 +27,7 @@ class HomePresenter @AssistedInject constructor(
     @Composable
     override fun present(): HomeUiState {
         var roomId by remember { mutableStateOf("") }
+        val scope = rememberCoroutineScope()
 
         return HomeUiState(
             roomId = roomId,
@@ -35,15 +38,17 @@ class HomePresenter @AssistedInject constructor(
                     }
 
                     is HomeEvent.Connect -> {
-                        val status = webRtcClient.getRoomStatus(roomId)
+                        scope.launch {
+                            val status = webRtcClient.getRoomStatus(roomId)
 
-                        when (status) {
-                            RoomStatus.NEW -> {
-                                navigator.goTo(ConnectScreen(roomId, event.isHost))
-                            }
+                            when (status) {
+                                RoomStatus.NEW -> {
+                                    navigator.goTo(ConnectScreen(roomId, event.isHost))
+                                }
 
-                            RoomStatus.TERMINATED -> {
-                                // nothing
+                                RoomStatus.TERMINATED -> {
+                                    // nothing
+                                }
                             }
                         }
                     }

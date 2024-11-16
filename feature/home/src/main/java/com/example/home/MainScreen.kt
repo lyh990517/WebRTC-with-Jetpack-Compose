@@ -28,42 +28,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import com.example.circuit.HomeScreen
 import com.example.home.ui.SearchBar
 import com.example.home.viewmodel.HomeViewModel
+import com.slack.circuit.codegen.annotations.CircuitInject
 import com.yunho.webrtc.core.designsystem.R
+import dagger.hilt.android.components.ActivityRetainedComponent
 
-const val homeRoute = "homeRoute"
-
-fun NavGraphBuilder.mainScreen(goToCall: (String, Boolean) -> Unit) {
-    composable(homeRoute) {
-        MainScreen(goToCall = goToCall)
-    }
-}
-
+@CircuitInject(HomeScreen::class, ActivityRetainedComponent::class)
 @Composable
 fun MainScreen(
-    viewModel: HomeViewModel = hiltViewModel(),
-    goToCall: (String, Boolean) -> Unit
+    state: HomeUiState,
 ) {
-    val roomId = remember { mutableStateOf("") }
-    val context = LocalContext.current
-
-    LaunchedEffect(Unit) {
-        viewModel.effect.collect {
-            when (it) {
-                is HomeSideEffect.EnterRoom -> {
-                    goToCall(it.roomId, it.isHost)
-                }
-
-                is HomeSideEffect.RoomAlreadyEnded -> {
-                    Toast.makeText(context, "이미 사용된 방입니다.", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -76,14 +52,14 @@ fun MainScreen(
             LogoImage()
             Spacer(modifier = Modifier.padding(vertical = 50.dp))
             InputContent(
-                roomId = { roomId.value },
+                roomId = { state.roomId },
                 onCall = {
-                    viewModel.connect(roomId.value, true)
+                    state.eventSink(HomeEvent.Connect(true))
                 },
                 onJoin = {
-                    viewModel.connect(roomId.value, false)
+                    state.eventSink(HomeEvent.Connect(false))
                 },
-                onInput = { roomId.value = it }
+                onInput = { state.eventSink(HomeEvent.Input(it)) }
             )
         }
         Text(text = "Created by yunho 2023", Modifier.padding(bottom = 10.dp))
