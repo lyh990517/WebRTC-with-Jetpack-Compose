@@ -116,7 +116,7 @@ internal class SignalingImpl @Inject constructor(
                 .get()
                 .await()
 
-            val data = snapshot.data ?: throw Exception("no packet")
+            val data = snapshot.data ?: throw Exception("there is no offer")
 
             val packet = Packet(data)
 
