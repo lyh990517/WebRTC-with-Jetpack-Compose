@@ -87,8 +87,11 @@ internal class IceManager @Inject constructor(
     private suspend fun handleIceCandidate(packet: Packet) {
         val iceCandidate = packet.toIceCandidate()
 
-        iceEvent.emit(WebRtcEvent.Guest.SetRemoteIce(iceCandidate))
-        iceEvent.emit(WebRtcEvent.Host.SetRemoteIce(iceCandidate))
+        if (isHost) {
+            iceEvent.emit(WebRtcEvent.Host.SetRemoteIce(iceCandidate))
+        } else {
+            iceEvent.emit(WebRtcEvent.Guest.SetRemoteIce(iceCandidate))
+        }
     }
 
     private fun getIceField(type: String) = firestore
