@@ -1,9 +1,9 @@
 package com.example.signaling
 
-import android.util.Log
 import com.example.common.WebRtcEvent
-import com.example.model.CandidateType
 import com.example.model.Packet
+import com.example.model.SignalType
+import com.example.signaling.SignalingImpl.Companion.ROOT
 import com.example.util.parseDate
 import com.example.util.toIceCandidate
 import com.google.firebase.firestore.FieldValue
@@ -33,39 +33,34 @@ class IceManager @Inject constructor(
         this.isHost = isHost
 
         webrtcScope.launch {
-            val type = if (isHost) CandidateType.OFFER.value else CandidateType.ANSWER.value
+            initializeIceField()
 
-            initializeIceField(type)
-
-            getIce().collect(::handleIceCandidate)
+            getIces().collect(::handleIceCandidate)
         }
     }
 
     fun sendIce(
         ice: IceCandidate?,
-        type: CandidateType
+        type: SignalType
     ) {
         if (ice == null) return
 
         val parsedIceCandidate = ice.parseDate(type.value)
 
-        Log.e("send", "ice : $parsedIceCandidate")
-
         getIceField(type.value)
-            .update("candidates", FieldValue.arrayUnion(parsedIceCandidate))
+            .update(ICE_FIELD, FieldValue.arrayUnion(parsedIceCandidate))
     }
 
     fun getEvent() = iceEvent.asSharedFlow()
 
     @OptIn(FlowPreview::class)
-    private fun getIce() = flow {
+    private fun getIces() = flow {
         callbackFlow {
-            val candidate = if (isHost) CandidateType.ANSWER else CandidateType.OFFER
-            val collection = getIceField(candidate.value)
+            val candidate = if (isHost) SignalType.ANSWER else SignalType.OFFER
 
-            val listener = collection
+            val listener = getIceField(candidate.value)
                 .addSnapshotListener { snapshot, e ->
-                    val candidates = snapshot?.get("candidates") as? List<*>
+                    val candidates = snapshot?.get(ICE_FIELD) as? List<*>
 
                     this.trySend(candidates)
                 }
@@ -80,9 +75,11 @@ class IceManager @Inject constructor(
     }
 
 
-    private fun initializeIceField(type: String) {
+    private fun initializeIceField() {
+        val type = if (isHost) SignalType.OFFER.value else SignalType.ANSWER.value
+
         getIceField(type)
-            .set(mapOf("candidates" to listOf<Any>()))
+            .set(mapOf(ICE_FIELD to listOf<Any>()))
     }
 
     private suspend fun handleIceCandidate(packet: Packet) {
@@ -95,11 +92,11 @@ class IceManager @Inject constructor(
     private fun getIceField(type: String) = firestore
         .collection(ROOT)
         .document(roomID)
-        .collection(ICE_CANDIDATE)
+        .collection(ICE_COLLECTION)
         .document(type)
 
     companion object {
-        private const val ROOT = "calls"
-        private const val ICE_CANDIDATE = "candidates"
+        private const val ICE_COLLECTION = "ice"
+        private const val ICE_FIELD = "ices"
     }
 }

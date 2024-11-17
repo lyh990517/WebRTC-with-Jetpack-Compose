@@ -4,6 +4,8 @@ import com.example.common.WebRtcEvent
 import com.example.model.Packet
 import com.example.model.Packet.Companion.isAnswer
 import com.example.model.Packet.Companion.isOffer
+import com.example.model.SignalType
+import com.example.signaling.SignalingImpl.Companion.ROOT
 import com.example.util.parseData
 import com.example.util.toAnswerSdp
 import com.example.util.toOfferSdp
@@ -63,7 +65,7 @@ class SdpManager @Inject constructor(
     }
 
     private suspend fun getOfferSdp(): Packet {
-        val snapshot = getSdpField("OFFER").get().await()
+        val snapshot = getSdpField(SignalType.OFFER.value).get().await()
 
         val data = snapshot.data ?: throw Exception("there is no offer")
 
@@ -73,7 +75,7 @@ class SdpManager @Inject constructor(
     }
 
     private fun getAnswerSdp() = callbackFlow {
-        val listener = getSdpField("ANSWER")
+        val listener = getSdpField(SignalType.ANSWER.value)
             .addSnapshotListener { snapshot, _ ->
 
                 val data = snapshot?.data
@@ -109,7 +111,6 @@ class SdpManager @Inject constructor(
         .document(type)
 
     companion object {
-        private const val ROOT = "calls"
         private const val SDP = "sdp"
     }
 }

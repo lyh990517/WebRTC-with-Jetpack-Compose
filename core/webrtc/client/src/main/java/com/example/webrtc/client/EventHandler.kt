@@ -1,7 +1,7 @@
 package com.example.webrtc.client
 
 import com.example.common.WebRtcEvent
-import com.example.model.CandidateType
+import com.example.model.SignalType
 import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -40,7 +40,7 @@ internal class EventHandler @Inject constructor(
             is WebRtcEvent.Guest.SendIceToHost -> {
                 signaling.sendIce(
                     ice = event.ice,
-                    type = CandidateType.ANSWER,
+                    type = SignalType.ANSWER,
                 )
             }
 
@@ -73,7 +73,7 @@ internal class EventHandler @Inject constructor(
             is WebRtcEvent.Host.SendIceToGuest -> {
                 signaling.sendIce(
                     ice = event.ice,
-                    type = CandidateType.OFFER,
+                    type = SignalType.OFFER,
                 )
             }
 

@@ -1,8 +1,8 @@
 package com.example.signaling
 
 import com.example.common.WebRtcEvent
-import com.example.model.CandidateType
 import com.example.model.RoomStatus
+import com.example.model.SignalType
 import com.example.webrtc.client.Signaling
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
@@ -33,7 +33,7 @@ internal class SignalingImpl @Inject constructor(
 
     override suspend fun sendIce(
         ice: IceCandidate?,
-        type: CandidateType
+        type: SignalType
     ) {
         iceManager.sendIce(ice, type)
     }
@@ -59,6 +59,6 @@ internal class SignalingImpl @Inject constructor(
         .document(roomId)
 
     companion object {
-        private const val ROOT = "calls"
+        const val ROOT = "calls"
     }
 }
