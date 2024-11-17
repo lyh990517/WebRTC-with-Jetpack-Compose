@@ -76,7 +76,6 @@ internal class IceManager @Inject constructor(
             }
     }
 
-
     private fun initializeIceField() {
         val type = if (isHost) SignalType.OFFER.value else SignalType.ANSWER.value
 
