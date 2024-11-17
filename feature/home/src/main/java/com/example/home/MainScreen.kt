@@ -100,7 +100,7 @@ private fun InputContent(
         colors = ButtonDefaults.buttonColors(Color.Blue)
     ) {
         Icon(imageVector = Icons.Filled.Send, contentDescription = "", tint = Color.White)
-        Text(text = "Create Room", color = Color.White, fontSize = 20.sp)
+        Text(text = "Connect", color = Color.White, fontSize = 20.sp)
     }
     Spacer(modifier = Modifier.padding(vertical = 10.dp))
 }
