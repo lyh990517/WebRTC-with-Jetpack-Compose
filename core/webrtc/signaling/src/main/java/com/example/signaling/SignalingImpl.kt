@@ -20,6 +20,7 @@ internal class SignalingImpl @Inject constructor(
     private val sdpManager: SdpManager,
     private val iceManager: IceManager
 ) : Signaling {
+    private var roomID = ""
 
     override suspend fun getRoomStatus(roomID: String): RoomStatus {
         val data = getRoom(roomID)
@@ -43,6 +44,10 @@ internal class SignalingImpl @Inject constructor(
         return roomExists
     }
 
+    override suspend fun terminate() {
+        getRoom(roomID).delete().await()
+    }
+
     override suspend fun sendIce(
         ice: IceCandidate?,
         type: SignalType
@@ -57,6 +62,8 @@ internal class SignalingImpl @Inject constructor(
     }
 
     override suspend fun start(roomID: String, isHost: Boolean) {
+        this.roomID = roomID
+
         firestore.enableNetwork()
 
         sdpManager.processSdpExchange(isHost, roomID)

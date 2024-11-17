@@ -1,10 +1,9 @@
 package com.example.webrtc.client
 
-import android.util.Log
 import com.example.model.RoomStatus
 import com.example.webrtc.api.WebRtcClient
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import org.webrtc.SurfaceViewRenderer
 import javax.inject.Inject
@@ -50,8 +49,11 @@ internal class WebRtcClientImpl @Inject constructor(
         localResourceController.getRemoteSurface()
 
     override fun disconnect() {
-        webRtcScope.cancel()
-        localResourceController.dispose()
-        webRtcController.closeConnection()
+        webRtcScope.launch {
+            localResourceController.dispose()
+            webRtcController.closeConnection()
+            signaling.terminate()
+            coroutineContext.cancelChildren()
+        }
     }
 }
