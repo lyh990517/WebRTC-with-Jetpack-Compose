@@ -49,12 +49,12 @@ internal class WebRtcController @Inject constructor(
             peerConnection.addStream(localMediaStream)
 
             if (isHost) {
-                controllerEvent.emit(WebRtcEvent.Host.SendOffer(roomID))
+                controllerEvent.emit(WebRtcEvent.Host.SendOffer)
             }
         }
     }
 
-    override fun createOffer(roomID: String) {
+    override fun createOffer() {
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
                 webRtcScope.launch {
@@ -62,7 +62,6 @@ internal class WebRtcController @Inject constructor(
                     controllerEvent.emit(
                         WebRtcEvent.Host.SendSdpToGuest(
                             sdp = sdp,
-                            roomId = roomID
                         )
                     )
                 }
@@ -72,15 +71,14 @@ internal class WebRtcController @Inject constructor(
         peerConnection.createOffer(sdpObserver, constraints)
     }
 
-    override fun createAnswer(roomID: String) {
+    override fun createAnswer() {
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
                 webRtcScope.launch {
                     controllerEvent.emit(WebRtcEvent.Guest.SetLocalSdp(observer, sdp))
                     controllerEvent.emit(
                         WebRtcEvent.Guest.SendSdpToHost(
-                            sdp = sdp,
-                            roomId = roomID
+                            sdp = sdp
                         )
                     )
                 }
@@ -136,15 +134,13 @@ internal class WebRtcController @Inject constructor(
                         if (isHost) {
                             controllerEvent.emit(
                                 WebRtcEvent.Host.SendIceToGuest(
-                                    ice = ice,
-                                    roomId = roomID
+                                    ice = ice
                                 )
                             )
                         } else {
                             controllerEvent.emit(
                                 WebRtcEvent.Guest.SendIceToHost(
-                                    ice = ice,
-                                    roomId = roomID
+                                    ice = ice
                                 )
                             )
                         }

@@ -22,8 +22,8 @@ sealed interface Controller {
 
     interface WebRtc {
         fun connect(roomID: String, isHost: Boolean)
-        fun createOffer(roomID: String)
-        fun createAnswer(roomID: String)
+        fun createOffer()
+        fun createAnswer()
         fun closeConnection()
         fun setLocalDescription(sdp: SessionDescription, observer: SdpObserver)
         fun setRemoteDescription(sdp: SessionDescription)

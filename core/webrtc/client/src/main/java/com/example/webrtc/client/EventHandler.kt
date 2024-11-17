@@ -30,7 +30,7 @@ internal class EventHandler @Inject constructor(
             }
 
             is WebRtcEvent.Guest.SendAnswer -> {
-                webRtcController.createAnswer(event.roomId)
+                webRtcController.createAnswer()
             }
 
             is WebRtcEvent.Guest.SetLocalSdp -> {
@@ -41,14 +41,12 @@ internal class EventHandler @Inject constructor(
                 signaling.sendIce(
                     ice = event.ice,
                     type = CandidateType.ANSWER,
-                    roomId = event.roomId
                 )
             }
 
             is WebRtcEvent.Guest.SendSdpToHost -> {
                 signaling.sendSdp(
-                    sdp = event.sdp,
-                    roomId = event.roomId
+                    sdp = event.sdp
                 )
             }
 
@@ -61,7 +59,7 @@ internal class EventHandler @Inject constructor(
     private suspend fun handleHostEvent(event: WebRtcEvent.Host) {
         when (event) {
             is WebRtcEvent.Host.SendOffer -> {
-                webRtcController.createOffer(event.roomId)
+                webRtcController.createOffer()
             }
 
             is WebRtcEvent.Host.SetLocalSdp -> {
@@ -76,14 +74,12 @@ internal class EventHandler @Inject constructor(
                 signaling.sendIce(
                     ice = event.ice,
                     type = CandidateType.OFFER,
-                    roomId = event.roomId
                 )
             }
 
             is WebRtcEvent.Host.SendSdpToGuest -> {
                 signaling.sendSdp(
-                    sdp = event.sdp,
-                    roomId = event.roomId
+                    sdp = event.sdp
                 )
             }
 
