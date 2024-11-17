@@ -1,7 +1,6 @@
 package com.example.signaling
 
 import com.example.common.WebRtcEvent
-import com.example.model.RoomStatus
 import com.example.model.SignalType
 import com.example.webrtc.client.Signaling
 import com.google.firebase.firestore.FirebaseFirestore
@@ -21,17 +20,6 @@ internal class SignalingImpl @Inject constructor(
     private val iceManager: IceManager
 ) : Signaling {
     private var roomID = ""
-
-    override suspend fun getRoomStatus(roomID: String): RoomStatus {
-        val data = getRoom(roomID)
-            .get()
-            .await()
-
-        val isRoomEnded = data["type"] == "END_CALL"
-        val roomStatus = if (isRoomEnded) RoomStatus.TERMINATED else RoomStatus.NEW
-
-        return roomStatus
-    }
 
     override suspend fun getRoomExists(roomID: String): Boolean {
         val room = getRoom(roomID)

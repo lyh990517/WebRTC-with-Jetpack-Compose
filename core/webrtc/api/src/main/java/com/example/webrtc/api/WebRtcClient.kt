@@ -1,6 +1,5 @@
 package com.example.webrtc.api
 
-import com.example.model.RoomStatus
 import org.webrtc.SurfaceViewRenderer
 
 interface WebRtcClient {
@@ -11,8 +10,6 @@ interface WebRtcClient {
     fun toggleVoice()
 
     fun toggleVideo()
-
-    suspend fun getRoomStatus(roomID: String): RoomStatus
 
     fun getLocalSurface(): SurfaceViewRenderer
 
