@@ -39,7 +39,7 @@ internal class WebRtcController @Inject constructor(
         webRtcScope.launch {
             peerConnectionFactory.createPeerConnection(
                 iceServer,
-                createPeerConnectionHostObserver(roomID, isHost)
+                createPeerConnectionObserver(isHost)
             )?.let { connection ->
                 peerConnection = connection
             }
@@ -59,11 +59,8 @@ internal class WebRtcController @Inject constructor(
             onSdpCreationSuccess = { sdp, observer ->
                 webRtcScope.launch {
                     controllerEvent.emit(WebRtcEvent.Host.SetLocalSdp(observer, sdp))
-                    controllerEvent.emit(
-                        WebRtcEvent.Host.SendSdpToGuest(
-                            sdp = sdp,
-                        )
-                    )
+
+                    controllerEvent.emit(WebRtcEvent.Host.SendSdpToGuest(sdp,))
                 }
             }
         )
@@ -76,11 +73,8 @@ internal class WebRtcController @Inject constructor(
             onSdpCreationSuccess = { sdp, observer ->
                 webRtcScope.launch {
                     controllerEvent.emit(WebRtcEvent.Guest.SetLocalSdp(observer, sdp))
-                    controllerEvent.emit(
-                        WebRtcEvent.Guest.SendSdpToHost(
-                            sdp = sdp
-                        )
-                    )
+
+                    controllerEvent.emit(WebRtcEvent.Guest.SendSdpToHost(sdp))
                 }
             }
         )
@@ -119,8 +113,7 @@ internal class WebRtcController @Inject constructor(
             override fun onSetFailure(p0: String?) {}
         }
 
-    private fun createPeerConnectionHostObserver(
-        roomID: String,
+    private fun createPeerConnectionObserver(
         isHost: Boolean
     ): PeerConnection.Observer =
         object : PeerConnection.Observer {
@@ -132,17 +125,9 @@ internal class WebRtcController @Inject constructor(
                 p0?.let { ice ->
                     webRtcScope.launch {
                         if (isHost) {
-                            controllerEvent.emit(
-                                WebRtcEvent.Host.SendIceToGuest(
-                                    ice = ice
-                                )
-                            )
+                            controllerEvent.emit(WebRtcEvent.Host.SendIceToGuest(ice))
                         } else {
-                            controllerEvent.emit(
-                                WebRtcEvent.Guest.SendIceToHost(
-                                    ice = ice
-                                )
-                            )
+                            controllerEvent.emit(WebRtcEvent.Guest.SendIceToHost(ice))
                         }
                     }
                 }
