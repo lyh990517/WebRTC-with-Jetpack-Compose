@@ -1,10 +1,8 @@
 package com.example.webrtc.client
 
-import com.example.model.RoomStatus
 import com.example.webrtc.api.WebRtcClient
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import org.webrtc.SurfaceViewRenderer
 import javax.inject.Inject
@@ -18,11 +16,13 @@ internal class WebRtcClientImpl @Inject constructor(
     private val localResourceController: Controller.LocalResource,
     private val signaling: Signaling
 ) : WebRtcClient {
-    override fun connect(roomID: String, isHost: Boolean) {
+    override fun connect(roomID: String) {
         webRtcScope.launch {
-            eventHandler.start()
+            val isHost = !signaling.getRoomExists(roomID)
 
-            signaling.start(roomID)
+            launch { eventHandler.start() }
+
+            launch { signaling.start(roomID, isHost) }
 
             webRtcController.connect(roomID, isHost)
 
@@ -38,9 +38,6 @@ internal class WebRtcClientImpl @Inject constructor(
         localResourceController.toggleVideo()
     }
 
-    override suspend fun getRoomStatus(roomID: String): RoomStatus =
-        signaling.getRoomStatus(roomID).first()
-
     override fun getLocalSurface(): SurfaceViewRenderer =
         localResourceController.getLocalSurface()
 
@@ -48,8 +45,11 @@ internal class WebRtcClientImpl @Inject constructor(
         localResourceController.getRemoteSurface()
 
     override fun disconnect() {
-        webRtcScope.cancel()
-        localResourceController.dispose()
-        webRtcController.closeConnection()
+        webRtcScope.launch {
+            localResourceController.dispose()
+            webRtcController.closeConnection()
+            signaling.terminate()
+            coroutineContext.cancelChildren()
+        }
     }
 }

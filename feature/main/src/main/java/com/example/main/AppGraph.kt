@@ -14,8 +14,8 @@ fun AppGraph(
     navHostController: NavHostController = rememberNavController()
 ) {
     NavHost(navController = navHostController, startDestination = homeRoute) {
-        mainScreen { roomId, isHost ->
-            navHostController.navigateToConnection(roomId, isHost)
+        mainScreen { roomId ->
+            navHostController.navigateToConnection(roomId)
         }
 
         connectionScreen()

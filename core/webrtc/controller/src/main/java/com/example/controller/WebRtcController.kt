@@ -1,9 +1,11 @@
 package com.example.controller
 
-import com.example.common.EventBus.eventFlow
 import com.example.common.WebRtcEvent
 import com.example.webrtc.client.Controller
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
@@ -29,6 +31,7 @@ internal class WebRtcController @Inject constructor(
     private val constraints = MediaConstraints().apply {
         mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
     }
+    private val controllerEvent = MutableSharedFlow<WebRtcEvent>()
 
     private lateinit var peerConnection: PeerConnection
 
@@ -36,7 +39,7 @@ internal class WebRtcController @Inject constructor(
         webRtcScope.launch {
             peerConnectionFactory.createPeerConnection(
                 iceServer,
-                createPeerConnectionHostObserver(roomID, isHost)
+                createPeerConnectionObserver(isHost)
             )?.let { connection ->
                 peerConnection = connection
             }
@@ -46,17 +49,18 @@ internal class WebRtcController @Inject constructor(
             peerConnection.addStream(localMediaStream)
 
             if (isHost) {
-                eventFlow.emit(WebRtcEvent.Host.SendOffer(roomID))
+                controllerEvent.emit(WebRtcEvent.Host.SendOffer)
             }
         }
     }
 
-    override fun createOffer(roomID: String) {
+    override fun createOffer() {
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
                 webRtcScope.launch {
-                    eventFlow.emit(WebRtcEvent.Host.SetLocalSdp(observer, sdp))
-                    eventFlow.emit(WebRtcEvent.Host.SendSdpToGuest(sdp = sdp, roomId = roomID))
+                    controllerEvent.emit(WebRtcEvent.Host.SetLocalSdp(observer, sdp))
+
+                    controllerEvent.emit(WebRtcEvent.Host.SendSdpToGuest(sdp,))
                 }
             }
         )
@@ -64,12 +68,13 @@ internal class WebRtcController @Inject constructor(
         peerConnection.createOffer(sdpObserver, constraints)
     }
 
-    override fun createAnswer(roomID: String) {
+    override fun createAnswer() {
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
                 webRtcScope.launch {
-                    eventFlow.emit(WebRtcEvent.Guest.SetLocalSdp(observer, sdp))
-                    eventFlow.emit(WebRtcEvent.Guest.SendSdpToHost(sdp = sdp, roomId = roomID))
+                    controllerEvent.emit(WebRtcEvent.Guest.SetLocalSdp(observer, sdp))
+
+                    controllerEvent.emit(WebRtcEvent.Guest.SendSdpToHost(sdp))
                 }
             }
         )
@@ -95,6 +100,8 @@ internal class WebRtcController @Inject constructor(
         peerConnection.addIceCandidate(iceCandidate)
     }
 
+    override fun getEvent(): SharedFlow<WebRtcEvent> = controllerEvent.asSharedFlow()
+
     private fun createSdpObserver(onSdpCreationSuccess: ((SessionDescription, SdpObserver) -> Unit)? = null) =
         object : SdpObserver {
             override fun onCreateSuccess(p0: SessionDescription?) {
@@ -106,8 +113,7 @@ internal class WebRtcController @Inject constructor(
             override fun onSetFailure(p0: String?) {}
         }
 
-    private fun createPeerConnectionHostObserver(
-        roomID: String,
+    private fun createPeerConnectionObserver(
         isHost: Boolean
     ): PeerConnection.Observer =
         object : PeerConnection.Observer {
@@ -119,21 +125,9 @@ internal class WebRtcController @Inject constructor(
                 p0?.let { ice ->
                     webRtcScope.launch {
                         if (isHost) {
-                            eventFlow.emit(
-                                WebRtcEvent.Host.SendIceToGuest(
-                                    ice = ice,
-                                    roomId = roomID
-                                )
-                            )
-                            eventFlow.emit(WebRtcEvent.Host.SetLocalIce(ice = ice))
+                            controllerEvent.emit(WebRtcEvent.Host.SendIceToGuest(ice))
                         } else {
-                            eventFlow.emit(
-                                WebRtcEvent.Guest.SendIceToHost(
-                                    ice = ice,
-                                    roomId = roomID
-                                )
-                            )
-                            eventFlow.emit(WebRtcEvent.Guest.SetLocalIce(ice = ice))
+                            controllerEvent.emit(WebRtcEvent.Guest.SendIceToHost(ice))
                         }
                     }
                 }

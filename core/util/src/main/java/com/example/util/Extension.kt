@@ -29,6 +29,6 @@ fun Packet.toAnswerSdp() = SessionDescription(
 
 fun Packet.toIceCandidate() = IceCandidate(
     data["sdpMid"].toString(),
-    java.lang.Math.toIntExact(data["sdpMLineIndex"] as Long),
+    data["sdpMLineIndex"]?.toString()?.toInt() ?: 0,
     data["sdpCandidate"].toString()
 )
