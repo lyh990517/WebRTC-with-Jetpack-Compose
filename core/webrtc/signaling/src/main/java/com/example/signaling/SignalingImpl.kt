@@ -17,7 +17,6 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -83,83 +82,104 @@ internal class SignalingImpl @Inject constructor(
     override suspend fun start(roomID: String, isHost: Boolean) {
         firestore.enableNetwork()
 
+        processSdpExchange(isHost, roomID)
+
+        processIceExchange(isHost, roomID)
+    }
+
+    private fun processIceExchange(isHost: Boolean, roomID: String) {
         webrtcScope.launch {
-            val packet = getSdpUpdate(roomID, isHost).first()
+            val type = if (isHost) CandidateType.OFFER.value else CandidateType.ANSWER.value
+
+            initializeIceCandidates(roomID, type)
+
+            getIce(roomID, isHost).collect { packet ->
+                handleIceCandidate(packet)
+            }
+        }
+    }
+
+    private fun initializeIceCandidates(roomID: String, type: String) {
+        getRoom(roomID)
+            .collection(ICE_CANDIDATE)
+            .document(type)
+            .set(mapOf("candidates" to listOf<Any>()))
+    }
+
+    private fun processSdpExchange(isHost: Boolean, roomID: String) {
+        webrtcScope.launch {
+            val packet = getSdp(roomID, isHost)
 
             when {
                 packet.isOffer() -> handleOffer(packet, roomID)
                 packet.isAnswer() -> handleAnswer(packet)
             }
         }
-
-        webrtcScope.launch {
-            val type = if (isHost) CandidateType.OFFER.value else CandidateType.ANSWER.value
-
-            getRoom(roomID)
-                .collection(ICE_CANDIDATE)
-                .document(type)
-                .set(mapOf("candidates" to listOf<Any>()))
-
-            getIceUpdate(roomID, isHost).collect { packet ->
-                handleIceCandidate(packet)
-            }
-        }
     }
 
     override fun getEvent(): SharedFlow<WebRtcEvent> = signalingEvent.asSharedFlow()
 
-    private fun getSdpUpdate(roomID: String, isHost: Boolean) = callbackFlow {
-        val collection = getRoom(roomID).collection(SDP)
-
-        if (isHost) {
-            collection
-                .document("ANSWER")
-                .addSnapshotListener { snapshot, _ ->
-
-                    val data = snapshot?.data
-
-                    if (data != null) {
-                        val packet = Packet(data)
-
-                        trySend(packet)
-                    }
-                }
+    private suspend fun getSdp(roomID: String, isHost: Boolean): Packet {
+        val packet = if (isHost) {
+            getAnswerSdp(roomID).first()
         } else {
-            val snapshot = collection
-                .document("OFFER")
-                .get()
-                .await()
-
-            val data = snapshot.data ?: throw Exception("there is no offer")
-
-            val packet = Packet(data)
-
-            trySend(packet)
+            getOfferSdp(roomID)
         }
 
-        awaitClose { }
+        return packet
+    }
+
+    private suspend fun getOfferSdp(roomID: String): Packet {
+        val collection = getRoom(roomID).collection(SDP)
+
+        val snapshot = collection
+            .document("OFFER")
+            .get()
+            .await()
+
+        val data = snapshot.data ?: throw Exception("there is no offer")
+
+        val packet = Packet(data)
+
+        return packet
+    }
+
+    private fun getAnswerSdp(roomID: String) = callbackFlow {
+        val collection = getRoom(roomID).collection(SDP)
+
+        val listener = collection
+            .document("ANSWER")
+            .addSnapshotListener { snapshot, _ ->
+
+                val data = snapshot?.data
+
+                if (data != null) {
+                    val packet = Packet(data)
+
+                    trySend(packet)
+                }
+            }
+        awaitClose { listener.remove() }
     }
 
     @OptIn(FlowPreview::class)
-    private fun getIceUpdate(roomID: String, isHost: Boolean) = flow {
-        val collection = getRoom(roomID).collection(ICE_CANDIDATE)
-        val candidate = if (isHost) CandidateType.ANSWER else CandidateType.OFFER
-
+    private fun getIce(roomID: String, isHost: Boolean) = flow {
         callbackFlow {
-            collection
+            val collection = getRoom(roomID).collection(ICE_CANDIDATE)
+            val candidate = if (isHost) CandidateType.ANSWER else CandidateType.OFFER
+
+            val listener = collection
                 .document(candidate.value)
                 .addSnapshotListener { snapshot, e ->
                     val candidates = snapshot?.get("candidates") as? List<*>
 
                     trySend(candidates)
                 }
-            awaitClose {}
+            awaitClose { listener.remove() }
         }.debounce(300)
             .collect { candidates ->
                 candidates?.forEach { data ->
-                    Log.e("123", "$data")
                     val packet = Packet(data as Map<String, Any>)
-
                     emit(packet)
                 }
             }
@@ -184,10 +204,6 @@ internal class SignalingImpl @Inject constructor(
         signalingEvent.emit(WebRtcEvent.Guest.ReceiveOffer(sdp))
 
         signalingEvent.emit(WebRtcEvent.Guest.SendAnswer(roomID))
-    }
-
-    private fun ProducerScope<Packet>.sendError(e: Exception) {
-        trySend(Packet(mapOf("error" to e)))
     }
 
     private fun getRoom(roomId: String) = firestore
