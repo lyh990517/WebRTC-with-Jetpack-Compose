@@ -4,7 +4,7 @@ import com.example.model.RoomStatus
 import org.webrtc.SurfaceViewRenderer
 
 interface WebRtcClient {
-    fun connect(roomID: String, isHost: Boolean)
+    fun connect(roomID: String)
 
     fun disconnect()
 

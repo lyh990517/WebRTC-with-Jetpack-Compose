@@ -9,6 +9,7 @@ import org.webrtc.SessionDescription
 
 interface Signaling {
     suspend fun getRoomStatus(roomID: String): RoomStatus
+    suspend fun getRoomExists(roomID: String): Boolean
     suspend fun sendIce(ice: IceCandidate?, type: SignalType)
     suspend fun sendSdp(sdp: SessionDescription)
     suspend fun start(roomID: String, isHost: Boolean)

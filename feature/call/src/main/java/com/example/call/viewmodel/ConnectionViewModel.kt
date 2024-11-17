@@ -32,7 +32,6 @@ class ConnectionViewModel @Inject constructor(
     )
 
     private val roomId = savedStateHandle.get<String>(roomIdArg) ?: ""
-    private val isHost = savedStateHandle.get<Boolean>(isHostArg) ?: false
 
     fun fetch() = viewModelScope.launch {
         val localSurface = webRtcClient.getLocalSurface()
@@ -47,7 +46,7 @@ class ConnectionViewModel @Inject constructor(
     }
 
     fun connect() = viewModelScope.launch {
-        webRtcClient.connect(roomId, isHost)
+        webRtcClient.connect(roomId)
     }
 
     fun toggleVoice() = viewModelScope.launch {

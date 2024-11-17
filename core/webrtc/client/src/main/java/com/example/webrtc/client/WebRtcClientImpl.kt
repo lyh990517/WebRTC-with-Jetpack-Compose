@@ -1,5 +1,6 @@
 package com.example.webrtc.client
 
+import android.util.Log
 import com.example.model.RoomStatus
 import com.example.webrtc.api.WebRtcClient
 import kotlinx.coroutines.CoroutineScope
@@ -17,8 +18,10 @@ internal class WebRtcClientImpl @Inject constructor(
     private val localResourceController: Controller.LocalResource,
     private val signaling: Signaling
 ) : WebRtcClient {
-    override fun connect(roomID: String, isHost: Boolean) {
+    override fun connect(roomID: String) {
         webRtcScope.launch {
+            val isHost = !signaling.getRoomExists(roomID)
+
             launch { eventHandler.start() }
 
             launch { signaling.start(roomID, isHost) }

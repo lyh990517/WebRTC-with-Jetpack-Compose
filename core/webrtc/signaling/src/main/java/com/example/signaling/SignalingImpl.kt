@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.tasks.await
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
+import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,6 +30,17 @@ internal class SignalingImpl @Inject constructor(
         val roomStatus = if (isRoomEnded) RoomStatus.TERMINATED else RoomStatus.NEW
 
         return roomStatus
+    }
+
+    override suspend fun getRoomExists(roomID: String): Boolean {
+        val room = getRoom(roomID)
+        val roomExists = room.get().await().exists()
+
+        if (!roomExists) {
+            room.set(mapOf("startedAt" to "${LocalDateTime.now()}"))
+        }
+
+        return roomExists
     }
 
     override suspend fun sendIce(
