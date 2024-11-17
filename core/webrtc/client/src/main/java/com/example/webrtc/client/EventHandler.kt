@@ -29,23 +29,32 @@ internal class EventHandler @Inject constructor(
             is WebRtcEvent.Guest.ReceiveOffer -> {
                 Log.i(
                     "WebRTC EventHandler",
-                    "Host ----> Guest: Received Offer -> Setting remote SDP [type=${event.sdp.type}]"
+                    "Host ---> Guest(You): Sending Offer -> Setting remote SDP [type=${event.sdp.type}]"
                 )
                 webRtcController.setRemoteDescription(event.sdp)
             }
 
             is WebRtcEvent.Guest.SendAnswer -> {
-                Log.i("WebRTC EventHandler", "Guest ----> Host: Sending Answer -> Creating answer SDP")
+                Log.i(
+                    "WebRTC EventHandler",
+                    "Guest(You) ---> Host: Sending Answer -> Creating answer SDP"
+                )
                 webRtcController.createAnswer()
             }
 
             is WebRtcEvent.Guest.SetLocalSdp -> {
-                Log.i("WebRTC EventHandler", "Guest: Setting Local SDP [type=${event.sdp.type}]")
+                Log.i(
+                    "WebRTC EventHandler",
+                    "Guest(You): Setting Local SDP [type=${event.sdp.type}]"
+                )
                 webRtcController.setLocalDescription(event.sdp, event.observer)
             }
 
             is WebRtcEvent.Guest.SendIceToHost -> {
-                Log.i("WebRTC EventHandler", "Guest ----> Host: Sending ICE Candidate [candidate=${event.ice}]")
+                Log.i(
+                    "WebRTC EventHandler",
+                    "Guest(You) ---> Host: Sending ICE Candidate [candidate=${event.ice}]"
+                )
                 signaling.sendIce(
                     ice = event.ice,
                     type = SignalType.ANSWER,
@@ -53,7 +62,10 @@ internal class EventHandler @Inject constructor(
             }
 
             is WebRtcEvent.Guest.SendSdpToHost -> {
-                Log.i("WebRTC EventHandler", "Guest ----> Host: Sending SDP [type=${event.sdp.type}]")
+                Log.i(
+                    "WebRTC EventHandler",
+                    "Guest(You) ---> Host: Sending SDP [type=${event.sdp.type}]"
+                )
                 signaling.sendSdp(
                     sdp = event.sdp
                 )
@@ -62,7 +74,7 @@ internal class EventHandler @Inject constructor(
             is WebRtcEvent.Guest.SetRemoteIce -> {
                 Log.i(
                     "WebRTC EventHandler",
-                    "Host ----> Guest: Received ICE Candidate -> Adding to remote [candidate=${event.ice}]"
+                    "Host ---> Guest(You): Sending ICE Candidate -> Adding to remote [candidate=${event.ice}]"
                 )
                 webRtcController.addIceCandidate(event.ice)
             }
@@ -72,25 +84,34 @@ internal class EventHandler @Inject constructor(
     private suspend fun handleHostEvent(event: WebRtcEvent.Host) {
         when (event) {
             is WebRtcEvent.Host.SendOffer -> {
-                Log.i("WebRTC EventHandler", "Host ----> Guest: Sending Offer -> Creating offer SDP")
+                Log.i(
+                    "WebRTC EventHandler",
+                    "Host(You) ---> Guest: Sending Offer -> Creating offer SDP"
+                )
                 webRtcController.createOffer()
             }
 
             is WebRtcEvent.Host.SetLocalSdp -> {
-                Log.i("WebRTC EventHandler", "Host: Setting Local SDP [type=${event.sdp.type}]")
+                Log.i(
+                    "WebRTC EventHandler",
+                    "Host(You): Setting Local SDP [type=${event.sdp.type}]"
+                )
                 webRtcController.setLocalDescription(event.sdp, event.observer)
             }
 
             is WebRtcEvent.Host.ReceiveAnswer -> {
                 Log.i(
                     "WebRTC EventHandler",
-                    "Guest ----> Host: Received Answer SDP [type=${event.sdp.type}] -> Setting remote SDP"
+                    "Guest ---> Host(You): Sending Answer SDP [type=${event.sdp.type}] -> Setting remote SDP"
                 )
                 webRtcController.setRemoteDescription(event.sdp)
             }
 
             is WebRtcEvent.Host.SendIceToGuest -> {
-                Log.i("WebRTC EventHandler", "Host ----> Guest: Sending ICE Candidate [candidate=${event.ice}]")
+                Log.i(
+                    "WebRTC EventHandler",
+                    "Host(You) ---> Guest: Sending ICE Candidate [candidate=${event.ice}]"
+                )
                 signaling.sendIce(
                     ice = event.ice,
                     type = SignalType.OFFER,
@@ -98,7 +119,10 @@ internal class EventHandler @Inject constructor(
             }
 
             is WebRtcEvent.Host.SendSdpToGuest -> {
-                Log.i("WebRTC EventHandler", "Host ----> Guest: Sending SDP [type=${event.sdp.type}]")
+                Log.i(
+                    "WebRTC EventHandler",
+                    "Host(You) ---> Guest: Sending SDP [type=${event.sdp.type}]"
+                )
                 signaling.sendSdp(
                     sdp = event.sdp
                 )
@@ -107,7 +131,7 @@ internal class EventHandler @Inject constructor(
             is WebRtcEvent.Host.SetRemoteIce -> {
                 Log.i(
                     "WebRTC EventHandler",
-                    "Guest ----> Host: Received ICE Candidate -> Adding to remote [candidate=${event.ice}]"
+                    "Guest ---> Host(You): Sending ICE Candidate -> Adding to remote [candidate=${event.ice}]"
                 )
                 webRtcController.addIceCandidate(event.ice)
             }
