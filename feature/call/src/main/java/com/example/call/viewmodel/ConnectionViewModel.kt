@@ -5,9 +5,8 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.example.call.state.CallState
-import com.example.call.isHostArg
 import com.example.call.roomIdArg
+import com.example.call.state.CallState
 import com.example.webrtc.api.WebRtcClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +31,6 @@ class ConnectionViewModel @Inject constructor(
     )
 
     private val roomId = savedStateHandle.get<String>(roomIdArg) ?: ""
-    private val isHost = savedStateHandle.get<Boolean>(isHostArg) ?: false
 
     fun fetch() = viewModelScope.launch {
         val localSurface = webRtcClient.getLocalSurface()
@@ -47,7 +45,7 @@ class ConnectionViewModel @Inject constructor(
     }
 
     fun connect() = viewModelScope.launch {
-        webRtcClient.connect(roomId, isHost)
+        webRtcClient.connect(roomId)
     }
 
     fun toggleVoice() = viewModelScope.launch {

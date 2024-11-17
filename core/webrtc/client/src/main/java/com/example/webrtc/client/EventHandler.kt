@@ -1,61 +1,53 @@
 package com.example.webrtc.client
 
-import com.example.common.EventBus.eventFlow
 import com.example.common.WebRtcEvent
-import com.example.model.CandidateType
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
+import com.example.model.SignalType
+import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 internal class EventHandler @Inject constructor(
-    private val webRtcScope: CoroutineScope,
     private val webRtcController: Controller.WebRtc,
     private val signaling: Signaling
 ) {
-    fun start() {
-        webRtcScope.launch {
-            eventFlow.collect { event ->
-                when (event) {
-                    is WebRtcEvent.Host -> handleHostEvent(event)
-                    is WebRtcEvent.Guest -> handleGuestEvent(event)
-                }
+    suspend fun start() {
+        merge(
+            webRtcController.getEvent(),
+            signaling.getEvent()
+        ).collect { event ->
+            when (event) {
+                is WebRtcEvent.Host -> handleHostEvent(event)
+                is WebRtcEvent.Guest -> handleGuestEvent(event)
             }
         }
     }
 
-    private fun handleGuestEvent(event: WebRtcEvent.Guest) {
+    private suspend fun handleGuestEvent(event: WebRtcEvent.Guest) {
         when (event) {
             is WebRtcEvent.Guest.ReceiveOffer -> {
                 webRtcController.setRemoteDescription(event.sdp)
             }
 
             is WebRtcEvent.Guest.SendAnswer -> {
-                webRtcController.createAnswer(event.roomId)
+                webRtcController.createAnswer()
+            }
+
+            is WebRtcEvent.Guest.SetLocalSdp -> {
+                webRtcController.setLocalDescription(event.sdp, event.observer)
             }
 
             is WebRtcEvent.Guest.SendIceToHost -> {
                 signaling.sendIce(
                     ice = event.ice,
-                    type = CandidateType.ANSWER,
-                    roomId = event.roomId
+                    type = SignalType.ANSWER,
                 )
             }
 
             is WebRtcEvent.Guest.SendSdpToHost -> {
                 signaling.sendSdp(
-                    sdp = event.sdp,
-                    roomId = event.roomId
+                    sdp = event.sdp
                 )
-            }
-
-            is WebRtcEvent.Guest.SetLocalIce -> {
-                webRtcController.addIceCandidate(event.ice)
-            }
-
-            is WebRtcEvent.Guest.SetLocalSdp -> {
-                webRtcController.setLocalDescription(event.sdp, event.observer)
             }
 
             is WebRtcEvent.Guest.SetRemoteIce -> {
@@ -64,10 +56,14 @@ internal class EventHandler @Inject constructor(
         }
     }
 
-    private fun handleHostEvent(event: WebRtcEvent.Host) {
+    private suspend fun handleHostEvent(event: WebRtcEvent.Host) {
         when (event) {
             is WebRtcEvent.Host.SendOffer -> {
-                webRtcController.createOffer(event.roomId)
+                webRtcController.createOffer()
+            }
+
+            is WebRtcEvent.Host.SetLocalSdp -> {
+                webRtcController.setLocalDescription(event.sdp, event.observer)
             }
 
             is WebRtcEvent.Host.ReceiveAnswer -> {
@@ -77,24 +73,14 @@ internal class EventHandler @Inject constructor(
             is WebRtcEvent.Host.SendIceToGuest -> {
                 signaling.sendIce(
                     ice = event.ice,
-                    type = CandidateType.OFFER,
-                    roomId = event.roomId
+                    type = SignalType.OFFER,
                 )
             }
 
             is WebRtcEvent.Host.SendSdpToGuest -> {
                 signaling.sendSdp(
-                    sdp = event.sdp,
-                    roomId = event.roomId
+                    sdp = event.sdp
                 )
-            }
-
-            is WebRtcEvent.Host.SetLocalIce -> {
-                webRtcController.addIceCandidate(event.ice)
-            }
-
-            is WebRtcEvent.Host.SetLocalSdp -> {
-                webRtcController.setLocalDescription(event.sdp, event.observer)
             }
 
             is WebRtcEvent.Host.SetRemoteIce -> {

@@ -25,30 +25,23 @@ import kotlinx.coroutines.delay
 
 const val connectionRoute = "connection"
 const val roomIdArg = "roomId"
-const val isHostArg = "isHost"
 
 fun NavHostController.navigateToConnection(
-    roomId: String,
-    isHost: Boolean
+    roomId: String
 ) {
-    val route = "$connectionRoute?$roomIdArg=$roomId&$isHostArg=$isHost"
+    val route = "$connectionRoute?$roomIdArg=$roomId"
 
     navigate(route)
 }
 
 fun NavGraphBuilder.connectionScreen() {
     composable(
-        route = "$connectionRoute?$roomIdArg={$roomIdArg}" +
-                "&$isHostArg={$isHostArg}",
+        route = "$connectionRoute?$roomIdArg={$roomIdArg}",
         arguments =
         listOf(
             navArgument(roomIdArg) {
                 nullable = false
                 type = NavType.StringType
-            },
-            navArgument(isHostArg) {
-                nullable = false
-                type = NavType.BoolType
             }
         )
     ) {
