@@ -16,13 +16,16 @@ import com.example.webrtc.client.Signaling
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.webrtc.IceCandidate
@@ -98,7 +101,6 @@ internal class SignalingImpl @Inject constructor(
                 .set(mapOf("candidates" to listOf<Any>()))
 
             getIceUpdate(roomID, isHost).collect { packet ->
-                Log.e("packet", "packet : $packet")
                 handleIceCandidate(packet)
             }
         }
@@ -138,23 +140,29 @@ internal class SignalingImpl @Inject constructor(
         awaitClose { }
     }
 
-    private fun getIceUpdate(roomID: String, isHost: Boolean) = callbackFlow {
+    @OptIn(FlowPreview::class)
+    private fun getIceUpdate(roomID: String, isHost: Boolean) = flow {
         val collection = getRoom(roomID).collection(ICE_CANDIDATE)
         val candidate = if (isHost) CandidateType.ANSWER else CandidateType.OFFER
 
-        collection
-            .document(candidate.value)
-            .addSnapshotListener { snapshot, e ->
-                val candidates = snapshot?.get("candidates") as? List<*>
+        callbackFlow {
+            collection
+                .document(candidate.value)
+                .addSnapshotListener { snapshot, e ->
+                    val candidates = snapshot?.get("candidates") as? List<*>
 
+                    trySend(candidates)
+                }
+            awaitClose {}
+        }.debounce(300)
+            .collect { candidates ->
                 candidates?.forEach { data ->
+                    Log.e("123", "$data")
                     val packet = Packet(data as Map<String, Any>)
 
-                    trySend(packet)
+                    emit(packet)
                 }
             }
-
-        awaitClose{}
     }
 
     private suspend fun handleIceCandidate(packet: Packet) {
