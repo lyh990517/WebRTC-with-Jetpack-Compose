@@ -1,6 +1,5 @@
 package com.example.home
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,26 +16,22 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.home.ui.SearchBar
-import com.example.home.viewmodel.HomeViewModel
 import com.yunho.webrtc.core.designsystem.R
 
 const val homeRoute = "homeRoute"
 
-fun NavGraphBuilder.mainScreen(goToCall: (String, Boolean) -> Unit) {
+fun NavGraphBuilder.mainScreen(goToCall: (String) -> Unit) {
     composable(homeRoute) {
         MainScreen(goToCall = goToCall)
     }
@@ -44,25 +39,9 @@ fun NavGraphBuilder.mainScreen(goToCall: (String, Boolean) -> Unit) {
 
 @Composable
 fun MainScreen(
-    viewModel: HomeViewModel = hiltViewModel(),
-    goToCall: (String, Boolean) -> Unit
+    goToCall: (String) -> Unit
 ) {
     val roomId = remember { mutableStateOf("") }
-    val context = LocalContext.current
-
-    LaunchedEffect(Unit) {
-        viewModel.effect.collect {
-            when (it) {
-                is HomeSideEffect.EnterRoom -> {
-                    goToCall(it.roomId, it.isHost)
-                }
-
-                is HomeSideEffect.RoomAlreadyEnded -> {
-                    Toast.makeText(context, "이미 사용된 방입니다.", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -78,10 +57,7 @@ fun MainScreen(
             InputContent(
                 roomId = { roomId.value },
                 onCall = {
-                    viewModel.connect(roomId.value, true)
-                },
-                onJoin = {
-                    viewModel.connect(roomId.value, false)
+                    goToCall(roomId.value)
                 },
                 onInput = { roomId.value = it }
             )
@@ -103,8 +79,7 @@ fun LogoImage() {
 private fun InputContent(
     roomId: () -> String,
     onInput: (String) -> Unit,
-    onCall: () -> Unit,
-    onJoin: () -> Unit
+    onCall: () -> Unit
 ) {
     SearchBar(
         modifier = Modifier
@@ -128,14 +103,4 @@ private fun InputContent(
         Text(text = "Create Room", color = Color.White, fontSize = 20.sp)
     }
     Spacer(modifier = Modifier.padding(vertical = 10.dp))
-    Button(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
-            .padding(horizontal = 40.dp),
-        colors = ButtonDefaults.buttonColors(Color.Blue),
-        onClick = onJoin
-    ) {
-        Text(text = "Join", color = Color.White, fontSize = 20.sp)
-    }
 }
