@@ -19,8 +19,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import org.webrtc.IceCandidate
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class IceManager @Inject constructor(
+@Singleton
+internal class IceManager @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val webrtcScope: CoroutineScope
 ) {

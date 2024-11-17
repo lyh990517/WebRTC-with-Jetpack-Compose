@@ -12,16 +12,17 @@ import com.example.util.toOfferSdp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import org.webrtc.SessionDescription
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class SdpManager @Inject constructor(
+@Singleton
+internal class SdpManager @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val webrtcScope: CoroutineScope
 ) {
@@ -34,12 +35,7 @@ class SdpManager @Inject constructor(
         this.roomID = roomID
 
         webrtcScope.launch {
-            val packet = getSdp()
-
-            when {
-                packet.isOffer() -> handleOfferSdp(packet)
-                packet.isAnswer() -> handleAnswerSdp(packet)
-            }
+            getSdp().collect(::handleSdp)
         }
     }
 
@@ -54,28 +50,14 @@ class SdpManager @Inject constructor(
 
     fun getEvent() = sdpEvent.asSharedFlow()
 
-    private suspend fun getSdp(): Packet {
-        val packet = if (isHost) {
-            getAnswerSdp().first()
-        } else {
-            getOfferSdp()
-        }
+    private fun getSdp(): Flow<Packet> {
+        val type = if (isHost) SignalType.ANSWER else SignalType.OFFER
 
-        return packet
+        return getSdp(type)
     }
 
-    private suspend fun getOfferSdp(): Packet {
-        val snapshot = getSdpField(SignalType.OFFER.value).get().await()
-
-        val data = snapshot.data ?: throw Exception("there is no offer")
-
-        val packet = Packet(data)
-
-        return packet
-    }
-
-    private fun getAnswerSdp() = callbackFlow {
-        val listener = getSdpField(SignalType.ANSWER.value)
+    private fun getSdp(signalType: SignalType) = callbackFlow {
+        val listener = getSdpField(signalType.value)
             .addSnapshotListener { snapshot, _ ->
 
                 val data = snapshot?.data
@@ -90,18 +72,21 @@ class SdpManager @Inject constructor(
         awaitClose { listener.remove() }
     }
 
-    private suspend fun handleAnswerSdp(packet: Packet) {
-        val sdp = packet.toAnswerSdp()
+    private suspend fun handleSdp(packet: Packet) {
+        when {
+            packet.isOffer() -> {
+                val sdp = packet.toOfferSdp()
 
-        sdpEvent.emit(WebRtcEvent.Host.ReceiveAnswer(sdp))
-    }
+                sdpEvent.emit(WebRtcEvent.Guest.ReceiveOffer(sdp))
+                sdpEvent.emit(WebRtcEvent.Guest.SendAnswer)
+            }
 
-    private suspend fun handleOfferSdp(packet: Packet) {
-        val sdp = packet.toOfferSdp()
+            packet.isAnswer() -> {
+                val sdp = packet.toAnswerSdp()
 
-        sdpEvent.emit(WebRtcEvent.Guest.ReceiveOffer(sdp))
-
-        sdpEvent.emit(WebRtcEvent.Guest.SendAnswer)
+                sdpEvent.emit(WebRtcEvent.Host.ReceiveAnswer(sdp))
+            }
+        }
     }
 
     private fun getSdpField(type: String) = firestore
