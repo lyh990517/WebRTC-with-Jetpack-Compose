@@ -54,17 +54,7 @@ internal class SdpManager @Inject constructor(
     }
 
     private fun getSdp(signalType: SignalType) = callbackFlow {
-        val listener = getSdp(signalType.value)
-            .addSnapshotListener { snapshot, _ ->
-
-                val data = snapshot?.data
-
-                if (data != null) {
-                    val packet = Packet(data)
-
-                    trySend(packet)
-                }
-            }
+        val listener = getSdp(signalType.value).observeSdp(::trySend)
 
         awaitClose { listener.remove() }
     }

@@ -57,15 +57,8 @@ internal class IceManager @Inject constructor(
         callbackFlow {
             val type = if (isHost) SignalType.ANSWER else SignalType.OFFER
 
-            val listener = getIce(type.value)
-                .addSnapshotListener { snapshot, e ->
-                    val candidates = snapshot?.parseIceCandidates()
-                    val packets = candidates?.toPackets()
+            val listener = getIce(type.value).observeIce(::trySend)
 
-                    packets?.let {
-                        trySend(packets)
-                    }
-                }
             awaitClose { listener.remove() }
         }.debounce(300)
 

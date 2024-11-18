@@ -1,6 +1,7 @@
 package com.example.signaling
 
 import com.example.model.Packet
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
@@ -36,4 +37,21 @@ fun Packet.toIceCandidate() = IceCandidate(
 
 fun DocumentSnapshot.parseIceCandidates() = get("ices") as? List<Map<String, Any>>
 
+fun DocumentSnapshot.toPacket() = data?.let { Packet(it) }
+
 fun List<Map<String, Any>>.toPackets() = map { data -> Packet(data) }
+
+fun DocumentReference.observeIce(onSend: (List<Packet>) -> Unit) =
+    addSnapshotListener { snapshot, _ ->
+        val candidates = snapshot?.parseIceCandidates()
+        val packets = candidates?.toPackets()
+
+        packets?.let { onSend(packets) }
+    }
+
+fun DocumentReference.observeSdp(onSend: (Packet) -> Unit) =
+    addSnapshotListener { snapshot, _ ->
+        val packet = snapshot?.toPacket()
+
+        packet?.let { onSend(packet) }
+    }
