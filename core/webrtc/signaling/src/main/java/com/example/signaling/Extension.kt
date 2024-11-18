@@ -1,6 +1,7 @@
 package com.example.signaling
 
 import com.example.model.Packet
+import com.google.firebase.firestore.DocumentSnapshot
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
 
@@ -32,3 +33,7 @@ fun Packet.toIceCandidate() = IceCandidate(
     data["sdpMLineIndex"]?.toString()?.toInt() ?: 0,
     data["sdpCandidate"].toString()
 )
+
+fun DocumentSnapshot.parseIceCandidates() = get("ices") as? List<Map<String, Any>>
+
+fun List<Map<String, Any>>.toPackets() = map { data -> Packet(data) }

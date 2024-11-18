@@ -55,14 +55,13 @@ internal class IceManager @Inject constructor(
     @OptIn(FlowPreview::class)
     private fun getIces() =
         callbackFlow {
-            val candidate = if (isHost) SignalType.ANSWER else SignalType.OFFER
+            val type = if (isHost) SignalType.ANSWER else SignalType.OFFER
 
-            val listener = getIce(candidate.value)
+            val listener = getIce(type.value)
                 .addSnapshotListener { snapshot, e ->
-                    val candidates = snapshot?.get(ICE_FIELD) as? List<*>
-                    val packets = candidates?.map { data ->
-                        Packet(data as Map<String, Any>)
-                    }
+                    val candidates = snapshot?.parseIceCandidates()
+                    val packets = candidates?.toPackets()
+
                     packets?.let {
                         trySend(packets)
                     }
