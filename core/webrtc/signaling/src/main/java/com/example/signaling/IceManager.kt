@@ -35,7 +35,7 @@ internal class IceManager @Inject constructor(
         this.isHost = isHost
 
         webrtcScope.launch {
-            initializeIceField()
+            setFieldToIce()
 
             getIces().collect(::handleIceCandidate)
         }
@@ -49,7 +49,7 @@ internal class IceManager @Inject constructor(
 
         val parsedIceCandidate = ice.parseDate(type.value)
 
-        getIceField(type.value)
+        getIce(type.value)
             .update(ICE_FIELD, FieldValue.arrayUnion(parsedIceCandidate))
     }
 
@@ -60,7 +60,7 @@ internal class IceManager @Inject constructor(
         callbackFlow {
             val candidate = if (isHost) SignalType.ANSWER else SignalType.OFFER
 
-            val listener = getIceField(candidate.value)
+            val listener = getIce(candidate.value)
                 .addSnapshotListener { snapshot, e ->
                     val candidates = snapshot?.get(ICE_FIELD) as? List<*>
 
@@ -76,10 +76,10 @@ internal class IceManager @Inject constructor(
             }
     }
 
-    private fun initializeIceField() {
+    private fun setFieldToIce() {
         val type = if (isHost) SignalType.OFFER.value else SignalType.ANSWER.value
 
-        getIceField(type)
+        getIce(type)
             .set(mapOf(ICE_FIELD to listOf<Any>()))
     }
 
@@ -93,7 +93,7 @@ internal class IceManager @Inject constructor(
         }
     }
 
-    private fun getIceField(type: String) = firestore
+    private fun getIce(type: String) = firestore
         .collection(ROOT)
         .document(roomID)
         .collection(ICE_COLLECTION)

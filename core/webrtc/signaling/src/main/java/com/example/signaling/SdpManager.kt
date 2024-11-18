@@ -44,7 +44,7 @@ internal class SdpManager @Inject constructor(
     ) {
         val parsedSdp = sdp.parseData()
 
-        getSdpField(sdp.type.name)
+        getSdp(sdp.type.name)
             .set(parsedSdp)
     }
 
@@ -57,7 +57,7 @@ internal class SdpManager @Inject constructor(
     }
 
     private fun getSdp(signalType: SignalType) = callbackFlow {
-        val listener = getSdpField(signalType.value)
+        val listener = getSdp(signalType.value)
             .addSnapshotListener { snapshot, _ ->
 
                 val data = snapshot?.data
@@ -89,7 +89,7 @@ internal class SdpManager @Inject constructor(
         }
     }
 
-    private fun getSdpField(type: String) = firestore
+    private fun getSdp(type: String) = firestore
         .collection(ROOT)
         .document(roomID)
         .collection(SDP)
