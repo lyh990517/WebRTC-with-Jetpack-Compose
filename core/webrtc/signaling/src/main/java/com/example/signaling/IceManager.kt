@@ -30,7 +30,7 @@ internal class IceManager @Inject constructor(
     private var roomID = ""
     private var isHost = false
 
-    fun processIceExchange(isHost: Boolean, roomID: String) {
+    fun collectIce(isHost: Boolean, roomID: String) {
         this.roomID = roomID
         this.isHost = isHost
 

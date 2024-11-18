@@ -54,9 +54,9 @@ internal class SignalingImpl @Inject constructor(
 
         firestore.enableNetwork()
 
-        sdpManager.processSdpExchange(isHost, roomID)
+        sdpManager.collectSdp(isHost, roomID)
 
-        iceManager.processIceExchange(isHost, roomID)
+        iceManager.collectIce(isHost, roomID)
     }
 
     override fun getEvent(): Flow<WebRtcEvent> = merge(sdpManager.getEvent(), iceManager.getEvent())

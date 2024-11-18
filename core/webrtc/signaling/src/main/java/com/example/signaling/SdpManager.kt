@@ -30,7 +30,7 @@ internal class SdpManager @Inject constructor(
     private var isHost = false
     private var roomID = ""
 
-    fun processSdpExchange(isHost: Boolean, roomID: String) {
+    fun collectSdp(isHost: Boolean, roomID: String) {
         this.isHost = isHost
         this.roomID = roomID
 
