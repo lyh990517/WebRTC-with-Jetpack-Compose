@@ -72,7 +72,13 @@ internal class WebRtcController @Inject constructor(
                     }
 
                     override fun onMessage(p0: DataChannel.Buffer?) {
-                        Log.e("webrtc event", "message: $p0")
+                        val byteBuffer = p0?.data ?: return
+
+                        val bytes = ByteArray(byteBuffer.remaining())
+                        byteBuffer.get(bytes)
+                        val message = String(bytes, Charsets.UTF_8)
+
+                        Log.e("webrtc event", "message: $message")
                     }
                 }
                 )
@@ -84,7 +90,7 @@ internal class WebRtcController @Inject constructor(
                     dataChannel?.send(
                         Buffer(
                             ByteBuffer.wrap(
-                                "hello".toByteArray()
+                                "hello ${if (isHost) "guest" else "host"}".toByteArray()
                             ), false
                         )
                     )
