@@ -7,6 +7,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
@@ -53,13 +54,6 @@ internal class WebRtcController @Inject constructor(
 
             peerConnection?.let(dataChannelManager::initialize)
 
-            webRtcScope.launch {
-                while (true) {
-                    delay(1000)
-                    dataChannelManager.sendMessage("hello ${if (isHost) "guest" else "host"}")
-                }
-            }
-
             peerConnection?.addTrack(localResourceController.getVideoTrack())
             peerConnection?.addTrack(localResourceController.getAudioTrack())
 
@@ -67,6 +61,10 @@ internal class WebRtcController @Inject constructor(
                 controllerEvent.emit(WebRtcEvent.Host.SendOffer)
             }
         }
+    }
+
+    override fun sendMessage(data: Any) {
+        dataChannelManager.sendMessage(data)
     }
 
     override fun createOffer() {
@@ -115,7 +113,10 @@ internal class WebRtcController @Inject constructor(
         peerConnection?.addIceCandidate(iceCandidate)
     }
 
-    override fun getEvent(): Flow<WebRtcEvent> = controllerEvent.asSharedFlow()
+    override fun getEvent(): Flow<WebRtcEvent> = merge(
+        controllerEvent.asSharedFlow(),
+        dataChannelManager.getEvent()
+    )
 
     private fun createSdpObserver(onSdpCreationSuccess: ((SessionDescription, SdpObserver) -> Unit)? = null) =
         object : SdpObserver {

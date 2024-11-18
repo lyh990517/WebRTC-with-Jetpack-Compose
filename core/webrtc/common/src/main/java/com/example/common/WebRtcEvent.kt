@@ -1,5 +1,7 @@
 package com.example.common
 
+import org.json.JSONObject
+import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.PeerConnection
 import org.webrtc.SdpObserver
@@ -12,6 +14,31 @@ sealed interface WebRtcEvent {
         data class IceGathering(val state: PeerConnection.IceGatheringState?) : StateChange
         data class Signaling(val state: PeerConnection.SignalingState?) : StateChange
         data class Connection(val state: PeerConnection.PeerConnectionState?) : StateChange
+    }
+
+    sealed interface DataChannel : WebRtcEvent {
+        sealed interface Message : DataChannel {
+            data class PlainString(val data: String) : Message
+            data class Number(val data: Double) : Message
+            data class JsonObject(val jsonObject: JSONObject) : Message
+            data class File(val bytes: ByteArray) : Message {
+                override fun equals(other: Any?): Boolean {
+                    if (this === other) return true
+                    if (javaClass != other?.javaClass) return false
+
+                    other as File
+
+                    return bytes.contentEquals(other.bytes)
+                }
+
+                override fun hashCode(): Int {
+                    return bytes.contentHashCode()
+                }
+            }
+        }
+        data class OnStateChanged(val state: org.webrtc.DataChannel.State) : DataChannel
+
+        data class OnBufferAmountChanged(val amount: Long) : DataChannel
     }
 
     sealed interface Host : WebRtcEvent {

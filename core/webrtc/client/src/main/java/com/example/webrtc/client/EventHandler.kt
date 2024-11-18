@@ -21,6 +21,53 @@ internal class EventHandler @Inject constructor(
                 is WebRtcEvent.Host -> handleHostEvent(event)
                 is WebRtcEvent.Guest -> handleGuestEvent(event)
                 is WebRtcEvent.StateChange -> handleStateChangeEvent(event)
+                is WebRtcEvent.DataChannel -> handleDataChannelEvent(event)
+            }
+        }
+    }
+
+    private fun handleDataChannelEvent(event: WebRtcEvent.DataChannel) {
+        when (event) {
+            is WebRtcEvent.DataChannel.Message.File -> {
+                Log.i(
+                    "WebRTC EventHandler",
+                    "DataChannel File Received : ${event.bytes.size}"
+                )
+            }
+
+            is WebRtcEvent.DataChannel.Message.JsonObject -> {
+                Log.i(
+                    "WebRTC EventHandler",
+                    "DataChannel JsonObject Received : ${event.jsonObject}"
+                )
+            }
+
+            is WebRtcEvent.DataChannel.Message.Number -> {
+                Log.i(
+                    "WebRTC EventHandler",
+                    "DataChannel Number Received : ${event.data}"
+                )
+            }
+
+            is WebRtcEvent.DataChannel.Message.PlainString -> {
+                Log.i(
+                    "WebRTC EventHandler",
+                    "DataChannel PlainString Received : ${event.data}"
+                )
+            }
+
+            is WebRtcEvent.DataChannel.OnBufferAmountChanged -> {
+                Log.i(
+                    "WebRTC EventHandler",
+                    "DataChannel OnBufferAmountChanged : ${event.amount}"
+                )
+            }
+
+            is WebRtcEvent.DataChannel.OnStateChanged -> {
+                Log.i(
+                    "WebRTC EventHandler",
+                    "DataChannel State Changes : ${event.state.name}"
+                )
             }
         }
     }
