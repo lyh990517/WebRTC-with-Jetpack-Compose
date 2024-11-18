@@ -32,6 +32,12 @@ class ConnectionViewModel @Inject constructor(
 
     private val roomId = savedStateHandle.get<String>(roomIdArg) ?: ""
 
+    val message = webRtcClient.getMessages().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ""
+    )
+
     fun fetch() = viewModelScope.launch {
         val localSurface = webRtcClient.getLocalSurface()
         val remoteSurface = webRtcClient.getRemoteSurface()
@@ -62,5 +68,9 @@ class ConnectionViewModel @Inject constructor(
         } catch (e: Exception) {
             Log.e("error", "${e.message}")
         }
+    }
+
+    fun sendMessage(message: String) = viewModelScope.launch {
+        webRtcClient.sendMessage(message)
     }
 }
