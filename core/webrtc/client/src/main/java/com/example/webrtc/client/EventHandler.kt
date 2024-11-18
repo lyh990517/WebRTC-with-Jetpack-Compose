@@ -20,6 +20,39 @@ internal class EventHandler @Inject constructor(
             when (event) {
                 is WebRtcEvent.Host -> handleHostEvent(event)
                 is WebRtcEvent.Guest -> handleGuestEvent(event)
+                is WebRtcEvent.StateChange -> handleStateChangeEvent(event)
+            }
+        }
+    }
+
+    private fun handleStateChangeEvent(event: WebRtcEvent.StateChange) {
+        when (event) {
+            is WebRtcEvent.StateChange.Connection -> {
+                Log.i(
+                    "WebRTC EventHandler",
+                    "Connection State Changes : ${event.state?.name}"
+                )
+            }
+
+            is WebRtcEvent.StateChange.IceConnection -> {
+                Log.i(
+                    "WebRTC EventHandler",
+                    "IceConnection State Changes : ${event.state?.name}"
+                )
+            }
+
+            is WebRtcEvent.StateChange.IceGathering -> {
+                Log.i(
+                    "WebRTC EventHandler",
+                    "IceGathering State Changes : ${event.state?.name}"
+                )
+            }
+
+            is WebRtcEvent.StateChange.Signaling -> {
+                Log.i(
+                    "WebRTC EventHandler",
+                    "Signaling State Changes : ${event.state?.name}"
+                )
             }
         }
     }

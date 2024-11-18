@@ -44,6 +44,8 @@ internal class WebRtcController @Inject constructor(
                 peerConnection = connection
             }
 
+            peerConnection.connectionState()
+
             val localMediaStream = localResourceController.getLocalMediaStream()
 
             peerConnection.addStream(localMediaStream)
@@ -60,7 +62,7 @@ internal class WebRtcController @Inject constructor(
                 webRtcScope.launch {
                     controllerEvent.emit(WebRtcEvent.Host.SetLocalSdp(observer, sdp))
 
-                    controllerEvent.emit(WebRtcEvent.Host.SendSdpToGuest(sdp,))
+                    controllerEvent.emit(WebRtcEvent.Host.SendSdpToGuest(sdp))
                 }
             }
         )
@@ -117,10 +119,32 @@ internal class WebRtcController @Inject constructor(
         isHost: Boolean
     ): PeerConnection.Observer =
         object : PeerConnection.Observer {
-            override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
-            override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
+            override fun onConnectionChange(newState: PeerConnection.PeerConnectionState?) {
+                super.onConnectionChange(newState)
+                webRtcScope.launch {
+                    controllerEvent.emit(WebRtcEvent.StateChange.Connection(newState))
+                }
+            }
+
+            override fun onSignalingChange(p0: PeerConnection.SignalingState?) {
+                webRtcScope.launch {
+                    controllerEvent.emit(WebRtcEvent.StateChange.Signaling(p0))
+                }
+            }
+
+            override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {
+                webRtcScope.launch {
+                    controllerEvent.emit(WebRtcEvent.StateChange.IceConnection(p0))
+                }
+            }
+
             override fun onIceConnectionReceivingChange(p0: Boolean) {}
-            override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
+            override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {
+                webRtcScope.launch {
+                    controllerEvent.emit(WebRtcEvent.StateChange.IceGathering(p0))
+                }
+            }
+
             override fun onIceCandidate(p0: IceCandidate?) {
                 p0?.let { ice ->
                     webRtcScope.launch {
