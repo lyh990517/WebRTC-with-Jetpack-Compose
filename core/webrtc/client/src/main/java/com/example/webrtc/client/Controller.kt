@@ -1,18 +1,21 @@
 package com.example.webrtc.client
 
 import com.example.common.WebRtcEvent
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
+import org.webrtc.AudioTrack
 import org.webrtc.IceCandidate
 import org.webrtc.MediaStream
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 import org.webrtc.SurfaceViewRenderer
+import org.webrtc.VideoTrack
 
 sealed interface Controller {
     interface LocalResource {
         fun getLocalSurface(): SurfaceViewRenderer
         fun getRemoteSurface(): SurfaceViewRenderer
-        fun getLocalMediaStream(): MediaStream
+        fun getVideoTrack(): VideoTrack
+        fun getAudioTrack(): AudioTrack
         fun sinkToRemoteSurface(remoteMediaStream: MediaStream)
         fun toggleVoice()
         fun toggleVideo()

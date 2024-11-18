@@ -14,8 +14,10 @@ import org.webrtc.MediaStream
 import org.webrtc.PeerConnection
 import org.webrtc.PeerConnectionFactory
 import org.webrtc.RtpReceiver
+import org.webrtc.RtpTransceiver
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
+import org.webrtc.VideoTrack
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -33,22 +35,22 @@ internal class WebRtcController @Inject constructor(
     }
     private val controllerEvent = MutableSharedFlow<WebRtcEvent>()
 
-    private lateinit var peerConnection: PeerConnection
+    private var peerConnection: PeerConnection? = null
 
     override fun connect(roomID: String, isHost: Boolean) {
         webRtcScope.launch {
-            peerConnectionFactory.createPeerConnection(
-                iceServer,
-                createPeerConnectionObserver(isHost)
-            )?.let { connection ->
-                peerConnection = connection
+            val rtcConfig = PeerConnection.RTCConfiguration(iceServer).apply {
+                sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
+                enableRtpDataChannel = true
             }
 
-            peerConnection.connectionState()
+            peerConnection = peerConnectionFactory.createPeerConnection(
+                rtcConfig,
+                createPeerConnectionObserver(isHost)
+            )
 
-            val localMediaStream = localResourceController.getLocalMediaStream()
-
-            peerConnection.addStream(localMediaStream)
+            peerConnection?.addTrack(localResourceController.getVideoTrack())
+            peerConnection?.addTrack(localResourceController.getAudioTrack())
 
             if (isHost) {
                 controllerEvent.emit(WebRtcEvent.Host.SendOffer)
@@ -67,7 +69,7 @@ internal class WebRtcController @Inject constructor(
             }
         )
 
-        peerConnection.createOffer(sdpObserver, constraints)
+        peerConnection?.createOffer(sdpObserver, constraints)
     }
 
     override fun createAnswer() {
@@ -158,18 +160,13 @@ internal class WebRtcController @Inject constructor(
             }
 
             override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
-            override fun onAddStream(p0: MediaStream?) {
-                p0?.let { remoteMediaStream ->
-                    localResourceController.sinkToRemoteSurface(remoteMediaStream)
-                }
-            }
+            override fun onAddStream(p0: MediaStream?) {}
 
             override fun onRemoveStream(p0: MediaStream?) {}
             override fun onDataChannel(p0: DataChannel?) {}
             override fun onRenegotiationNeeded() {}
             override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
         }
-
 
     companion object {
         private const val ICE_SERVER_URL = "stun:stun4.l.google.com:19302"

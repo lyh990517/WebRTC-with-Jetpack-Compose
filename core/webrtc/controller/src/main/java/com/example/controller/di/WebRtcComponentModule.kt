@@ -16,7 +16,6 @@ import org.webrtc.DefaultVideoDecoderFactory
 import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.EglBase
 import org.webrtc.MediaConstraints
-import org.webrtc.MediaStream
 import org.webrtc.PeerConnectionFactory
 import org.webrtc.SurfaceTextureHelper
 import org.webrtc.SurfaceViewRenderer
@@ -31,7 +30,6 @@ internal object WebRtcComponentModule {
 
     private const val LOCAL_VIDEO_TRACK = "local_track_video"
     private const val LOCAL_AUDIO_TRACK = "local_track_audio"
-    private const val LOCAL_MEDIA_STREAM = "local_track_stream"
     private const val FIELD_TRIAL = "WebRTC-H264HighProfile/Enabled/"
 
     @Provides
@@ -135,21 +133,6 @@ internal object WebRtcComponentModule {
         audioSource: AudioSource,
     ): AudioTrack =
         peerConnectionFactory.createAudioTrack(LOCAL_AUDIO_TRACK, audioSource)
-
-    @Provides
-    @Singleton
-    fun providesMediaStream(
-        peerConnectionFactory: PeerConnectionFactory,
-        videoTrack: VideoTrack,
-        audioTrack: AudioTrack,
-    ): MediaStream {
-        val mediaStream = peerConnectionFactory.createLocalMediaStream(LOCAL_MEDIA_STREAM)
-
-        mediaStream.addTrack(videoTrack)
-        mediaStream.addTrack(audioTrack)
-
-        return mediaStream
-    }
 
     @Provides
     @Singleton
