@@ -1,18 +1,14 @@
 package com.example.controller
 
-import android.util.Log
 import com.example.common.WebRtcEvent
 import com.example.webrtc.client.Controller
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import org.webrtc.DataChannel
-import org.webrtc.DataChannel.Buffer
-import org.webrtc.DataChannel.Observer
 import org.webrtc.IceCandidate
 import org.webrtc.MediaConstraints
 import org.webrtc.MediaStream
@@ -23,7 +19,6 @@ import org.webrtc.RtpTransceiver
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 import org.webrtc.VideoTrack
-import java.nio.ByteBuffer
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,6 +27,7 @@ internal class WebRtcController @Inject constructor(
     private val webRtcScope: CoroutineScope,
     private val peerConnectionFactory: PeerConnectionFactory,
     private val localResourceController: Controller.LocalResource,
+    private val dataChannelManager: DataChannelManager
 ) : Controller.WebRtc {
     private val iceServer =
         listOf(PeerConnection.IceServer.builder(ICE_SERVER_URL).createIceServer())
@@ -42,7 +38,6 @@ internal class WebRtcController @Inject constructor(
     private val controllerEvent = MutableSharedFlow<WebRtcEvent>()
 
     private var peerConnection: PeerConnection? = null
-    private var dataChannel: DataChannel? = null
 
     override fun connect(roomID: String, isHost: Boolean) {
         webRtcScope.launch {
@@ -56,44 +51,12 @@ internal class WebRtcController @Inject constructor(
                 createPeerConnectionObserver(isHost)
             )
 
+            peerConnection?.let(dataChannelManager::initialize)
+
             webRtcScope.launch {
-                dataChannel = peerConnection?.createDataChannel(
-                    "channel",
-                    DataChannel.Init().apply { negotiated = true }
-                )
-
-                dataChannel?.registerObserver(object : Observer {
-                    override fun onBufferedAmountChange(p0: Long) {
-
-                    }
-
-                    override fun onStateChange() {
-
-                    }
-
-                    override fun onMessage(p0: DataChannel.Buffer?) {
-                        val byteBuffer = p0?.data ?: return
-
-                        val bytes = ByteArray(byteBuffer.remaining())
-                        byteBuffer.get(bytes)
-                        val message = String(bytes, Charsets.UTF_8)
-
-                        Log.e("webrtc event", "message: $message")
-                    }
-                }
-                )
-
                 while (true) {
                     delay(1000)
-                    Log.e("webrtc event", "state:: ${dataChannel?.state()}")
-
-                    dataChannel?.send(
-                        Buffer(
-                            ByteBuffer.wrap(
-                                "hello ${if (isHost) "guest" else "host"}".toByteArray()
-                            ), false
-                        )
-                    )
+                    dataChannelManager.sendMessage("hello ${if (isHost) "guest" else "host"}")
                 }
             }
 
