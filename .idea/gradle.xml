@@ -26,7 +26,6 @@
             <option value="$PROJECT_DIR$/core" />
             <option value="$PROJECT_DIR$/core/designsystem" />
             <option value="$PROJECT_DIR$/core/model" />
-            <option value="$PROJECT_DIR$/core/util" />
             <option value="$PROJECT_DIR$/core/webrtc" />
             <option value="$PROJECT_DIR$/core/webrtc/api" />
             <option value="$PROJECT_DIR$/core/webrtc/client" />

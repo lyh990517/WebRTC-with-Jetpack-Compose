@@ -6,9 +6,6 @@ import com.example.model.Packet.Companion.isAnswer
 import com.example.model.Packet.Companion.isOffer
 import com.example.model.SignalType
 import com.example.signaling.SignalingImpl.Companion.ROOT
-import com.example.util.parseData
-import com.example.util.toAnswerSdp
-import com.example.util.toOfferSdp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose

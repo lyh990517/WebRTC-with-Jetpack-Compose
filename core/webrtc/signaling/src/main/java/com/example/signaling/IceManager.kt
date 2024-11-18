@@ -4,8 +4,6 @@ import com.example.common.WebRtcEvent
 import com.example.model.Packet
 import com.example.model.SignalType
 import com.example.signaling.SignalingImpl.Companion.ROOT
-import com.example.util.parseDate
-import com.example.util.toIceCandidate
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
