@@ -34,7 +34,7 @@ internal class IceManager @Inject constructor(
         webrtcScope.launch {
             setFieldToIce()
 
-            getIces().collect(::handleIceCandidate)
+            getIceFlow().collect(::handleIceCandidate)
         }
     }
 
@@ -53,7 +53,7 @@ internal class IceManager @Inject constructor(
     fun getEvent() = iceEvent.asSharedFlow()
 
     @OptIn(FlowPreview::class)
-    private fun getIces() =
+    private fun getIceFlow() =
         callbackFlow {
             val type = if (isHost) SignalType.ANSWER else SignalType.OFFER
 
@@ -61,7 +61,6 @@ internal class IceManager @Inject constructor(
 
             awaitClose { listener.remove() }
         }.debounce(300)
-
 
     private fun setFieldToIce() {
         val type = if (isHost) SignalType.OFFER.value else SignalType.ANSWER.value

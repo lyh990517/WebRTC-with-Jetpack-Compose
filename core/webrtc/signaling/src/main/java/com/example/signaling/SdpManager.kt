@@ -9,7 +9,6 @@ import com.example.signaling.SignalingImpl.Companion.ROOT
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
@@ -30,9 +29,10 @@ internal class SdpManager @Inject constructor(
     fun collectSdp(isHost: Boolean, roomID: String) {
         this.isHost = isHost
         this.roomID = roomID
+        val signalType = if (isHost) SignalType.ANSWER else SignalType.OFFER
 
         webrtcScope.launch {
-            getSdp().collect(::handleSdp)
+            getSdpFlow(signalType).collect(::handleSdp)
         }
     }
 
@@ -47,13 +47,7 @@ internal class SdpManager @Inject constructor(
 
     fun getEvent() = sdpEvent.asSharedFlow()
 
-    private fun getSdp(): Flow<Packet> {
-        val type = if (isHost) SignalType.ANSWER else SignalType.OFFER
-
-        return getSdp(type)
-    }
-
-    private fun getSdp(signalType: SignalType) = callbackFlow {
+    private fun getSdpFlow(signalType: SignalType) = callbackFlow {
         val listener = getSdp(signalType.value).observeSdp(::trySend)
 
         awaitClose { listener.remove() }
