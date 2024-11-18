@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import org.webrtc.IceCandidate
 import javax.inject.Inject
@@ -56,25 +55,23 @@ internal class IceManager @Inject constructor(
     fun getEvent() = iceEvent.asSharedFlow()
 
     @OptIn(FlowPreview::class)
-    private fun getIces() = flow {
+    private fun getIces() =
         callbackFlow {
             val candidate = if (isHost) SignalType.ANSWER else SignalType.OFFER
 
             val listener = getIce(candidate.value)
                 .addSnapshotListener { snapshot, e ->
                     val candidates = snapshot?.get(ICE_FIELD) as? List<*>
-
-                    this.trySend(candidates)
+                    val packets = candidates?.map { data ->
+                        Packet(data as Map<String, Any>)
+                    }
+                    packets?.let {
+                        trySend(packets)
+                    }
                 }
             awaitClose { listener.remove() }
         }.debounce(300)
-            .collect { candidates ->
-                candidates?.forEach { data ->
-                    val packet = Packet(data as Map<String, Any>)
-                    emit(packet)
-                }
-            }
-    }
+
 
     private fun setFieldToIce() {
         val type = if (isHost) SignalType.OFFER.value else SignalType.ANSWER.value
@@ -83,13 +80,15 @@ internal class IceManager @Inject constructor(
             .set(mapOf(ICE_FIELD to listOf<Any>()))
     }
 
-    private suspend fun handleIceCandidate(packet: Packet) {
-        val iceCandidate = packet.toIceCandidate()
+    private suspend fun handleIceCandidate(packets: List<Packet>) {
+        packets.forEach { packet ->
+            val iceCandidate = packet.toIceCandidate()
 
-        if (isHost) {
-            iceEvent.emit(WebRtcEvent.Host.SetRemoteIce(iceCandidate))
-        } else {
-            iceEvent.emit(WebRtcEvent.Guest.SetRemoteIce(iceCandidate))
+            if (isHost) {
+                iceEvent.emit(WebRtcEvent.Host.SetRemoteIce(iceCandidate))
+            } else {
+                iceEvent.emit(WebRtcEvent.Guest.SetRemoteIce(iceCandidate))
+            }
         }
     }
 
