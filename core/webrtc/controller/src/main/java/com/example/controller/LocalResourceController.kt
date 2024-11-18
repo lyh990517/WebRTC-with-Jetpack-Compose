@@ -17,14 +17,15 @@ internal class LocalResourceController @Inject constructor(
     @RemoteSurface private val remoteSurface: SurfaceViewRenderer,
     private val localVideoTrack: VideoTrack,
     private val localAudioTrack: AudioTrack,
-    private val videoCapturer: VideoCapturer,
-    private val localMediaStream: MediaStream,
+    private val videoCapturer: VideoCapturer
 ) : Controller.LocalResource {
     override fun getLocalSurface(): SurfaceViewRenderer = localSurface
 
     override fun getRemoteSurface(): SurfaceViewRenderer = remoteSurface
 
-    override fun getLocalMediaStream(): MediaStream = localMediaStream
+    override fun getVideoTrack(): VideoTrack = localVideoTrack
+
+    override fun getAudioTrack(): AudioTrack = localAudioTrack
 
     override fun sinkToRemoteSurface(remoteMediaStream: MediaStream) {
         remoteMediaStream.videoTracks?.get(0)?.addSink(remoteSurface)

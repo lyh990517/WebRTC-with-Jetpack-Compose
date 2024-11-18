@@ -4,8 +4,6 @@ import com.example.common.WebRtcEvent
 import com.example.model.Packet
 import com.example.model.SignalType
 import com.example.signaling.SignalingImpl.Companion.ROOT
-import com.example.util.parseDate
-import com.example.util.toIceCandidate
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +13,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import org.webrtc.IceCandidate
 import javax.inject.Inject
@@ -30,14 +27,14 @@ internal class IceManager @Inject constructor(
     private var roomID = ""
     private var isHost = false
 
-    fun processIceExchange(isHost: Boolean, roomID: String) {
+    fun collectIce(isHost: Boolean, roomID: String) {
         this.roomID = roomID
         this.isHost = isHost
 
         webrtcScope.launch {
-            initializeIceField()
+            setFieldToIce()
 
-            getIces().collect(::handleIceCandidate)
+            getIceFlow().collect(::handleIceCandidate)
         }
     }
 
@@ -49,51 +46,42 @@ internal class IceManager @Inject constructor(
 
         val parsedIceCandidate = ice.parseDate(type.value)
 
-        getIceField(type.value)
+        getIce(type.value)
             .update(ICE_FIELD, FieldValue.arrayUnion(parsedIceCandidate))
     }
 
     fun getEvent() = iceEvent.asSharedFlow()
 
     @OptIn(FlowPreview::class)
-    private fun getIces() = flow {
+    private fun getIceFlow() =
         callbackFlow {
-            val candidate = if (isHost) SignalType.ANSWER else SignalType.OFFER
+            val type = if (isHost) SignalType.ANSWER else SignalType.OFFER
 
-            val listener = getIceField(candidate.value)
-                .addSnapshotListener { snapshot, e ->
-                    val candidates = snapshot?.get(ICE_FIELD) as? List<*>
+            val listener = getIce(type.value).observeIce(::trySend)
 
-                    this.trySend(candidates)
-                }
             awaitClose { listener.remove() }
         }.debounce(300)
-            .collect { candidates ->
-                candidates?.forEach { data ->
-                    val packet = Packet(data as Map<String, Any>)
-                    emit(packet)
-                }
-            }
-    }
 
-    private fun initializeIceField() {
+    private fun setFieldToIce() {
         val type = if (isHost) SignalType.OFFER.value else SignalType.ANSWER.value
 
-        getIceField(type)
+        getIce(type)
             .set(mapOf(ICE_FIELD to listOf<Any>()))
     }
 
-    private suspend fun handleIceCandidate(packet: Packet) {
-        val iceCandidate = packet.toIceCandidate()
+    private suspend fun handleIceCandidate(packets: List<Packet>) {
+        packets.forEach { packet ->
+            val iceCandidate = packet.toIceCandidate()
 
-        if (isHost) {
-            iceEvent.emit(WebRtcEvent.Host.SetRemoteIce(iceCandidate))
-        } else {
-            iceEvent.emit(WebRtcEvent.Guest.SetRemoteIce(iceCandidate))
+            if (isHost) {
+                iceEvent.emit(WebRtcEvent.Host.SetRemoteIce(iceCandidate))
+            } else {
+                iceEvent.emit(WebRtcEvent.Guest.SetRemoteIce(iceCandidate))
+            }
         }
     }
 
-    private fun getIceField(type: String) = firestore
+    private fun getIce(type: String) = firestore
         .collection(ROOT)
         .document(roomID)
         .collection(ICE_COLLECTION)

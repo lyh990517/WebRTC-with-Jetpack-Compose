@@ -6,13 +6,9 @@ import com.example.model.Packet.Companion.isAnswer
 import com.example.model.Packet.Companion.isOffer
 import com.example.model.SignalType
 import com.example.signaling.SignalingImpl.Companion.ROOT
-import com.example.util.parseData
-import com.example.util.toAnswerSdp
-import com.example.util.toOfferSdp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
@@ -30,12 +26,13 @@ internal class SdpManager @Inject constructor(
     private var isHost = false
     private var roomID = ""
 
-    fun processSdpExchange(isHost: Boolean, roomID: String) {
+    fun collectSdp(isHost: Boolean, roomID: String) {
         this.isHost = isHost
         this.roomID = roomID
+        val signalType = if (isHost) SignalType.ANSWER else SignalType.OFFER
 
         webrtcScope.launch {
-            getSdp().collect(::handleSdp)
+            getSdpFlow(signalType).collect(::handleSdp)
         }
     }
 
@@ -44,30 +41,14 @@ internal class SdpManager @Inject constructor(
     ) {
         val parsedSdp = sdp.parseData()
 
-        getSdpField(sdp.type.name)
+        getSdp(sdp.type.name)
             .set(parsedSdp)
     }
 
     fun getEvent() = sdpEvent.asSharedFlow()
 
-    private fun getSdp(): Flow<Packet> {
-        val type = if (isHost) SignalType.ANSWER else SignalType.OFFER
-
-        return getSdp(type)
-    }
-
-    private fun getSdp(signalType: SignalType) = callbackFlow {
-        val listener = getSdpField(signalType.value)
-            .addSnapshotListener { snapshot, _ ->
-
-                val data = snapshot?.data
-
-                if (data != null) {
-                    val packet = Packet(data)
-
-                    trySend(packet)
-                }
-            }
+    private fun getSdpFlow(signalType: SignalType) = callbackFlow {
+        val listener = getSdp(signalType.value).observeSdp(::trySend)
 
         awaitClose { listener.remove() }
     }
@@ -89,7 +70,7 @@ internal class SdpManager @Inject constructor(
         }
     }
 
-    private fun getSdpField(type: String) = firestore
+    private fun getSdp(type: String) = firestore
         .collection(ROOT)
         .document(roomID)
         .collection(SDP)

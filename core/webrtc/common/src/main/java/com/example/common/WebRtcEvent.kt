@@ -1,10 +1,19 @@
 package com.example.common
 
 import org.webrtc.IceCandidate
+import org.webrtc.PeerConnection
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 
 sealed interface WebRtcEvent {
+
+    sealed interface StateChange : WebRtcEvent {
+        data class IceConnection(val state: PeerConnection.IceConnectionState?) : StateChange
+        data class IceGathering(val state: PeerConnection.IceGatheringState?) : StateChange
+        data class Signaling(val state: PeerConnection.SignalingState?) : StateChange
+        data class Connection(val state: PeerConnection.PeerConnectionState?) : StateChange
+    }
+
     sealed interface Host : WebRtcEvent {
         data object SendOffer : Host
 
