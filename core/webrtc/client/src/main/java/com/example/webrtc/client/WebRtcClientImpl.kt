@@ -3,6 +3,7 @@ package com.example.webrtc.client
 import com.example.webrtc.api.WebRtcClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.webrtc.SurfaceViewRenderer
 import javax.inject.Inject
@@ -29,6 +30,12 @@ internal class WebRtcClientImpl @Inject constructor(
             localResourceController.startCapture()
         }
     }
+
+    override fun sendMessage(message: Any) {
+        webRtcController.sendMessage(message)
+    }
+
+    override fun getMessages(): Flow<Any> = webRtcController.getMessages()
 
     override fun toggleVoice() {
         localResourceController.toggleVoice()

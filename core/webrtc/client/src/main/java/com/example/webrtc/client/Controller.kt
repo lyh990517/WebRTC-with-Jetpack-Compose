@@ -26,6 +26,7 @@ sealed interface Controller {
     interface WebRtc {
         fun connect(roomID: String, isHost: Boolean)
         fun sendMessage(data: Any)
+        fun getMessages() : Flow<Any>
         fun createOffer()
         fun createAnswer()
         fun closeConnection()

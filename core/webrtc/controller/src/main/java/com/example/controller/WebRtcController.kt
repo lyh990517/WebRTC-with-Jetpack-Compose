@@ -7,6 +7,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import org.webrtc.DataChannel
@@ -66,6 +68,10 @@ internal class WebRtcController @Inject constructor(
     override fun sendMessage(data: Any) {
         dataChannelManager.sendMessage(data)
     }
+
+    override fun getMessages(): Flow<Any> =
+        dataChannelManager.getMessages()
+
 
     override fun createOffer() {
         val sdpObserver = createSdpObserver(
