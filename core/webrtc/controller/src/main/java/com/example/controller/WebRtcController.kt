@@ -3,6 +3,7 @@ package com.example.controller
 import com.example.common.WebRtcEvent
 import com.example.webrtc.client.Controller
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -83,28 +84,28 @@ internal class WebRtcController @Inject constructor(
             }
         )
 
-        peerConnection.createAnswer(sdpObserver, constraints)
+        peerConnection?.createAnswer(sdpObserver, constraints)
     }
 
     override fun closeConnection() {
-        peerConnection.close()
+        peerConnection?.close()
     }
 
     override fun setLocalDescription(sdp: SessionDescription, observer: SdpObserver) {
-        peerConnection.setLocalDescription(observer, sdp)
+        peerConnection?.setLocalDescription(observer, sdp)
     }
 
     override fun setRemoteDescription(sdp: SessionDescription) {
         val sdpObserver = createSdpObserver()
 
-        peerConnection.setRemoteDescription(sdpObserver, sdp)
+        peerConnection?.setRemoteDescription(sdpObserver, sdp)
     }
 
     override fun addIceCandidate(iceCandidate: IceCandidate) {
-        peerConnection.addIceCandidate(iceCandidate)
+        peerConnection?.addIceCandidate(iceCandidate)
     }
 
-    override fun getEvent(): SharedFlow<WebRtcEvent> = controllerEvent.asSharedFlow()
+    override fun getEvent(): Flow<WebRtcEvent> = controllerEvent.asSharedFlow()
 
     private fun createSdpObserver(onSdpCreationSuccess: ((SessionDescription, SdpObserver) -> Unit)? = null) =
         object : SdpObserver {
@@ -166,6 +167,12 @@ internal class WebRtcController @Inject constructor(
             override fun onDataChannel(p0: DataChannel?) {}
             override fun onRenegotiationNeeded() {}
             override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
+            override fun onTrack(transceiver: RtpTransceiver?) {
+                val track = transceiver?.receiver?.track()
+                if (track is VideoTrack) {
+                    track.addSink(localResourceController.getRemoteSurface())
+                }
+            }
         }
 
     companion object {

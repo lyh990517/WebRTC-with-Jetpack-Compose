@@ -31,6 +31,6 @@ sealed interface Controller {
         fun setLocalDescription(sdp: SessionDescription, observer: SdpObserver)
         fun setRemoteDescription(sdp: SessionDescription)
         fun addIceCandidate(iceCandidate: IceCandidate)
-        fun getEvent(): SharedFlow<WebRtcEvent>
+        fun getEvent(): Flow<WebRtcEvent>
     }
 }
