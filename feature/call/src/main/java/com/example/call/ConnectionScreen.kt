@@ -123,8 +123,7 @@ private fun CallContent(
                     .background(
                         color = Color.White.copy(alpha = 0.95f),
                         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-                    )
-                    .padding(16.dp),
+                    ),
                 state = state,
                 onMessage = onMessage,
                 onToggleChat = { isChat = !isChat }
