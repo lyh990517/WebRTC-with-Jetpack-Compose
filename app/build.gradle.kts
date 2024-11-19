@@ -12,6 +12,4 @@ dependencies {
     implementation(projects.feature.main)
 
     runtimeOnly(projects.core.webrtc.client)
-    runtimeOnly(projects.core.webrtc.signaling)
-    runtimeOnly(projects.core.webrtc.controller)
 }

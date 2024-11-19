@@ -1,6 +1,9 @@
 package com.example.webrtc.client
 
-import com.example.webrtc.api.WebRtcClient
+import com.example.webrtc.client.api.WebRtcClient
+import com.example.webrtc.client.controller.Controller
+import com.example.webrtc.client.signaling.Signaling
+import com.example.webrtc.client.event.EventHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.Flow

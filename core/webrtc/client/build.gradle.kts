@@ -1,7 +1,7 @@
 import com.example.build_logic.setNamespace
 
 plugins {
-    id("core")
+    id("webrtc")
 }
 
 android {
@@ -9,7 +9,5 @@ android {
 }
 
 dependencies {
-    api(projects.core.webrtc.common)
 
-    implementation(projects.core.webrtc.api)
 }

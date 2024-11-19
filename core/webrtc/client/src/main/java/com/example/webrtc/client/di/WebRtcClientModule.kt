@@ -1,6 +1,6 @@
 package com.example.webrtc.client.di
 
-import com.example.webrtc.api.WebRtcClient
+import com.example.webrtc.client.api.WebRtcClient
 import com.example.webrtc.client.WebRtcClientImpl
 import dagger.Binds
 import dagger.Module
