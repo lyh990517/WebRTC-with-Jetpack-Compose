@@ -150,7 +150,6 @@ fun Chatting(
                     showNewMessageNotification =
                         lastVisibleItem != null
                                 && lastVisibleItem.index < state.messages.size - 1
-                                && state.messages[lastVisibleItem.index].type != ChatMessage.ChatType.ME
                 }
             }
 
@@ -187,7 +186,18 @@ fun Chatting(
                         }
                     }
                 }
-                MessageInputUi(onMessage)
+                MessageInputUi {
+                    if (it.isNotBlank()) {
+                        scope.launch {
+                            val isAtBottom = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index == state.messages.size - 1
+                            onMessage(it)
+
+                            if (isAtBottom) {
+                                lazyListState.animateScrollToItem(state.messages.size - 1)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
