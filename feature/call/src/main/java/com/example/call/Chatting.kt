@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.call.state.CallState
 
 data class ChatMessage(
     val type: ChatType,
@@ -48,7 +49,7 @@ data class ChatMessage(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Chatting(
-    messages: () -> List<ChatMessage>,
+    state: CallState.Success,
     onMessage: (String) -> Unit,
     onToggleChat: () -> Unit,
     modifier: Modifier = Modifier
@@ -74,7 +75,7 @@ fun Chatting(
                 contentPadding = PaddingValues(12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(messages()) { chatMessage ->
+                items(state.messages) { chatMessage ->
                     val isSent = chatMessage.type == ChatMessage.ChatType.ME
 
                     Row(

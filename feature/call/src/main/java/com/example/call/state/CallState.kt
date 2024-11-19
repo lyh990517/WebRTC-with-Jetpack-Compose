@@ -1,5 +1,6 @@
 package com.example.call.state
 
+import com.example.call.ChatMessage
 import org.webrtc.SurfaceViewRenderer
 
 sealed interface CallState {
@@ -7,6 +8,7 @@ sealed interface CallState {
 
     data class Success(
         val local: SurfaceViewRenderer,
-        val remote: SurfaceViewRenderer
+        val remote: SurfaceViewRenderer,
+        val messages: List<ChatMessage>
     ) : CallState
 }

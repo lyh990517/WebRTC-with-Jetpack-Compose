@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.example.call.ChatMessage
 import com.example.call.roomIdArg
 import com.example.call.state.CallState
 import com.example.webrtc.client.api.WebRtcClient
@@ -12,6 +13,8 @@ import com.example.webrtc.client.model.Message
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -33,11 +36,26 @@ class ConnectionViewModel @Inject constructor(
 
     private val roomId = savedStateHandle.get<String>(roomIdArg) ?: ""
 
-    val message = webRtcClient.getMessages().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = Message.PlainString("")
-    )
+    init {
+        viewModelScope.launch {
+            webRtcClient.getMessages()
+                .filter { it is Message.PlainString }
+                .map {
+                    ChatMessage(
+                        type = ChatMessage.ChatType.OTHER,
+                        message = (it as Message.PlainString).data
+                    )
+                }.collect { message ->
+                    _uiState.update { state ->
+                        if (state is CallState.Success) {
+                            state.copy(
+                                messages = state.messages + message
+                            )
+                        } else state
+                    }
+                }
+        }
+    }
 
     fun fetch() = viewModelScope.launch {
         val localSurface = webRtcClient.getLocalSurface()
@@ -46,7 +64,8 @@ class ConnectionViewModel @Inject constructor(
         _uiState.update {
             CallState.Success(
                 local = localSurface,
-                remote = remoteSurface
+                remote = remoteSurface,
+                messages = emptyList()
             )
         }
     }
@@ -72,6 +91,16 @@ class ConnectionViewModel @Inject constructor(
     }
 
     fun sendMessage(message: String) = viewModelScope.launch {
+        _uiState.update { state ->
+            if (state is CallState.Success) {
+                state.copy(
+                    messages = state.messages + ChatMessage(
+                        type = ChatMessage.ChatType.ME,
+                        message = message
+                    )
+                )
+            } else state
+        }
         webRtcClient.sendMessage(message)
     }
 }
