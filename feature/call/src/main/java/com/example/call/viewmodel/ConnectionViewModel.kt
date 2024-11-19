@@ -71,7 +71,7 @@ class ConnectionViewModel @Inject constructor(
         }
     }
 
-    fun sendMessage(message: Message) = viewModelScope.launch {
+    fun sendMessage(message: String) = viewModelScope.launch {
         webRtcClient.sendMessage(message)
     }
 }

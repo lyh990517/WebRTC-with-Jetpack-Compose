@@ -35,8 +35,12 @@ internal class WebRtcClientImpl @Inject constructor(
         }
     }
 
-    override fun sendMessage(message: Message) {
+    override fun sendMessage(message: String) {
         webRtcController.sendMessage(message)
+    }
+
+    override fun sendFile(bytes: ByteArray) {
+        webRtcController.sendFile(bytes)
     }
 
     override fun getMessages(): Flow<Message> = webRtcController.getMessages()

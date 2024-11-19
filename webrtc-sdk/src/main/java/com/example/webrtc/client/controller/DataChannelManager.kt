@@ -7,8 +7,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import org.json.JSONException
-import org.json.JSONObject
 import org.webrtc.DataChannel
 import org.webrtc.DataChannel.Buffer
 import org.webrtc.PeerConnection
@@ -31,16 +29,20 @@ class DataChannelManager @Inject constructor(
         dataChannel?.registerObserver(createChannelObserver())
     }
 
-    fun sendMessage(message: Message) {
+    fun sendMessage(message: String) {
         val dataChannel = dataChannel ?: return
 
-        val buffer = when (message) {
-            is Message.PlainString -> ByteBuffer.wrap(message.data.toByteArray(Charsets.UTF_8))
-            is Message.File -> ByteBuffer.wrap(message.bytes)
-        }
+        val buffer = ByteBuffer.wrap(message.toByteArray(Charsets.UTF_8))
 
-        val isBinary = message is Message.File
-        dataChannel.send(Buffer(buffer, isBinary))
+        dataChannel.send(Buffer(buffer, false))
+    }
+
+    fun sendFile(bytes: ByteArray) {
+        val dataChannel = dataChannel ?: return
+
+        val buffer = ByteBuffer.wrap(bytes)
+
+        dataChannel.send(Buffer(buffer, true))
     }
 
     fun getMessages() = messages.asSharedFlow()

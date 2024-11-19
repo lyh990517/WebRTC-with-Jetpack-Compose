@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
@@ -121,9 +122,9 @@ private fun CallContent(
     onToggleVoice: () -> Unit,
     onToggleVideo: () -> Unit,
     onDisconnect: () -> Unit,
-    onMessage: (Message) -> Unit
+    onMessage: (String) -> Unit
 ) {
-    var message by remember { mutableStateOf("") }
+    var isChat by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
@@ -143,23 +144,45 @@ private fun CallContent(
                 .align(Alignment.TopCenter),
             onToggleVoice = onToggleVoice,
             onToggleVideo = onToggleVideo,
+            onToggleChat = { isChat = !isChat },
             onDisconnect = onDisconnect,
         )
-        Column(modifier = Modifier.align(Alignment.BottomCenter)) {
+        if (isChat) {
+            Chatting(
+                messages = messages,
+                onMessage = onMessage,
+                onToggleChat = { isChat = !isChat }
+            )
+        }
+    }
+}
+
+@Composable
+private fun Chatting(
+    messages: () -> List<String>,
+    onMessage: (String) -> Unit,
+    onToggleChat: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var message by remember { mutableStateOf("") }
+
+    Box {
+        Column(modifier = modifier.fillMaxSize()) {
             LazyColumn(
                 Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .weight(1f)
                     .background(Color.White)
             ) {
                 items(messages()) {
-                    Text(it, color = Color.Red)
+                    Text(it, color = Color.Black)
                 }
             }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(70.dp)
+                    .height(70.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 BasicTextField(
                     modifier = Modifier
@@ -170,13 +193,21 @@ private fun CallContent(
                 )
                 Button(
                     onClick = {
-                        onMessage(Message.PlainString(message))
+                        onMessage(message)
                         message = ""
                     }
                 ) {
                     Text("send")
                 }
             }
+        }
+        Button(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(20.dp),
+            onClick = onToggleChat
+        ) {
+            Text("back")
         }
     }
 }

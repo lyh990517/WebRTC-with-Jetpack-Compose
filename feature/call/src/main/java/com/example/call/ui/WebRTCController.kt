@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -19,6 +20,7 @@ fun ControllerUi(
     modifier: Modifier = Modifier,
     onToggleVoice: () -> Unit,
     onToggleVideo: () -> Unit,
+    onToggleChat: () -> Unit,
     onDisconnect: () -> Unit
 ) {
     val isCallClicked = rememberSaveable { mutableStateOf(false) }
@@ -46,6 +48,14 @@ fun ControllerUi(
         ) {
             isVideoClicked.value = !isVideoClicked.value
             onToggleVideo()
+        }
+        MenuButton(
+            imageVector = Icons.Default.Email,
+            description = "Chat",
+            defaultBackgroundColor = Color.Green,
+            state = isVideoClicked
+        ) {
+            onToggleChat()
         }
         MenuButton(
             imageVector = Icons.Default.Close,
