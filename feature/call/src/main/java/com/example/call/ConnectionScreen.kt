@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.example.call.state.CallState
 import com.example.call.ui.Chatting
 import com.example.call.ui.ControllerUi
@@ -51,6 +53,14 @@ fun ConnectionScreen(
         viewModel.fetch()
         delay(200)
         viewModel.connect()
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        viewModel.disconnect()
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
+        viewModel.disconnect()
     }
 
     when (state) {
