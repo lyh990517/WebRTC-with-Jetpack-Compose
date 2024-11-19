@@ -10,18 +10,23 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,9 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
@@ -174,6 +177,7 @@ private fun CallContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Chatting(
     messages: () -> List<ChatMessage>,
@@ -183,27 +187,37 @@ private fun Chatting(
 ) {
     var message by remember { mutableStateOf("") }
 
-    Box {
-        Column(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Column {
+            TopAppBar(
+                title = { Text("Chatting") },
+                navigationIcon = {
+                    IconButton(onClick = onToggleChat) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .background(Color(0xFFF5F5F5)),
-                contentPadding = PaddingValues(8.dp),
+                    .background(MaterialTheme.colorScheme.background),
+                contentPadding = PaddingValues(12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(messages()) { message ->
-                    val isSent = message.type == "me"
-                    Box(
+                items(messages()) { chatMessage ->
+                    val isSent = chatMessage.type == "me"
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = if (isSent) Alignment.CenterEnd else Alignment.CenterStart
+                        horizontalArrangement = if (isSent) Arrangement.End else Arrangement.Start
                     ) {
-                        Text(
-                            text = message.message,
+                        Box(
                             modifier = Modifier
                                 .background(
-                                    color = if (isSent) Color(0xFFDCF8C6) else Color.White,
+                                    color = if (isSent) Color(0xFF9CE09F) else Color(
+                                        0xFF4692E1
+                                    ),
                                     shape = RoundedCornerShape(
                                         topStart = 12.dp,
                                         topEnd = 12.dp,
@@ -212,47 +226,31 @@ private fun Chatting(
                                     )
                                 )
                                 .padding(horizontal = 12.dp, vertical = 8.dp)
-                                .widthIn(max = 250.dp),
-                            color = Color.Black,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                                .widthIn(max = 250.dp)
+                        ) {
+                            Text(
+                                text = chatMessage.message,
+                                color = if (isSent) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
                 }
             }
 
+            // 메시지 입력 필드
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.Green)
-                    .height(70.dp)
-                    .padding(horizontal = 16.dp),
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BasicTextField(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .background(
-                            color = Color(0xFFF0F0F0),
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                OutlinedTextField(
                     value = message,
                     onValueChange = { message = it },
-                    decorationBox = { innerTextField ->
-                        if (message.isEmpty()) {
-                            Text(
-                                text = "Type a message...",
-                                color = Color.Gray,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                        innerTextField()
-                    },
-                    textStyle = TextStyle(
-                        color = Color.Black,
-                        fontSize = 16.sp
-                    )
+                    placeholder = { Text("Type a message...") },
+                    modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
@@ -265,15 +263,6 @@ private fun Chatting(
                     Text("Send")
                 }
             }
-
-        }
-        Button(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(20.dp),
-            onClick = onToggleChat
-        ) {
-            Text("back")
         }
     }
 }
