@@ -11,6 +11,4 @@ android {
 
 dependencies {
     implementation(projects.feature.main)
-
-    runtimeOnly(projects.webrtcSdk)
 }
