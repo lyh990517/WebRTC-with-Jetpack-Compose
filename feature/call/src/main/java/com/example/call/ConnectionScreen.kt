@@ -58,7 +58,6 @@ fun ConnectionScreen(
     viewModel: ConnectionViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
-    val messages = remember { mutableStateListOf<ChatMessage>() }
 
     LaunchedEffect(Unit) {
         viewModel.fetch()
