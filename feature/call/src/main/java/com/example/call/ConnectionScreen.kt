@@ -75,12 +75,17 @@ fun NavGraphBuilder.connectionScreen() {
     }
 }
 
+data class ChatMessage(
+    val type: String,
+    val message: String
+)
+
 @Composable
 fun ConnectionScreen(
     viewModel: ConnectionViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
-    val messages = remember { mutableStateListOf<String>() }
+    val messages = remember { mutableStateListOf<ChatMessage>() }
 
     LaunchedEffect(Unit) {
         viewModel.fetch()
@@ -93,7 +98,7 @@ fun ConnectionScreen(
             when (message) {
                 is Message.File -> {}
                 is Message.PlainString -> {
-                    messages.add(message.data)
+                    messages.add(ChatMessage("other", message.data))
                 }
             }
         }
@@ -110,7 +115,10 @@ fun ConnectionScreen(
                 onToggleVoice = viewModel::toggleVoice,
                 onToggleVideo = viewModel::toggleVideo,
                 onDisconnect = viewModel::disconnect,
-                onMessage = viewModel::sendMessage,
+                onMessage = {
+                    messages.add(ChatMessage("me", it))
+                    viewModel.sendMessage(it)
+                },
                 messages = { messages.toList() }
             )
         }
@@ -126,7 +134,7 @@ private fun LoadingContent() {
 
 @Composable
 private fun CallContent(
-    messages: () -> List<String>,
+    messages: () -> List<ChatMessage>,
     state: CallState.Success,
     onToggleVoice: () -> Unit,
     onToggleVideo: () -> Unit,
@@ -168,7 +176,7 @@ private fun CallContent(
 
 @Composable
 private fun Chatting(
-    messages: () -> List<String>,
+    messages: () -> List<ChatMessage>,
     onMessage: (String) -> Unit,
     onToggleChat: () -> Unit,
     modifier: Modifier = Modifier
@@ -186,13 +194,13 @@ private fun Chatting(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(messages()) { message ->
-                    val isSent = message.startsWith("Me:")
+                    val isSent = message.type == "me"
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = if (isSent) Alignment.CenterEnd else Alignment.CenterStart
                     ) {
                         Text(
-                            text = message.removePrefix("Me: "),
+                            text = message.message,
                             modifier = Modifier
                                 .background(
                                     color = if (isSent) Color(0xFFDCF8C6) else Color.White,
