@@ -78,11 +78,6 @@ fun NavGraphBuilder.connectionScreen() {
     }
 }
 
-data class ChatMessage(
-    val type: String,
-    val message: String
-)
-
 @Composable
 fun ConnectionScreen(
     viewModel: ConnectionViewModel = hiltViewModel(),
@@ -101,7 +96,7 @@ fun ConnectionScreen(
             when (message) {
                 is Message.File -> {}
                 is Message.PlainString -> {
-                    messages.add(ChatMessage("other", message.data))
+                    messages.add(ChatMessage(ChatMessage.ChatType.OTHER, message.data))
                 }
             }
         }
@@ -119,7 +114,7 @@ fun ConnectionScreen(
                 onToggleVideo = viewModel::toggleVideo,
                 onDisconnect = viewModel::disconnect,
                 onMessage = {
-                    messages.add(ChatMessage("me", it))
+                    messages.add(ChatMessage(ChatMessage.ChatType.ME, it))
                     viewModel.sendMessage(it)
                 },
                 messages = { messages.toList() }
@@ -173,96 +168,6 @@ private fun CallContent(
                 onMessage = onMessage,
                 onToggleChat = { isChat = !isChat }
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun Chatting(
-    messages: () -> List<ChatMessage>,
-    onMessage: (String) -> Unit,
-    onToggleChat: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var message by remember { mutableStateOf("") }
-
-    Box(modifier = modifier.fillMaxSize()) {
-        Column {
-            TopAppBar(
-                title = { Text("Chatting") },
-                navigationIcon = {
-                    IconButton(onClick = onToggleChat) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .background(MaterialTheme.colorScheme.background),
-                contentPadding = PaddingValues(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(messages()) { chatMessage ->
-                    val isSent = chatMessage.type == "me"
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = if (isSent) Arrangement.End else Arrangement.Start
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    color = if (isSent) Color(0xFF9CE09F) else Color(
-                                        0xFF4692E1
-                                    ),
-                                    shape = RoundedCornerShape(
-                                        topStart = 12.dp,
-                                        topEnd = 12.dp,
-                                        bottomStart = if (isSent) 12.dp else 0.dp,
-                                        bottomEnd = if (isSent) 0.dp else 12.dp
-                                    )
-                                )
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                                .widthIn(max = 250.dp)
-                        ) {
-                            Text(
-                                text = chatMessage.message,
-                                color = if (isSent) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 메시지 입력 필드
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = message,
-                    onValueChange = { message = it },
-                    placeholder = { Text("Type a message...") },
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        onMessage(message)
-                        message = ""
-                    },
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Send")
-                }
-            }
         }
     }
 }
