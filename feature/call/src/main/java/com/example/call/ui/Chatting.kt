@@ -4,7 +4,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -34,6 +37,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -42,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,10 +60,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.call.state.CallState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 data class ChatMessage(
     val type: ChatType,
-    val message: String
+    val message: String,
 ) {
     enum class ChatType {
         ME,
@@ -72,8 +78,12 @@ fun Chatting(
     state: CallState.Success,
     onMessage: (String) -> Unit,
     onToggleChat: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
+    val lazyListState = rememberLazyListState()
+    var showNewMessageNotification by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
     Box(modifier = modifier.fillMaxSize()) {
         Column {
             TopAppBar(
@@ -89,6 +99,7 @@ fun Chatting(
             )
 
             LazyColumn(
+                state = lazyListState,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
@@ -98,58 +109,90 @@ fun Chatting(
             ) {
                 items(state.messages) { chatMessage ->
                     val isSent = chatMessage.type == ChatMessage.ChatType.ME
-                    var receiveAnimation by remember { mutableStateOf(false) }
 
-                    LaunchedEffect(Unit) {
-                        delay(50)
-                        receiveAnimation = true
-                    }
-
-                    AnimatedVisibility(
-                        visible = receiveAnimation,
-                        enter = fadeIn() + slideInHorizontally(initialOffsetX = { if (isSent) 300 else -300 }),
-                        exit = fadeOut() + slideOutHorizontally(targetOffsetX = { if (isSent) 300 else -300 })
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = if (isSent) Arrangement.End else Arrangement.Start
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = if (isSent) Arrangement.End else Arrangement.Start
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .background(
-                                        brush = Brush.horizontalGradient(
-                                            colors = if (isSent) listOf(
-                                                Color(0xFF9CE09F), Color(0xFF60BE7B)
-                                            ) else listOf(
-                                                Color(0xFF4692E1), Color(0xFF1C73D1)
-                                            )
-                                        ),
-                                        shape = RoundedCornerShape(
-                                            topStart = 12.dp,
-                                            topEnd = 12.dp,
-                                            bottomStart = if (isSent) 12.dp else 0.dp,
-                                            bottomEnd = if (isSent) 0.dp else 12.dp
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    brush = Brush.horizontalGradient(
+                                        colors = if (isSent) listOf(
+                                            Color(0xFF9CE09F), Color(0xFF60BE7B)
+                                        ) else listOf(
+                                            Color(0xFF4692E1), Color(0xFF1C73D1)
                                         )
+                                    ),
+                                    shape = RoundedCornerShape(
+                                        topStart = 12.dp,
+                                        topEnd = 12.dp,
+                                        bottomStart = if (isSent) 12.dp else 0.dp,
+                                        bottomEnd = if (isSent) 0.dp else 12.dp
                                     )
-                                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                                    .widthIn(max = 250.dp)
-                            ) {
-                                Text(
-                                    text = chatMessage.message,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    style = MaterialTheme.typography.bodyMedium
                                 )
-                            }
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                .widthIn(max = 250.dp)
+                        ) {
+                            Text(
+                                text = chatMessage.message,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
                         }
                     }
                 }
             }
 
-            MessageInputUi(onMessage)
+            LaunchedEffect(state.messages.size) {
+                if (lazyListState.layoutInfo.visibleItemsInfo.isNotEmpty()) {
+                    val lastVisibleItem = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()
+                    showNewMessageNotification =
+                        lastVisibleItem != null
+                                && lastVisibleItem.index < state.messages.size - 1
+                                && state.messages[lastVisibleItem.index].type != ChatMessage.ChatType.ME
+                }
+            }
 
+            Column {
+                AnimatedVisibility(
+                    visible = showNewMessageNotification,
+                    enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.secondary)
+                            .padding(8.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = state.messages[state.messages.size - 1].message,
+                                color = MaterialTheme.colorScheme.onSecondary,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            TextButton(onClick = {
+                                scope.launch {
+                                    lazyListState.animateScrollToItem(state.messages.size - 1)
+                                }
+                                showNewMessageNotification = false
+                            }) {
+                                Text("View", color = Color.White)
+                            }
+                        }
+                    }
+                }
+                MessageInputUi(onMessage)
+            }
         }
     }
 }
+
 
 @Composable
 private fun MessageInputUi(onMessage: (String) -> Unit) {
@@ -208,6 +251,6 @@ private fun MessageInputUi(onMessage: (String) -> Unit) {
 
 @Preview
 @Composable
-fun MessageInputUiPreview(){
-    MessageInputUi {  }
+fun MessageInputUiPreview() {
+    MessageInputUi { }
 }
