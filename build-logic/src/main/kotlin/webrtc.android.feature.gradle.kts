@@ -1,6 +1,5 @@
 import com.example.webrtc.configureCircuit
 import com.example.webrtc.configureHiltAndroid
-import com.example.webrtc.libs
 
 
 plugins {

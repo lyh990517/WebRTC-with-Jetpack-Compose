@@ -9,6 +9,6 @@ android {
 }
 
 dependencies {
-    api("org.webrtc:google-webrtc:1.0.30039@aar")
+    api(libs.google.webrtc)
     implementation(projects.domain)
 }

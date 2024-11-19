@@ -80,7 +80,7 @@ internal class WebRTCInteractorImpl @Inject constructor(
         }
         _state.value = initState
         if (!initState.isJoin) {
-            peerConnection?.startCall(initState.accessCode)
+            peerConnection?.createCall(initState.accessCode)
         }
     }
 
@@ -141,7 +141,7 @@ internal class WebRTCInteractorImpl @Inject constructor(
         })
     }.createPeerConnectionFactory()
 
-    private fun PeerConnection.startCall(accessCode: String) {
+    private fun PeerConnection.createCall(accessCode: String) {
         createOffer(
             createSdpObserver { sdp, observer -> setLocalSdp(observer, sdp, accessCode) },
             constraints

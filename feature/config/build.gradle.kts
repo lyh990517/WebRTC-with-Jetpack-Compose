@@ -6,6 +6,3 @@ plugins {
 android {
     namespace = "com.example.config"
 }
-ksp{
-    arg("circuit.codegen.mode", "hilt")
-}
