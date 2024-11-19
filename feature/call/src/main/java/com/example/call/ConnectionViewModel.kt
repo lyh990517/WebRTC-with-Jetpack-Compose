@@ -1,12 +1,12 @@
-package com.example.call.viewmodel
+package com.example.call
 
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.example.call.ChatMessage
-import com.example.call.roomIdArg
+import com.example.call.navigation.roomIdArg
+import com.example.call.ui.ChatMessage
 import com.example.call.state.CallState
 import com.example.webrtc.client.api.WebRtcClient
 import com.example.webrtc.client.model.Message

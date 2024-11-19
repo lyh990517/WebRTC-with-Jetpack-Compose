@@ -1,4 +1,4 @@
-package com.example.call
+package com.example.call.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

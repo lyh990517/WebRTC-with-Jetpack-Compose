@@ -1,6 +1,6 @@
 package com.example.call.state
 
-import com.example.call.ChatMessage
+import com.example.call.ui.ChatMessage
 import org.webrtc.SurfaceViewRenderer
 
 sealed interface CallState {
