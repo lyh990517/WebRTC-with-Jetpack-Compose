@@ -102,7 +102,7 @@ fun ControllerButton(
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = if (isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+            color = Color.White
         )
     }
 }

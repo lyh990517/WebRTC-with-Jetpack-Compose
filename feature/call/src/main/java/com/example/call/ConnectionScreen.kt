@@ -39,6 +39,7 @@ import com.example.call.state.CallState
 import com.example.call.ui.Chatting
 import com.example.call.ui.ControllerUi
 import kotlinx.coroutines.delay
+import org.webrtc.SurfaceViewRenderer
 
 @Composable
 fun ConnectionScreen(
@@ -82,32 +83,13 @@ private fun CallContent(
     onToggleVoice: () -> Unit,
     onToggleVideo: () -> Unit,
     onDisconnect: () -> Unit,
-    onMessage: (String) -> Unit
+    onMessage: (String) -> Unit,
 ) {
     var isChat by remember { mutableStateOf(false) }
-    var localViewOffset by remember { mutableStateOf(Offset(16f, 16f)) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { state.remote }
-        )
-
-        AndroidView(
-            modifier = Modifier
-                .padding(20.dp)
-                .align(Alignment.TopEnd)
-                .size(100.dp)
-                .offset { IntOffset(localViewOffset.x.toInt(), localViewOffset.y.toInt()) }
-                .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        localViewOffset += dragAmount
-                    }
-                }
-                .clip(CircleShape),
-            factory = { state.local }
-        )
+        RemoteSurface(state.remote)
+        LocalSurface(state.local)
 
         Box(
             modifier = Modifier
@@ -148,5 +130,38 @@ private fun CallContent(
                 onToggleChat = { isChat = !isChat }
             )
         }
+    }
+}
+
+@Composable
+private fun RemoteSurface(remoteSurface: SurfaceViewRenderer) {
+    AndroidView(
+        modifier = Modifier.fillMaxSize(),
+        factory = { remoteSurface }
+    )
+}
+
+@Composable
+private fun LocalSurface(
+    localSurface: SurfaceViewRenderer,
+) {
+    var localViewOffset by remember { mutableStateOf(Offset(16f, 16f)) }
+
+    Box(Modifier.fillMaxSize()) {
+        AndroidView(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(20.dp)
+                .size(100.dp)
+                .offset { IntOffset(localViewOffset.x.toInt(), localViewOffset.y.toInt()) }
+                .pointerInput(Unit) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        localViewOffset += dragAmount
+                    }
+                }
+                .clip(CircleShape),
+            factory = { localSurface }
+        )
     }
 }
