@@ -67,11 +67,11 @@ class DataChannelManager @Inject constructor(
         }
 
         override fun onMessage(p0: Buffer?) {
-            webRtcScope.launch {
-                val byteBuffer = p0?.data ?: return@launch
-                val bytes = ByteArray(byteBuffer.remaining())
-                byteBuffer.get(bytes)
+            val byteBuffer = p0?.data ?: return
+            val bytes = ByteArray(byteBuffer.remaining())
+            byteBuffer.get(bytes)
 
+            webRtcScope.launch {
                 try {
                     if (!p0.binary) {
                         val message = String(bytes, Charsets.UTF_8)
