@@ -1,8 +1,10 @@
 package com.example.call
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -147,7 +150,7 @@ private fun CallContent(
         ControllerUi(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.TopCenter),
+                .align(Alignment.BottomCenter),
             onToggleVoice = onToggleVoice,
             onToggleVideo = onToggleVideo,
             onToggleChat = { isChat = !isChat },
@@ -175,15 +178,40 @@ private fun Chatting(
     Box {
         Column(modifier = modifier.fillMaxSize()) {
             LazyColumn(
-                Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .background(Color.White)
+                    .background(Color(0xFFF5F5F5)),
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(messages()) {
-                    Text(it, color = Color.Black)
+                items(messages()) { message ->
+                    val isSent = message.startsWith("Me:")
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = if (isSent) Alignment.CenterEnd else Alignment.CenterStart
+                    ) {
+                        Text(
+                            text = message.removePrefix("Me: "),
+                            modifier = Modifier
+                                .background(
+                                    color = if (isSent) Color(0xFFDCF8C6) else Color.White,
+                                    shape = RoundedCornerShape(
+                                        topStart = 12.dp,
+                                        topEnd = 12.dp,
+                                        bottomStart = if (isSent) 12.dp else 0.dp,
+                                        bottomEnd = if (isSent) 0.dp else 12.dp
+                                    )
+                                )
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                .widthIn(max = 250.dp),
+                            color = Color.Black,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
