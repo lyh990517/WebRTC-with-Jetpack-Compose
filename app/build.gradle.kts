@@ -11,5 +11,5 @@ android {
 dependencies {
     implementation(projects.feature.main)
 
-    runtimeOnly(projects.core.webrtc.client)
+    runtimeOnly(projects.client)
 }
