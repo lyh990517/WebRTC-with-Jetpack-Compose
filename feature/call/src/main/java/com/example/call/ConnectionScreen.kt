@@ -82,7 +82,6 @@ fun ConnectionScreen(
         viewModel.message.collect { message ->
             when (message) {
                 is Message.File -> {}
-                is Message.Json -> {}
                 is Message.PlainString -> {
                     messages.add(message.data)
                 }

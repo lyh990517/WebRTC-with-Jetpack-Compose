@@ -36,10 +36,6 @@ class DataChannelManager @Inject constructor(
 
         val buffer = when (message) {
             is Message.PlainString -> ByteBuffer.wrap(message.data.toByteArray(Charsets.UTF_8))
-            is Message.Json -> ByteBuffer.wrap(
-                message.jsonObject.toString().toByteArray(Charsets.UTF_8)
-            )
-
             is Message.File -> ByteBuffer.wrap(message.bytes)
         }
 
@@ -75,16 +71,7 @@ class DataChannelManager @Inject constructor(
                 try {
                     if (!p0.binary) {
                         val message = String(bytes, Charsets.UTF_8)
-                        if (message.startsWith("{") && message.endsWith("}")) {
-                            try {
-                                val jsonObject = JSONObject(message)
-                                messages.emit(Message.Json(jsonObject))
-                            } catch (e: JSONException) {
-                                Log.e("WebRTC Event", "Invalid JSON: $message")
-                            }
-                        } else {
-                            messages.emit(Message.PlainString(message))
-                        }
+                        messages.emit(Message.PlainString(message))
                     } else {
                         messages.emit(Message.File(bytes))
                     }
