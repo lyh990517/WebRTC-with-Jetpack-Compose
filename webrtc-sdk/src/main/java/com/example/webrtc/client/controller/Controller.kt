@@ -1,6 +1,7 @@
 package com.example.webrtc.client.controller
 
 import com.example.webrtc.client.event.WebRtcEvent
+import com.example.webrtc.client.model.Message
 import kotlinx.coroutines.flow.Flow
 import org.webrtc.AudioTrack
 import org.webrtc.IceCandidate
@@ -25,8 +26,8 @@ sealed interface Controller {
 
     interface WebRtc {
         fun connect(roomID: String, isHost: Boolean)
-        fun sendMessage(data: Any)
-        fun getMessages() : Flow<Any>
+        fun sendMessage(message: Message)
+        fun getMessages() : Flow<Message>
         fun createOffer()
         fun createAnswer()
         fun closeConnection()

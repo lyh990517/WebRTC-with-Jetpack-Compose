@@ -2,6 +2,7 @@ package com.example.webrtc.client.controller
 
 import android.util.Log
 import com.example.webrtc.client.event.WebRtcEvent
+import com.example.webrtc.client.model.Message
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -10,7 +11,6 @@ import org.json.JSONException
 import org.json.JSONObject
 import org.webrtc.DataChannel
 import org.webrtc.DataChannel.Buffer
-import org.webrtc.DataChannel.Observer
 import org.webrtc.PeerConnection
 import java.nio.ByteBuffer
 import javax.inject.Inject
@@ -20,7 +20,7 @@ class DataChannelManager @Inject constructor(
 ) {
     private var dataChannel: DataChannel? = null
     private val dataChannelEvent = MutableSharedFlow<WebRtcEvent>()
-    private val messages = MutableSharedFlow<Any>()
+    private val messages = MutableSharedFlow<Message>()
 
     fun initialize(peerConnection: PeerConnection) {
         dataChannel = peerConnection.createDataChannel(
@@ -31,25 +31,27 @@ class DataChannelManager @Inject constructor(
         dataChannel?.registerObserver(createChannelObserver())
     }
 
-    fun sendMessage(data: Any) {
-        when (data) {
-            is String -> {
-                dataChannel?.send(
-                    Buffer(ByteBuffer.wrap(data.toByteArray()), false)
-                )
-            }
+    fun sendMessage(message: Message) {
+        val dataChannel = dataChannel ?: return
 
-            else -> {
-                Log.e("DataChannelManager", "todo implement")
-            }
+        val buffer = when (message) {
+            is Message.PlainString -> ByteBuffer.wrap(message.data.toByteArray(Charsets.UTF_8))
+            is Message.Json -> ByteBuffer.wrap(
+                message.jsonObject.toString().toByteArray(Charsets.UTF_8)
+            )
+
+            is Message.File -> ByteBuffer.wrap(message.bytes)
         }
+
+        val isBinary = message is Message.File
+        dataChannel.send(Buffer(buffer, isBinary))
     }
 
     fun getMessages() = messages.asSharedFlow()
 
     fun getEvent() = dataChannelEvent.asSharedFlow()
 
-    private fun createChannelObserver() = object : Observer {
+    private fun createChannelObserver() = object : DataChannel.Observer {
         override fun onBufferedAmountChange(p0: Long) {
             webRtcScope.launch {
                 dataChannelEvent.emit(WebRtcEvent.StateChange.Buffer(p0))
@@ -67,25 +69,27 @@ class DataChannelManager @Inject constructor(
         override fun onMessage(p0: Buffer?) {
             webRtcScope.launch {
                 val byteBuffer = p0?.data ?: return@launch
-
                 val bytes = ByteArray(byteBuffer.remaining())
                 byteBuffer.get(bytes)
 
-                if (!p0.binary) {
-                    val message = String(bytes, Charsets.UTF_8)
-
-                    if (message.startsWith("{") && message.endsWith("}")) {
-                        try {
-                            val jsonObject = JSONObject(message)
-                            messages.emit(jsonObject)
-                        } catch (e: JSONException) {
-                            Log.e("webrtc event", "Invalid JSON: $message")
+                try {
+                    if (!p0.binary) {
+                        val message = String(bytes, Charsets.UTF_8)
+                        if (message.startsWith("{") && message.endsWith("}")) {
+                            try {
+                                val jsonObject = JSONObject(message)
+                                messages.emit(Message.Json(jsonObject))
+                            } catch (e: JSONException) {
+                                Log.e("WebRTC Event", "Invalid JSON: $message")
+                            }
+                        } else {
+                            messages.emit(Message.PlainString(message))
                         }
                     } else {
-                        messages.emit(message)
+                        messages.emit(Message.File(bytes))
                     }
-                } else {
-                    messages.emit(bytes)
+                } catch (e: Exception) {
+                    Log.e("WebRTC Event", "Failed to process message: ${e.message}")
                 }
             }
         }

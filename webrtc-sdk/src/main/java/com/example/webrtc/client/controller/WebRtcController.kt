@@ -1,6 +1,7 @@
 package com.example.webrtc.client.controller
 
 import com.example.webrtc.client.event.WebRtcEvent
+import com.example.webrtc.client.model.Message
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -61,11 +62,11 @@ internal class WebRtcController @Inject constructor(
         }
     }
 
-    override fun sendMessage(data: Any) {
-        dataChannelManager.sendMessage(data)
+    override fun sendMessage(message: Message) {
+        dataChannelManager.sendMessage(message)
     }
 
-    override fun getMessages(): Flow<Any> =
+    override fun getMessages(): Flow<Message> =
         dataChannelManager.getMessages()
 
 

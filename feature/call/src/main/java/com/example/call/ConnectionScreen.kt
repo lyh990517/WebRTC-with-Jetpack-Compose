@@ -36,6 +36,7 @@ import androidx.navigation.navArgument
 import com.example.call.state.CallState
 import com.example.call.ui.ControllerUi
 import com.example.call.viewmodel.ConnectionViewModel
+import com.example.webrtc.client.model.Message
 import kotlinx.coroutines.delay
 
 const val connectionRoute = "connection"
@@ -79,7 +80,13 @@ fun ConnectionScreen(
 
     LaunchedEffect(Unit) {
         viewModel.message.collect { message ->
-            messages.add(message as String)
+            when (message) {
+                is Message.File -> {}
+                is Message.Json -> {}
+                is Message.PlainString -> {
+                    messages.add(message.data)
+                }
+            }
         }
     }
 
@@ -115,7 +122,7 @@ private fun CallContent(
     onToggleVoice: () -> Unit,
     onToggleVideo: () -> Unit,
     onDisconnect: () -> Unit,
-    onMessage: (String) -> Unit
+    onMessage: (Message) -> Unit
 ) {
     var message by remember { mutableStateOf("") }
 
@@ -164,7 +171,7 @@ private fun CallContent(
                 )
                 Button(
                     onClick = {
-                        onMessage(message)
+                        onMessage(Message.PlainString(message))
                         message = ""
                     }
                 ) {

@@ -4,6 +4,7 @@ import com.example.webrtc.client.api.WebRtcClient
 import com.example.webrtc.client.controller.Controller
 import com.example.webrtc.client.signaling.Signaling
 import com.example.webrtc.client.event.EventHandler
+import com.example.webrtc.client.model.Message
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.Flow
@@ -34,11 +35,11 @@ internal class WebRtcClientImpl @Inject constructor(
         }
     }
 
-    override fun sendMessage(message: Any) {
+    override fun sendMessage(message: Message) {
         webRtcController.sendMessage(message)
     }
 
-    override fun getMessages(): Flow<Any> = webRtcController.getMessages()
+    override fun getMessages(): Flow<Message> = webRtcController.getMessages()
 
     override fun toggleVoice() {
         localResourceController.toggleVoice()

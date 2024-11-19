@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.call.roomIdArg
 import com.example.call.state.CallState
 import com.example.webrtc.client.api.WebRtcClient
+import com.example.webrtc.client.model.Message
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,7 +36,7 @@ class ConnectionViewModel @Inject constructor(
     val message = webRtcClient.getMessages().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ""
+        initialValue = Message.PlainString("")
     )
 
     fun fetch() = viewModelScope.launch {
@@ -70,7 +71,7 @@ class ConnectionViewModel @Inject constructor(
         }
     }
 
-    fun sendMessage(message: String) = viewModelScope.launch {
+    fun sendMessage(message: Message) = viewModelScope.launch {
         webRtcClient.sendMessage(message)
     }
 }
