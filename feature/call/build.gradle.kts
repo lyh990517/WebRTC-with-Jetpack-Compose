@@ -9,5 +9,5 @@ android {
 }
 
 dependencies {
-    implementation(projects.client)
+    implementation(projects.webrtcSdk)
 }
