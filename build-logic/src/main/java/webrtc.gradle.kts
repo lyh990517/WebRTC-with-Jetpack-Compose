@@ -13,10 +13,11 @@ plugins {
 configureKotlinAndroid()
 configureHiltAndroid()
 configureCoroutineAndroid()
-configureFirebase()
 
 dependencies {
     val libs = project.extensions.libs
 
     implementation(libs.findLibrary("google.webrtc").get())
+    add("implementation", platform(libs.findLibrary("firebase.bom").get()))
+    add("implementation", libs.findLibrary("firebase.firestore.ktx").get())
 }
