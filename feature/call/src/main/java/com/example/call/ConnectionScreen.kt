@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -35,8 +34,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import com.example.call.state.CallState
 import com.example.call.ui.ChatMessage
 import com.example.call.ui.Chatting
@@ -54,14 +51,6 @@ fun ConnectionScreen(
         viewModel.fetch()
         delay(200)
         viewModel.connect()
-    }
-
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
-        viewModel.disconnect()
-    }
-
-    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
-        viewModel.disconnect()
     }
 
     when (state) {
