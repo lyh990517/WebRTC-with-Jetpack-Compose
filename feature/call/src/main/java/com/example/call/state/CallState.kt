@@ -9,6 +9,7 @@ sealed interface CallState {
     data class Success(
         val local: SurfaceViewRenderer,
         val remote: SurfaceViewRenderer,
-        val messages: List<ChatMessage>
+        val messages: List<ChatMessage>,
+        val otherUserOnInput: Boolean
     ) : CallState
 }

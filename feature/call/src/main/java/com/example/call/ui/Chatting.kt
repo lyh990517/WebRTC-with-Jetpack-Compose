@@ -3,9 +3,7 @@ package com.example.call.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -38,7 +36,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -77,12 +74,21 @@ data class ChatMessage(
 fun Chatting(
     state: CallState.Success,
     onMessage: (String) -> Unit,
+    onInputChange: () -> Unit,
+    onInputStopped: () -> Unit,
     onToggleChat: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val lazyListState = rememberLazyListState()
     var showNewMessageNotification by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(state.otherUserOnInput) {
+        if (state.otherUserOnInput) {
+            delay(800)
+            onInputStopped()
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column {
@@ -155,6 +161,30 @@ fun Chatting(
 
             Column {
                 AnimatedVisibility(
+                    visible = state.otherUserOnInput,
+                    enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.secondary)
+                            .padding(8.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "other user on input",
+                                color = MaterialTheme.colorScheme.onSecondary,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+                AnimatedVisibility(
                     visible = showNewMessageNotification,
                     enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                     exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
@@ -186,18 +216,21 @@ fun Chatting(
                         }
                     }
                 }
-                MessageInputUi {
-                    if (it.isNotBlank()) {
-                        scope.launch {
-                            val isAtBottom = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index == state.messages.size - 1
-                            onMessage(it)
+                MessageInputUi(
+                    onMessage = {
+                        if (it.isNotBlank()) {
+                            scope.launch {
+                                val isAtBottom =
+                                    lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index == state.messages.size - 1
+                                onMessage(it)
 
-                            if (isAtBottom) {
-                                lazyListState.animateScrollToItem(state.messages.size - 1)
+                                if (isAtBottom) {
+                                    lazyListState.animateScrollToItem(state.messages.size - 1)
+                                }
                             }
                         }
-                    }
-                }
+                    }, onInputChange = onInputChange
+                )
             }
         }
     }
@@ -205,7 +238,7 @@ fun Chatting(
 
 
 @Composable
-private fun MessageInputUi(onMessage: (String) -> Unit) {
+private fun MessageInputUi(onMessage: (String) -> Unit, onInputChange: () -> Unit) {
     var message by remember { mutableStateOf("") }
 
     Row(
@@ -217,7 +250,10 @@ private fun MessageInputUi(onMessage: (String) -> Unit) {
     ) {
         OutlinedTextField(
             value = message,
-            onValueChange = { message = it },
+            onValueChange = {
+                message = it
+                onInputChange()
+            },
             placeholder = { Text("Type a message...") },
             modifier = Modifier
                 .weight(1f)
@@ -262,5 +298,5 @@ private fun MessageInputUi(onMessage: (String) -> Unit) {
 @Preview
 @Composable
 fun MessageInputUiPreview() {
-    MessageInputUi { }
+    MessageInputUi({}) { }
 }

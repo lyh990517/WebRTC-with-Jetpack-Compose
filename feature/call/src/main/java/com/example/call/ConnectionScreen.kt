@@ -74,7 +74,9 @@ fun ConnectionScreen(
                 onToggleVoice = viewModel::toggleVoice,
                 onToggleVideo = viewModel::toggleVideo,
                 onDisconnect = viewModel::disconnect,
-                onMessage = viewModel::sendMessage
+                onMessage = viewModel::sendMessage,
+                onInputChange = viewModel::onInputChange,
+                onInputStopped = viewModel::onInputStopped
             )
         }
     }
@@ -92,6 +94,8 @@ private fun CallContent(
     state: CallState.Success,
     onToggleVoice: () -> Unit,
     onToggleVideo: () -> Unit,
+    onInputChange: () -> Unit,
+    onInputStopped: () -> Unit,
     onDisconnect: () -> Unit,
     onMessage: (String) -> Unit,
 ) {
@@ -136,7 +140,9 @@ private fun CallContent(
                     ),
                 state = state,
                 onMessage = onMessage,
-                onToggleChat = { isChat = !isChat }
+                onToggleChat = { isChat = !isChat },
+                onInputChange = onInputChange,
+                onInputStopped = onInputStopped
             )
         }
     }

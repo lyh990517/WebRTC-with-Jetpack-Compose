@@ -6,8 +6,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.call.navigation.roomIdArg
-import com.example.call.ui.ChatMessage
 import com.example.call.state.CallState
+import com.example.call.ui.ChatMessage
 import com.example.webrtc.client.api.WebRtcClient
 import com.example.webrtc.client.model.Message
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -48,9 +48,13 @@ class ConnectionViewModel @Inject constructor(
                 }.collect { message ->
                     _uiState.update { state ->
                         if (state is CallState.Success) {
-                            state.copy(
-                                messages = state.messages + message
-                            )
+                            if (message.message == "<INPUT EVENT>") {
+                                state.copy(otherUserOnInput = true)
+                            } else {
+                                state.copy(
+                                    messages = state.messages + message
+                                )
+                            }
                         } else state
                     }
                 }
@@ -65,7 +69,8 @@ class ConnectionViewModel @Inject constructor(
             CallState.Success(
                 local = localSurface,
                 remote = remoteSurface,
-                messages = emptyList()
+                messages = emptyList(),
+                otherUserOnInput = false
             )
         }
     }
@@ -102,5 +107,17 @@ class ConnectionViewModel @Inject constructor(
             } else state
         }
         webRtcClient.sendMessage(message)
+    }
+
+    fun onInputChange() = viewModelScope.launch {
+        webRtcClient.sendMessage("<INPUT EVENT>")
+    }
+
+    fun onInputStopped() = viewModelScope.launch {
+        _uiState.update { state ->
+            if (state is CallState.Success) {
+                state.copy(otherUserOnInput = false)
+            } else state
+        }
     }
 }
