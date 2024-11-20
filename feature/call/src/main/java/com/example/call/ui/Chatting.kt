@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -29,10 +30,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,6 +68,7 @@ import androidx.compose.ui.unit.sp
 import com.example.call.state.CallState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
 
 data class ChatMessage(
     val type: ChatType,
@@ -247,6 +252,8 @@ fun Chatting(
 private fun MessageInputUi(onMessage: (String) -> Unit, onInputChange: () -> Unit) {
     var message by remember { mutableStateOf("") }
     var isAdditionalUiVisible by remember { mutableStateOf(false) }
+    var selectedImage by remember { mutableStateOf<ImageBitmap?>(null) }
+    var selectedFile by remember { mutableStateOf<File?>(null) }
 
     Column {
         Row(
@@ -332,12 +339,49 @@ private fun MessageInputUi(onMessage: (String) -> Unit, onInputChange: () -> Uni
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                Text("Additional UI appears here")
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Button(
+                        onClick = {
+
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.AccountBox, contentDescription = "Select Image")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Select Image")
+                    }
+
+                    Button(
+                        onClick = {
+
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Star, contentDescription = "Select File")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Select File")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                selectedImage?.let {
+                    Image(
+                        bitmap = it,
+                        contentDescription = "Selected Image",
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                selectedFile?.let {
+                    Text("Selected File: ${it.name}")
+                }
             }
         }
     }
 }
-
 
 @Preview
 @Composable
