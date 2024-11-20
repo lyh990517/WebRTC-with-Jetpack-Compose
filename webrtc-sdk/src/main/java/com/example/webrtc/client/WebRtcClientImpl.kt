@@ -35,6 +35,8 @@ internal class WebRtcClientImpl @Inject constructor(
         }
     }
 
+    override suspend fun getRoomList(): List<String> = signaling.getRoomList()
+
     override fun sendMessage(message: String) {
         webRtcController.sendMessage(message)
     }

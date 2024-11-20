@@ -30,6 +30,10 @@ internal class SignalingImpl @Inject constructor(
         return roomExists
     }
 
+    override suspend fun getRoomList(): List<String> {
+        return firestore.collection(ROOT).get().await().documents.map { it.id }
+    }
+
     override suspend fun terminate() {
         getRoom(roomID).delete().await()
     }

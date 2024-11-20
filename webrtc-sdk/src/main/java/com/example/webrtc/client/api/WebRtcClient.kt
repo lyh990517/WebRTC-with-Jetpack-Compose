@@ -7,6 +7,8 @@ import org.webrtc.SurfaceViewRenderer
 interface WebRtcClient {
     fun connect(roomID: String)
 
+    suspend fun getRoomList() : List<String>
+
     fun sendMessage(message: String)
 
     fun sendFile(bytes: ByteArray)
