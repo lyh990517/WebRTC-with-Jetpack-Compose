@@ -52,7 +52,6 @@ fun MainScreen(
 ) {
     var roomId by remember { mutableStateOf("") }
     val context = LocalContext.current
-    val rooms = viewModel.rooms
     var isRoomListVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -100,7 +99,7 @@ fun MainScreen(
                     .fillMaxWidth()
                     .padding(vertical = 16.dp)
             ) {
-                items(rooms) { room ->
+                items(viewModel.rooms) { room ->
                     RoomItem(roomName = room, onClick = { goToCall(room) })
                 }
             }
