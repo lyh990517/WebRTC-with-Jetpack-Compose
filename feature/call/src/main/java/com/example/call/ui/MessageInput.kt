@@ -98,6 +98,7 @@ fun MessageInputUi(onMessage: (ChatMessage) -> Unit, onInputChange: () -> Unit) 
                 onMessage = {
                     onMessage(it)
                     message = ""
+                    selectedImage = emptyList()
                 },
                 message = message
             )
