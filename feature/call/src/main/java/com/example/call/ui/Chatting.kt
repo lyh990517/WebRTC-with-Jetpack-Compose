@@ -151,7 +151,41 @@ fun Chatting(
                         }
 
                         is ChatMessage.Image -> {
-
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = if (isSent) Arrangement.End else Arrangement.Start
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            brush = Brush.horizontalGradient(
+                                                colors = if (isSent) listOf(
+                                                    Color(0xFF9CE09F), Color(0xFF60BE7B)
+                                                ) else listOf(
+                                                    Color(0xFF4692E1), Color(0xFF1C73D1)
+                                                )
+                                            ),
+                                            shape = RoundedCornerShape(
+                                                topStart = 12.dp,
+                                                topEnd = 12.dp,
+                                                bottomStart = if (isSent) 12.dp else 0.dp,
+                                                bottomEnd = if (isSent) 0.dp else 12.dp
+                                            )
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                                        .widthIn(max = 250.dp)
+                                ) {
+                                    Column {
+                                        chatMessage.images.forEach {
+                                            Image(
+                                                bitmap = it,
+                                                contentDescription = "",
+                                                modifier = Modifier.size(100.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         is ChatMessage.Message -> {

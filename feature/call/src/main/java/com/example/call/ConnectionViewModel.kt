@@ -125,7 +125,12 @@ class ConnectionViewModel @Inject constructor(
                     }
 
                     is ChatMessage.Image -> {
-                        state
+                        state.copy(
+                            messages = state.messages + ChatMessage.Image(
+                                type = ChatMessage.ChatType.ME,
+                                images = message.images
+                            )
+                        )
                     }
 
                     is ChatMessage.Message -> {
