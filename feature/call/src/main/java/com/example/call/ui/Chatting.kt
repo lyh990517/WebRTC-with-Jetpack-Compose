@@ -1,8 +1,11 @@
 package com.example.call.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -23,9 +26,12 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -240,60 +246,98 @@ fun Chatting(
 @Composable
 private fun MessageInputUi(onMessage: (String) -> Unit, onInputChange: () -> Unit) {
     var message by remember { mutableStateOf("") }
+    var isAdditionalUiVisible by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        OutlinedTextField(
-            value = message,
-            onValueChange = {
-                message = it
-                onInputChange()
-            },
-            placeholder = { Text("Type a message...") },
+    Column {
+        Row(
             modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(4.dp),
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Button(
-            onClick = {
-                if (message.isNotBlank()) {
-                    onMessage(message)
-                    message = ""
-                }
-            },
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier
-                .height(48.dp)
-                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)),
-            elevation = ButtonDefaults.buttonElevation(4.dp)
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = {
+                    isAdditionalUiVisible = !isAdditionalUiVisible
+                },
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
             ) {
                 Icon(
-                    Icons.Filled.Send,
-                    contentDescription = "Send",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
+                    imageVector = if (isAdditionalUiVisible) Icons.Default.Close else Icons.Default.Add,
+                    contentDescription = if (isAdditionalUiVisible) "Close" else "Add",
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    "Send",
-                    style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            OutlinedTextField(
+                value = message,
+                onValueChange = {
+                    message = it
+                    onInputChange()
+                },
+                placeholder = { Text("Type a message...") },
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(4.dp),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(
+                onClick = {
+                    if (message.isNotBlank()) {
+                        onMessage(message)
+                        message = ""
+                    }
+                },
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .height(48.dp)
+                    .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)),
+                elevation = ButtonDefaults.buttonElevation(4.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Filled.Send,
+                        contentDescription = "Send",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        "Send",
+                        style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    )
+                }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = isAdditionalUiVisible,
+            enter = fadeIn(animationSpec = tween(durationMillis = 500)) + expandVertically(),
+            exit = fadeOut(animationSpec = tween(durationMillis = 300)) + shrinkVertically()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text("Additional UI appears here")
             }
         }
     }
 }
+
 
 @Preview
 @Composable
