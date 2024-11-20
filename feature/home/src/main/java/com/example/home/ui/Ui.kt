@@ -55,7 +55,7 @@ fun InputContent(
         OutlinedTextField(
             value = roomId(),
             onValueChange = onInput,
-            label = { Text(text = "Room") },
+            label = { Text(text = "Room Name") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 20.dp, bottom = 24.dp)
@@ -73,7 +73,7 @@ fun InputContent(
                 tint = Color.White,
                 modifier = Modifier.padding(end = 8.dp)
             )
-            Text(text = "Connect", color = Color.White, fontSize = 18.sp)
+            Text(text = "Create Room", color = Color.White, fontSize = 18.sp)
         }
     }
 }
