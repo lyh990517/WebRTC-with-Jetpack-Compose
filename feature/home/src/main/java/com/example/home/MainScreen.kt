@@ -3,22 +3,29 @@ package com.example.home
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,7 +53,7 @@ fun MainScreen(
     var roomId by remember { mutableStateOf("") }
     val context = LocalContext.current
     val rooms = viewModel.rooms
-    var isRoomListVisible by remember { mutableStateOf(false) } // Room 리스트 표시 여부
+    var isRoomListVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.fetch()
@@ -94,14 +101,7 @@ fun MainScreen(
                     .padding(vertical = 16.dp)
             ) {
                 items(rooms) { room ->
-                    Button(
-                        onClick = { goToCall(room) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                    ) {
-                        Text(text = room, style = MaterialTheme.typography.bodyLarge)
-                    }
+                    RoomItem(roomName = room, onClick = { goToCall(room) })
                 }
             }
         }
@@ -114,6 +114,46 @@ fun MainScreen(
                 .align(Alignment.CenterHorizontally),
             style = MaterialTheme.typography.bodyLarge.copy(color = Color.Gray)
         )
+    }
+}
+
+@Composable
+fun RoomItem(
+    roomName: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp, horizontal = 8.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.AccountBox,
+                contentDescription = "Room Icon",
+                tint = Color(0xFF6200EE),
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = roomName,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                color = Color(0xFF333333),
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = Icons.Default.ArrowForward,
+                contentDescription = "Join Room",
+                tint = Color.Gray
+            )
+        }
     }
 }
 
