@@ -14,7 +14,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WebRTC"
-        tools:targetApi="31">
+        tools:targetApi="35">
     </application>
 
 </manifest>

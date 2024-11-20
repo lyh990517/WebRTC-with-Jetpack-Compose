@@ -13,7 +13,6 @@ internal fun Project.configureFirebase() {
     androidExtension.apply {
         dependencies {
             add("implementation", platform(libs.findLibrary("firebase.bom").get()))
-            add("implementation", libs.findLibrary("firebase.analytics.ktx").get())
             add("implementation", libs.findLibrary("firebase.firestore.ktx").get())
         }
     }

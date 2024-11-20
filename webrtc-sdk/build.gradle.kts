@@ -1,11 +1,11 @@
 import com.example.build_logic.setNamespace
 
 plugins {
-    id("feature")
+    id("webrtc")
 }
 
 android {
-    setNamespace("feature.home")
+    setNamespace("webrtc")
 }
 
 dependencies {
