@@ -38,6 +38,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.example.call.state.CallState
+import com.example.call.ui.ChatMessage
 import com.example.call.ui.Chatting
 import com.example.call.ui.ControllerUi
 import kotlinx.coroutines.delay
@@ -97,7 +98,7 @@ private fun CallContent(
     onInputChange: () -> Unit,
     onInputStopped: () -> Unit,
     onDisconnect: () -> Unit,
-    onMessage: (String) -> Unit,
+    onMessage: (ChatMessage) -> Unit,
 ) {
     var isChat by remember { mutableStateOf(false) }
 

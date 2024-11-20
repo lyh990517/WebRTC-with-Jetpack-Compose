@@ -41,19 +41,40 @@ class ConnectionViewModel @Inject constructor(
             webRtcClient.getMessages()
                 .filter { it is Message.PlainString }
                 .map {
-                    ChatMessage(
-                        type = ChatMessage.ChatType.OTHER,
-                        message = (it as Message.PlainString).data
-                    )
+                    when (it) {
+                        is Message.File -> ChatMessage.File(
+                            type = ChatMessage.ChatType.OTHER,
+                            files = emptyList()
+                        )
+
+                        is Message.PlainString -> {
+                            ChatMessage.Message(
+                                type = ChatMessage.ChatType.OTHER,
+                                message = it.data
+                            )
+                        }
+                    }
                 }.collect { message ->
                     _uiState.update { state ->
                         if (state is CallState.Success) {
-                            if (message.message == "<INPUT EVENT>") {
-                                state.copy(otherUserOnInput = true)
-                            } else {
-                                state.copy(
-                                    messages = state.messages + message
-                                )
+                            when (message) {
+                                is ChatMessage.File -> {
+                                    state
+                                }
+
+                                is ChatMessage.Image -> {
+                                    state
+                                }
+
+                                is ChatMessage.Message -> {
+                                    if (message.message == "<INPUT EVENT>") {
+                                        state.copy(otherUserOnInput = true)
+                                    } else {
+                                        state.copy(
+                                            messages = state.messages + message
+                                        )
+                                    }
+                                }
                             }
                         } else state
                     }
@@ -95,18 +116,42 @@ class ConnectionViewModel @Inject constructor(
         }
     }
 
-    fun sendMessage(message: String) = viewModelScope.launch {
+    fun sendMessage(message: ChatMessage) = viewModelScope.launch {
         _uiState.update { state ->
             if (state is CallState.Success) {
-                state.copy(
-                    messages = state.messages + ChatMessage(
-                        type = ChatMessage.ChatType.ME,
-                        message = message
-                    )
-                )
+                when (message) {
+                    is ChatMessage.File -> {
+                        state
+                    }
+
+                    is ChatMessage.Image -> {
+                        state
+                    }
+
+                    is ChatMessage.Message -> {
+                        state.copy(
+                            messages = state.messages + ChatMessage.Message(
+                                type = ChatMessage.ChatType.ME,
+                                message = message.message
+                            )
+                        )
+                    }
+                }
             } else state
         }
-        webRtcClient.sendMessage(message)
+        when (message) {
+            is ChatMessage.File -> {
+//                webRtcClient.sendFile()
+            }
+
+            is ChatMessage.Image -> {
+//                webRtcClient.sendFile()
+            }
+
+            is ChatMessage.Message -> {
+                webRtcClient.sendMessage(message.message)
+            }
+        }
     }
 
     fun onInputChange() = viewModelScope.launch {

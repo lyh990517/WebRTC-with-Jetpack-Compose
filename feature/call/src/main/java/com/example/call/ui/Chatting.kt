@@ -74,10 +74,24 @@ import com.example.call.state.CallState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-data class ChatMessage(
-    val type: ChatType,
-    val message: String,
-) {
+sealed interface ChatMessage {
+    val type: ChatType
+
+    data class Message(
+        override val type: ChatType,
+        val message: String,
+    ) : ChatMessage
+
+    data class Image(
+        override val type: ChatType,
+        val images: List<ImageBitmap>,
+    ) : ChatMessage
+
+    data class File(
+        override val type: ChatType,
+        val files: List<java.io.File>,
+    ) : ChatMessage
+
     enum class ChatType {
         ME,
         OTHER
@@ -88,7 +102,7 @@ data class ChatMessage(
 @Composable
 fun Chatting(
     state: CallState.Success,
-    onMessage: (String) -> Unit,
+    onMessage: (ChatMessage) -> Unit,
     onInputChange: () -> Unit,
     onInputStopped: () -> Unit,
     onToggleChat: () -> Unit,
@@ -131,35 +145,47 @@ fun Chatting(
                 items(state.messages) { chatMessage ->
                     val isSent = chatMessage.type == ChatMessage.ChatType.ME
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = if (isSent) Arrangement.End else Arrangement.Start
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    brush = Brush.horizontalGradient(
-                                        colors = if (isSent) listOf(
-                                            Color(0xFF9CE09F), Color(0xFF60BE7B)
-                                        ) else listOf(
-                                            Color(0xFF4692E1), Color(0xFF1C73D1)
+                    when (chatMessage) {
+                        is ChatMessage.File -> {
+
+                        }
+
+                        is ChatMessage.Image -> {
+
+                        }
+
+                        is ChatMessage.Message -> {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = if (isSent) Arrangement.End else Arrangement.Start
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            brush = Brush.horizontalGradient(
+                                                colors = if (isSent) listOf(
+                                                    Color(0xFF9CE09F), Color(0xFF60BE7B)
+                                                ) else listOf(
+                                                    Color(0xFF4692E1), Color(0xFF1C73D1)
+                                                )
+                                            ),
+                                            shape = RoundedCornerShape(
+                                                topStart = 12.dp,
+                                                topEnd = 12.dp,
+                                                bottomStart = if (isSent) 12.dp else 0.dp,
+                                                bottomEnd = if (isSent) 0.dp else 12.dp
+                                            )
                                         )
-                                    ),
-                                    shape = RoundedCornerShape(
-                                        topStart = 12.dp,
-                                        topEnd = 12.dp,
-                                        bottomStart = if (isSent) 12.dp else 0.dp,
-                                        bottomEnd = if (isSent) 0.dp else 12.dp
+                                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                                        .widthIn(max = 250.dp)
+                                ) {
+                                    Text(
+                                        text = chatMessage.message,
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        style = MaterialTheme.typography.bodyMedium
                                     )
-                                )
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                                .widthIn(max = 250.dp)
-                        ) {
-                            Text(
-                                text = chatMessage.message,
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                                }
+                            }
                         }
                     }
                 }
@@ -215,32 +241,90 @@ fun Chatting(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = state.messages[state.messages.size - 1].message,
-                                color = MaterialTheme.colorScheme.onSecondary,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            TextButton(onClick = {
-                                scope.launch {
-                                    lazyListState.animateScrollToItem(state.messages.size - 1)
+                            val lastChat = state.messages[state.messages.size - 1]
+
+                            when (lastChat) {
+                                is ChatMessage.File -> {
+                                    Text(
+                                        text = "File Received",
+                                        color = MaterialTheme.colorScheme.onSecondary,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    TextButton(onClick = {
+                                        scope.launch {
+                                            lazyListState.animateScrollToItem(state.messages.size - 1)
+                                        }
+                                        showNewMessageNotification = false
+                                    }) {
+                                        Text("View", color = Color.White)
+                                    }
                                 }
-                                showNewMessageNotification = false
-                            }) {
-                                Text("View", color = Color.White)
+
+                                is ChatMessage.Image -> {
+                                    Text(
+                                        text = "Image Received",
+                                        color = MaterialTheme.colorScheme.onSecondary,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    TextButton(onClick = {
+                                        scope.launch {
+                                            lazyListState.animateScrollToItem(state.messages.size - 1)
+                                        }
+                                        showNewMessageNotification = false
+                                    }) {
+                                        Text("View", color = Color.White)
+                                    }
+                                }
+
+                                is ChatMessage.Message -> {
+                                    Text(
+                                        text = lastChat.message,
+                                        color = MaterialTheme.colorScheme.onSecondary,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    TextButton(onClick = {
+                                        scope.launch {
+                                            lazyListState.animateScrollToItem(state.messages.size - 1)
+                                        }
+                                        showNewMessageNotification = false
+                                    }) {
+                                        Text("View", color = Color.White)
+                                    }
+                                }
                             }
                         }
                     }
                 }
                 MessageInputUi(
-                    onMessage = {
-                        if (it.isNotBlank()) {
-                            scope.launch {
-                                val isAtBottom =
-                                    lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index == state.messages.size - 1
-                                onMessage(it)
+                    onMessage = { message ->
+                        when (message) {
+                            is ChatMessage.File -> {
 
-                                if (isAtBottom) {
-                                    lazyListState.animateScrollToItem(state.messages.size - 1)
+                            }
+
+                            is ChatMessage.Image -> {
+                                scope.launch {
+                                    val isAtBottom =
+                                        lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index == state.messages.size - 1
+                                    onMessage(message)
+
+                                    if (isAtBottom) {
+                                        lazyListState.animateScrollToItem(state.messages.size - 1)
+                                    }
+                                }
+                            }
+
+                            is ChatMessage.Message -> {
+                                if (message.message.isNotBlank()) {
+                                    scope.launch {
+                                        val isAtBottom =
+                                            lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index == state.messages.size - 1
+                                        onMessage(message)
+
+                                        if (isAtBottom) {
+                                            lazyListState.animateScrollToItem(state.messages.size - 1)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -253,7 +337,7 @@ fun Chatting(
 
 
 @Composable
-private fun MessageInputUi(onMessage: (String) -> Unit, onInputChange: () -> Unit) {
+private fun MessageInputUi(onMessage: (ChatMessage) -> Unit, onInputChange: () -> Unit) {
     val context = LocalContext.current
     var message by remember { mutableStateOf("") }
     var isAdditionalUiVisible by remember { mutableStateOf(false) }
@@ -317,9 +401,27 @@ private fun MessageInputUi(onMessage: (String) -> Unit, onInputChange: () -> Uni
 
             Button(
                 onClick = {
-                    if (message.isNotBlank()) {
-                        onMessage(message)
-                        message = ""
+                    when {
+                        selectedImage.isNotEmpty() -> {
+                            onMessage(
+                                ChatMessage.Image(
+                                    type = ChatMessage.ChatType.ME,
+                                    images = selectedImage
+                                )
+                            )
+                        }
+
+                        else -> {
+                            if (message.isNotBlank()) {
+                                onMessage(
+                                    ChatMessage.Message(
+                                        type = ChatMessage.ChatType.ME,
+                                        message = message
+                                    )
+                                )
+                                message = ""
+                            }
+                        }
                     }
                 },
                 shape = RoundedCornerShape(8.dp),
