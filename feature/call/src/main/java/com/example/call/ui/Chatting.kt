@@ -1,5 +1,8 @@
 package com.example.call.ui
 
+import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -25,12 +28,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -60,6 +63,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,7 +73,6 @@ import androidx.compose.ui.unit.sp
 import com.example.call.state.CallState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.File
 
 data class ChatMessage(
     val type: ChatType,
@@ -250,10 +254,19 @@ fun Chatting(
 
 @Composable
 private fun MessageInputUi(onMessage: (String) -> Unit, onInputChange: () -> Unit) {
+    val context = LocalContext.current
     var message by remember { mutableStateOf("") }
     var isAdditionalUiVisible by remember { mutableStateOf(false) }
-    var selectedImage by remember { mutableStateOf<ImageBitmap?>(null) }
-    var selectedFile by remember { mutableStateOf<File?>(null) }
+    var selectedImage by remember { mutableStateOf<List<ImageBitmap>>(emptyList()) }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        selectedImage = uris.mapNotNull { uri ->
+            val stream = context.contentResolver.openInputStream(uri)
+            BitmapFactory.decodeStream(stream)?.asImageBitmap()
+        }
+    }
 
     Column {
         Row(
@@ -265,7 +278,11 @@ private fun MessageInputUi(onMessage: (String) -> Unit, onInputChange: () -> Uni
         ) {
             IconButton(
                 onClick = {
-                    isAdditionalUiVisible = !isAdditionalUiVisible
+                    if (isAdditionalUiVisible) {
+                        isAdditionalUiVisible = false
+                    } else {
+                        isAdditionalUiVisible = true
+                    }
                 },
                 modifier = Modifier
                     .size(40.dp)
@@ -344,18 +361,17 @@ private fun MessageInputUi(onMessage: (String) -> Unit, onInputChange: () -> Uni
                 ) {
                     Button(
                         onClick = {
-
+                            galleryLauncher.launch("image/*")
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Icon(Icons.Default.AccountBox, contentDescription = "Select Image")
+                        Icon(Icons.Default.Star, contentDescription = "Select Image")
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Select Image")
                     }
 
                     Button(
                         onClick = {
-
                         },
                         modifier = Modifier.weight(1f)
                     ) {
@@ -367,21 +383,26 @@ private fun MessageInputUi(onMessage: (String) -> Unit, onInputChange: () -> Uni
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                selectedImage?.let {
-                    Image(
-                        bitmap = it,
-                        contentDescription = "Selected Image",
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                selectedFile?.let {
-                    Text("Selected File: ${it.name}")
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(selectedImage) { image ->
+                        Image(
+                            bitmap = image,
+                            contentDescription = "Selected Image",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                        )
+                    }
                 }
             }
         }
     }
 }
+
 
 @Preview
 @Composable
