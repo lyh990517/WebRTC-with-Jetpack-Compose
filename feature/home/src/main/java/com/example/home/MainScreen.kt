@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,12 +27,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,7 +61,7 @@ fun MainScreen(
 ) {
     var roomId by remember { mutableStateOf("") }
     val context = LocalContext.current
-    var isRoomListVisible by remember { mutableStateOf(false) }
+    var isDialogVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.fetch()
@@ -95,22 +98,9 @@ fun MainScreen(
             }
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { isRoomListVisible = !isRoomListVisible }) {
-            Text(if (isRoomListVisible) "Hide Rooms" else "Show Rooms")
+        Button(onClick = { isDialogVisible = true }) {
+            Text("Show Rooms")
         }
-
-        if (isRoomListVisible) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
-            ) {
-                items(viewModel.rooms) { room ->
-                    RoomItem(roomName = room, onClick = { goToCall(room) })
-                }
-            }
-        }
-
         Spacer(modifier = Modifier.weight(1f))
         Text(
             text = "Created by yunho 2023",
@@ -120,6 +110,50 @@ fun MainScreen(
             style = MaterialTheme.typography.bodyLarge.copy(color = Color.Gray)
         )
     }
+
+    if (isDialogVisible) {
+        RoomDialog(
+            rooms = viewModel.rooms,
+            onDismiss = { isDialogVisible = false },
+            onRoomClick = { room ->
+                isDialogVisible = false
+                goToCall(room)
+            }
+        )
+    }
+}
+
+@Composable
+fun RoomDialog(
+    rooms: List<String>,
+    onDismiss: () -> Unit,
+    onRoomClick: (String) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Available Rooms",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+            )
+        },
+        text = {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 300.dp) // 제한된 높이
+            ) {
+                items(rooms) { room ->
+                    RoomItem(roomName = room, onClick = { onRoomClick(room) })
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
 }
 
 @Composable
@@ -169,7 +203,6 @@ fun RoomItem(
         }
     }
 }
-
 
 fun checkCameraAndAudioPermission(
     context: Context,
