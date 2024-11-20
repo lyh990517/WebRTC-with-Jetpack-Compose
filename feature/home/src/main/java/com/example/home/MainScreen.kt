@@ -3,6 +3,7 @@ package com.example.home
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -12,11 +13,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,15 +34,23 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.home.ui.InputContent
 import com.example.home.ui.LogoImage
 
 @Composable
 fun MainScreen(
-    goToCall: (String) -> Unit
+    goToCall: (String) -> Unit,
+    viewModel: MainViewModel = hiltViewModel()
 ) {
     var roomId by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val rooms = viewModel.rooms
+    var isRoomListVisible by remember { mutableStateOf(false) } // Room 리스트 표시 여부
+
+    LaunchedEffect(Unit) {
+        viewModel.fetch()
+    }
 
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -68,6 +82,31 @@ fun MainScreen(
                 )
             }
         )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { isRoomListVisible = !isRoomListVisible }) {
+            Text(if (isRoomListVisible) "Hide Rooms" else "Show Rooms")
+        }
+
+        if (isRoomListVisible) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+            ) {
+                items(rooms) { room ->
+                    Button(
+                        onClick = { goToCall(room) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Text(text = room, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
         Text(
             text = "Created by yunho 2023",
             modifier = Modifier
@@ -77,6 +116,7 @@ fun MainScreen(
         )
     }
 }
+
 
 fun checkCameraAndAudioPermission(
     context: Context,
