@@ -9,6 +9,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,12 +28,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -129,31 +135,78 @@ fun RoomDialog(
     onDismiss: () -> Unit,
     onRoomClick: (String) -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Available Rooms",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-            )
-        },
-        text = {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 300.dp) // 제한된 높이
-            ) {
-                items(rooms) { room ->
-                    RoomItem(roomName = room, onClick = { onRoomClick(room) })
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.5f))
+            .clickable(onClick = onDismiss, indication = null, interactionSource = remember { MutableInteractionSource() })
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 80.dp)
+                .align(Alignment.Center),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.elevatedCardElevation(8.dp)
+        ) {
+            Column {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(Color(0xFF6200EA), Color(0xFF3700B3))
+                            )
+                        )
+                        .padding(vertical = 16.dp, horizontal = 24.dp)
+                ) {
+                    Text(
+                        text = "Available Rooms",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    )
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.align(Alignment.TopEnd)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close Dialog",
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .heightIn(max = 300.dp)
+                ) {
+                    items(rooms) { room ->
+                        RoomItem(roomName = room, onClick = { onRoomClick(room) })
+                        Divider(
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            color = Color.LightGray
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Close", style = MaterialTheme.typography.bodyLarge.copy(color = Color(0xFF6200EA)))
+                    }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
-            }
         }
-    )
+    }
 }
 
 @Composable
@@ -161,48 +214,30 @@ fun RoomItem(
     roomName: String,
     onClick: () -> Unit
 ) {
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 12.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.elevatedCardElevation(3.dp),
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp, horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(Color(0xFF8E2DE2), Color(0xFF4A00E0))
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = roomName,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                )
-            }
-
-            Icon(
-                imageVector = Icons.Default.ArrowForward,
-                contentDescription = "Join Room",
-                tint = Color.White,
-                modifier = Modifier.padding(10.dp).size(24.dp)
+        Icon(
+            imageVector = Icons.Default.AccountCircle,
+            contentDescription = "Room Icon",
+            tint = Color(0xFF6200EE),
+            modifier = Modifier.size(36.dp)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = roomName,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF333333)
             )
-        }
+        )
     }
 }
+
 
 fun checkCameraAndAudioPermission(
     context: Context,
