@@ -14,6 +14,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -57,19 +58,9 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun MessageInputUi(onMessage: (ChatMessage) -> Unit, onInputChange: () -> Unit) {
-    val context = LocalContext.current
     var message by remember { mutableStateOf("") }
     var isAdditionalUiVisible by remember { mutableStateOf(false) }
     var selectedImage by remember { mutableStateOf<List<ImageBitmap>>(emptyList()) }
-
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetMultipleContents()
-    ) { uris ->
-        selectedImage = uris.mapNotNull { uri ->
-            val stream = context.contentResolver.openInputStream(uri)
-            BitmapFactory.decodeStream(stream)?.asImageBitmap()
-        }
-    }
 
     Column {
         Row(
@@ -79,24 +70,8 @@ fun MessageInputUi(onMessage: (ChatMessage) -> Unit, onInputChange: () -> Unit) 
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = {
-                    if (isAdditionalUiVisible) {
-                        isAdditionalUiVisible = false
-                    } else {
-                        isAdditionalUiVisible = true
-                    }
-                },
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-            ) {
-                Icon(
-                    imageVector = if (isAdditionalUiVisible) Icons.Default.Close else Icons.Default.Add,
-                    contentDescription = if (isAdditionalUiVisible) "Close" else "Add",
-                    tint = MaterialTheme.colorScheme.primary
-                )
+            AddButton(isAdditionalUiVisible) {
+                isAdditionalUiVisible = !isAdditionalUiVisible
             }
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -118,106 +93,164 @@ fun MessageInputUi(onMessage: (ChatMessage) -> Unit, onInputChange: () -> Unit) 
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Button(
-                onClick = {
-                    when {
-                        selectedImage.isNotEmpty() -> {
-                            onMessage(
-                                ChatMessage.Image(
-                                    type = ChatMessage.ChatType.ME,
-                                    images = selectedImage
-                                )
-                            )
-                        }
-
-                        else -> {
-                            if (message.isNotBlank()) {
-                                onMessage(
-                                    ChatMessage.Message(
-                                        type = ChatMessage.ChatType.ME,
-                                        message = message
-                                    )
-                                )
-                                message = ""
-                            }
-                        }
-                    }
+            SendButton(
+                selectedImage = selectedImage,
+                onMessage = {
+                    onMessage(it)
+                    message = ""
                 },
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .height(48.dp)
-                    .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)),
-                elevation = ButtonDefaults.buttonElevation(4.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Filled.Send,
-                        contentDescription = "Send",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        "Send",
-                        style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                    )
-                }
-            }
+                message = message
+            )
         }
 
-        AnimatedVisibility(
-            visible = isAdditionalUiVisible,
-            enter = fadeIn(animationSpec = tween(durationMillis = 500)) + expandVertically(),
-            exit = fadeOut(animationSpec = tween(durationMillis = 300)) + shrinkVertically()
+        AdditionalUi(
+            isAdditionalUiVisible = isAdditionalUiVisible,
+            selectedImage = selectedImage
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Button(
-                        onClick = {
-                            galleryLauncher.launch("image/*")
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.Star, contentDescription = "Select Image")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Select Image")
-                    }
+            selectedImage = it
+        }
+    }
+}
 
-                    Button(
-                        onClick = {
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.Star, contentDescription = "Select File")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Select File")
-                    }
+@Composable
+private fun AddButton(isAdditionalUiVisible: Boolean, onClick: () -> Unit) {
+    IconButton(
+        onClick = {
+            onClick()
+        },
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+    ) {
+        Icon(
+            imageVector = if (isAdditionalUiVisible) Icons.Default.Close else Icons.Default.Add,
+            contentDescription = if (isAdditionalUiVisible) "Close" else "Add",
+            tint = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+@Composable
+private fun SendButton(
+    selectedImage: List<ImageBitmap>,
+    onMessage: (ChatMessage) -> Unit,
+    message: String
+) {
+    Button(
+        onClick = {
+            when {
+                selectedImage.isNotEmpty() -> {
+                    onMessage(
+                        ChatMessage.Image(
+                            type = ChatMessage.ChatType.ME,
+                            images = selectedImage
+                        )
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(selectedImage) { image ->
-                        Image(
-                            bitmap = image,
-                            contentDescription = "Selected Image",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                else -> {
+                    if (message.isNotBlank()) {
+                        onMessage(
+                            ChatMessage.Message(
+                                type = ChatMessage.ChatType.ME,
+                                message = message
+                            )
                         )
                     }
+                }
+            }
+        },
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier
+            .height(48.dp)
+            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)),
+        elevation = ButtonDefaults.buttonElevation(4.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Filled.Send,
+                contentDescription = "Send",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                "Send",
+                style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.AdditionalUi(
+    isAdditionalUiVisible: Boolean,
+    selectedImage: List<ImageBitmap>,
+    onSelectImage: (List<ImageBitmap>) -> Unit
+) {
+    val context = LocalContext.current
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        onSelectImage(uris.mapNotNull { uri ->
+            val stream = context.contentResolver.openInputStream(uri)
+            BitmapFactory.decodeStream(stream)?.asImageBitmap()
+        })
+    }
+
+    AnimatedVisibility(
+        visible = isAdditionalUiVisible,
+        enter = fadeIn(animationSpec = tween(durationMillis = 500)) + expandVertically(),
+        exit = fadeOut(animationSpec = tween(durationMillis = 300)) + shrinkVertically()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Button(
+                    onClick = {
+                        galleryLauncher.launch("image/*")
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Star, contentDescription = "Select Image")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Select Image")
+                }
+
+                Button(
+                    onClick = {
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Star, contentDescription = "Select File")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Select File")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(selectedImage) { image ->
+                    Image(
+                        bitmap = image,
+                        contentDescription = "Selected Image",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    )
                 }
             }
         }
