@@ -35,6 +35,8 @@ import com.example.call.ui.RemoteSurface
 import com.example.call.ui.chat.Chatting
 import com.example.webrtc.client.event.WebRtcEvent
 import kotlinx.coroutines.delay
+import org.webrtc.DataChannel
+import org.webrtc.PeerConnection
 
 @Composable
 fun ConnectionScreen(
@@ -42,6 +44,7 @@ fun ConnectionScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val webrtcEvent by viewModel.webrtcEvents.collectAsState(WebRtcEvent.None)
+    var isShowStatus by remember { mutableStateOf(true) }
     var otherUserOnInput by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -59,6 +62,26 @@ fun ConnectionScreen(
             }
         }
     }
+
+    LaunchedEffect(webrtcEvent) {
+        val shouldHideStatus = when (webrtcEvent) {
+            is WebRtcEvent.StateChange.DataChannel ->
+                (webrtcEvent as WebRtcEvent.StateChange.DataChannel).state == DataChannel.State.OPEN
+
+            is WebRtcEvent.StateChange.IceConnection ->
+                (webrtcEvent as WebRtcEvent.StateChange.IceConnection).state == PeerConnection.IceConnectionState.CONNECTED
+
+            is WebRtcEvent.StateChange.Signaling ->
+                (webrtcEvent as WebRtcEvent.StateChange.Signaling).state == PeerConnection.SignalingState.STABLE
+
+            else -> false
+        }
+
+        if (shouldHideStatus) {
+            isShowStatus = false
+        }
+    }
+
 
     LaunchedEffect(otherUserOnInput) {
         if (otherUserOnInput) {
@@ -85,11 +108,13 @@ fun ConnectionScreen(
                 )
             }
         }
-        Text(
-            modifier = Modifier.align(Alignment.Center),
-            text = webrtcEvent.toString(),
-            color = Color.White
-        )
+        if (isShowStatus) {
+            Text(
+                modifier = Modifier.align(Alignment.Center),
+                text = webrtcEvent.toString(),
+                color = Color.White
+            )
+        }
     }
 }
 
