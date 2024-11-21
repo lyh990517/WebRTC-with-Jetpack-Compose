@@ -32,6 +32,7 @@ internal class WebRtcController @Inject constructor(
 
     private val constraints = MediaConstraints().apply {
         mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
+        mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
     }
     private val controllerEvent = MutableSharedFlow<WebRtcEvent>(extraBufferCapacity = 100)
 
