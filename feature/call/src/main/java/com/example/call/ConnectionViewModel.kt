@@ -10,12 +10,10 @@ import com.example.call.state.CallEvent
 import com.example.call.state.CallState
 import com.example.call.ui.chat.ChatMessage
 import com.example.webrtc.client.api.WebRtcClient
-import com.example.webrtc.client.model.Message
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -46,30 +44,18 @@ class ConnectionViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            webRtcClient.getMessages()
-                .map { message ->
-                    when (message) {
-                        Message.InputEvent -> ChatMessage.InputEvent
-                        is Message.PlainString -> {
-                            ChatMessage.TextMessage(
-                                type = ChatMessage.ChatType.OTHER,
-                                message = message.data
-                            )
-                        }
-                    }
-                }.collect { message ->
+            webRtcClient
+                .getMessages()
+                .mapToChatMessage()
+                .collect { message ->
                     when (message) {
                         ChatMessage.InputEvent -> {
                             _uiEffect.emit(CallEvent.InputEvent)
                         }
 
                         is ChatMessage.TextMessage -> {
-                            _uiState.update {
-                                val state = it as CallState.Success
-
-                                state.copy(
-                                    messages = state.messages + message
-                                )
+                            updateState { state ->
+                                state.copy(messages = state.messages + message)
                             }
                         }
                     }
@@ -111,20 +97,23 @@ class ConnectionViewModel @Inject constructor(
     }
 
     fun sendMessage(message: String) = viewModelScope.launch {
-        _uiState.update {
-            val state = it as CallState.Success
-
-            state.copy(
-                messages = state.messages + ChatMessage.TextMessage(
-                    type = ChatMessage.ChatType.ME,
-                    message = message
-                )
-            )
+        updateState { state ->
+            state.copy(messages = state.messages + message.toChatMessage())
         }
         webRtcClient.sendMessage(message)
     }
 
     fun onInputChange() = viewModelScope.launch {
         webRtcClient.sendInputEvent()
+    }
+
+    private fun updateState(update: (CallState.Success) -> CallState.Success) {
+        _uiState.update { currentState ->
+            if (currentState is CallState.Success) {
+                update(currentState)
+            } else {
+                currentState
+            }
+        }
     }
 }
