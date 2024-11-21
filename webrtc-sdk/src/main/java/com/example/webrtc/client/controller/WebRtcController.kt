@@ -11,6 +11,8 @@ import org.webrtc.IceCandidate
 import org.webrtc.MediaConstraints
 import org.webrtc.MediaStream
 import org.webrtc.PeerConnection
+import org.webrtc.PeerConnection.Observer
+import org.webrtc.PeerConnection.RTCConfiguration
 import org.webrtc.PeerConnectionFactory
 import org.webrtc.RtpReceiver
 import org.webrtc.RtpTransceiver
@@ -37,20 +39,11 @@ internal class WebRtcController @Inject constructor(
     private var peerConnection: PeerConnection? = null
 
     override fun connect(roomID: String, isHost: Boolean) {
-        val rtcConfig = PeerConnection.RTCConfiguration(iceServer).apply {
-            sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
-            enableRtpDataChannel = true
-        }
+        peerConnection = peerConnectionFactory.createPeerConnection(isHost)
 
-        peerConnection = peerConnectionFactory.createPeerConnection(
-            rtcConfig,
-            createPeerConnectionObserver(isHost)
-        )
+        peerConnection?.createDataChannel()
 
-        peerConnection?.let(dataChannelManager::initialize)
-
-        peerConnection?.addTrack(localResourceController.getVideoTrack())
-        peerConnection?.addTrack(localResourceController.getAudioTrack())
+        peerConnection?.initializeLocalResource()
 
         if (isHost) {
             controllerEvent.tryEmit(WebRtcEvent.Host.SendOffer)
@@ -116,6 +109,30 @@ internal class WebRtcController @Inject constructor(
         dataChannelManager.getEvent()
     )
 
+    private fun PeerConnection.initializeLocalResource() {
+        addTrack(localResourceController.getVideoTrack())
+        addTrack(localResourceController.getAudioTrack())
+    }
+
+    private fun PeerConnectionFactory.createPeerConnection(
+        isHost: Boolean
+    ): PeerConnection? {
+        val rtcConfig = createRtcConfig()
+        val peerConnectionObserver = createPeerConnectionObserver(isHost)
+
+        return createPeerConnection(
+            rtcConfig,
+            peerConnectionObserver
+        )
+    }
+
+    private fun PeerConnection.createDataChannel() = dataChannelManager.initialize(this)
+
+    private fun createRtcConfig() = RTCConfiguration(iceServer).apply {
+        sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
+        enableRtpDataChannel = true
+    }
+
     private fun createSdpObserver(onSdpCreationSuccess: ((SessionDescription, SdpObserver) -> Unit)? = null) =
         object : SdpObserver {
             override fun onCreateSuccess(p0: SessionDescription?) {
@@ -129,8 +146,8 @@ internal class WebRtcController @Inject constructor(
 
     private fun createPeerConnectionObserver(
         isHost: Boolean
-    ): PeerConnection.Observer =
-        object : PeerConnection.Observer {
+    ): Observer =
+        object : Observer {
             override fun onConnectionChange(newState: PeerConnection.PeerConnectionState?) {
                 controllerEvent.tryEmit(WebRtcEvent.StateChange.Connection(newState))
             }
