@@ -2,8 +2,9 @@ package com.example.webrtc.client.event
 
 import android.util.Log
 import com.example.webrtc.client.controller.Controller
-import com.example.webrtc.client.signaling.Signaling
+import com.example.webrtc.client.signaling.RoomStatus
 import com.example.webrtc.client.signaling.SignalType
+import com.example.webrtc.client.signaling.Signaling
 import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -40,6 +41,7 @@ internal class EventHandler @Inject constructor(
                     "WebRTC EventHandler",
                     "IceConnection State Changes : ${event.state?.name}"
                 )
+                signaling.sendStatus(RoomStatus(status = event.state?.name ?: ""))
             }
 
             is WebRtcEvent.StateChange.IceGathering -> {
@@ -54,6 +56,7 @@ internal class EventHandler @Inject constructor(
                     "WebRTC EventHandler",
                     "Signaling State Changes : ${event.state?.name}"
                 )
+                signaling.sendStatus(RoomStatus(status = event.state?.name ?: ""))
             }
 
             is WebRtcEvent.StateChange.Buffer -> {

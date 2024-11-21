@@ -5,7 +5,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.tasks.await
 import org.webrtc.IceCandidate
@@ -18,9 +17,11 @@ import javax.inject.Singleton
 internal class SignalingImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val sdpManager: SdpManager,
-    private val iceManager: IceManager
+    private val iceManager: IceManager,
+    private val roomStatusManager: RoomStatusManager
 ) : Signaling {
     private var roomID = ""
+    private var isHost = false
 
     override suspend fun getRoomExists(roomID: String): Boolean {
         val room = getRoom(roomID)
@@ -44,6 +45,13 @@ internal class SignalingImpl @Inject constructor(
         getRoom(roomID).delete().await()
     }
 
+    override fun sendStatus(roomStatus: RoomStatus) {
+        roomStatusManager.sendStatus(roomId = roomID, isHost = isHost, roomStatus = roomStatus)
+    }
+
+    override suspend fun getRoomStatus(): Flow<RoomStatus> =
+        roomStatusManager.getStatus(roomID, isHost)
+
     override suspend fun sendIce(
         ice: IceCandidate?,
         type: SignalType
@@ -59,6 +67,7 @@ internal class SignalingImpl @Inject constructor(
 
     override suspend fun start(roomID: String, isHost: Boolean) {
         this.roomID = roomID
+        this.isHost = isHost
 
         firestore.enableNetwork()
 
@@ -67,7 +76,11 @@ internal class SignalingImpl @Inject constructor(
         iceManager.collectIce(isHost, roomID)
     }
 
-    override fun getEvent(): Flow<WebRtcEvent> = merge(sdpManager.getEvent(), iceManager.getEvent())
+    override fun getEvent(): Flow<WebRtcEvent> =
+        merge(
+            sdpManager.getEvent(),
+            iceManager.getEvent()
+        )
 
     private fun getRoom(roomId: String) = firestore
         .collection(ROOT)
