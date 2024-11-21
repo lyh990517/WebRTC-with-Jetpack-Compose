@@ -6,15 +6,17 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.call.navigation.roomIdArg
+import com.example.call.state.CallEvent
 import com.example.call.state.CallState
 import com.example.call.ui.ChatMessage
 import com.example.webrtc.client.api.WebRtcClient
 import com.example.webrtc.client.model.Message
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -34,28 +36,42 @@ class ConnectionViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000)
     )
 
+    private val _uiEffect = MutableSharedFlow<CallEvent>()
+    val uiEffect = _uiEffect.shareIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000)
+    )
+
     private val roomId = savedStateHandle.get<String>(roomIdArg) ?: ""
 
     init {
         viewModelScope.launch {
             webRtcClient.getMessages()
-                .filter { it is Message.PlainString }
-                .map {
-                    ChatMessage(
-                        type = ChatMessage.ChatType.OTHER,
-                        message = (it as Message.PlainString).data
-                    )
+                .map { message ->
+                    when (message) {
+                        Message.InputEvent -> ChatMessage.InputEvent
+                        is Message.PlainString -> {
+                            ChatMessage.TextMessage(
+                                type = ChatMessage.ChatType.OTHER,
+                                message = message.data
+                            )
+                        }
+                    }
                 }.collect { message ->
-                    _uiState.update { state ->
-                        if (state is CallState.Success) {
-                            if (message.message == "<INPUT EVENT>") {
-                                state.copy(otherUserOnInput = true)
-                            } else {
+                    when (message) {
+                        ChatMessage.InputEvent -> {
+                            _uiEffect.emit(CallEvent.InputEvent)
+                        }
+
+                        is ChatMessage.TextMessage -> {
+                            _uiState.update {
+                                val state = it as CallState.Success
+
                                 state.copy(
                                     messages = state.messages + message
                                 )
                             }
-                        } else state
+                        }
                     }
                 }
         }
@@ -69,8 +85,7 @@ class ConnectionViewModel @Inject constructor(
             CallState.Success(
                 local = localSurface,
                 remote = remoteSurface,
-                messages = emptyList(),
-                otherUserOnInput = false
+                messages = emptyList()
             )
         }
     }
@@ -99,7 +114,7 @@ class ConnectionViewModel @Inject constructor(
         _uiState.update { state ->
             if (state is CallState.Success) {
                 state.copy(
-                    messages = state.messages + ChatMessage(
+                    messages = state.messages + ChatMessage.TextMessage(
                         type = ChatMessage.ChatType.ME,
                         message = message
                     )
@@ -110,14 +125,6 @@ class ConnectionViewModel @Inject constructor(
     }
 
     fun onInputChange() = viewModelScope.launch {
-        webRtcClient.sendMessage("<INPUT EVENT>")
-    }
-
-    fun onInputStopped() = viewModelScope.launch {
-        _uiState.update { state ->
-            if (state is CallState.Success) {
-                state.copy(otherUserOnInput = false)
-            } else state
-        }
+        webRtcClient.sendInputEvent()
     }
 }

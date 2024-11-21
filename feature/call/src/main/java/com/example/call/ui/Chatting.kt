@@ -58,13 +58,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.call.state.CallState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-data class ChatMessage(
-    val type: ChatType,
-    val message: String,
-) {
+sealed interface ChatMessage {
+    data class TextMessage(
+        val type: ChatType,
+        val message: String? = null,
+    ) : ChatMessage
+
+    data object InputEvent : ChatMessage
+
     enum class ChatType {
         ME,
         OTHER
@@ -75,9 +78,9 @@ data class ChatMessage(
 @Composable
 fun Chatting(
     state: CallState.Success,
+    otherUserOnInput: () -> Boolean,
     onMessage: (String) -> Unit,
     onInputChange: () -> Unit,
-    onInputStopped: () -> Unit,
     onToggleChat: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -85,11 +88,8 @@ fun Chatting(
     var showNewMessageNotification by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(state.otherUserOnInput) {
-        if (state.otherUserOnInput) {
-            delay(800)
-            onInputStopped()
-        }
+    LaunchedEffect(state.messages) {
+
     }
 
     BackHandler {
@@ -120,37 +120,39 @@ fun Chatting(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(state.messages) { chatMessage ->
-                    val isSent = chatMessage.type == ChatMessage.ChatType.ME
+                    if (chatMessage is ChatMessage.TextMessage) {
+                        val isSent = chatMessage.type == ChatMessage.ChatType.ME
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = if (isSent) Arrangement.End else Arrangement.Start
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    brush = Brush.horizontalGradient(
-                                        colors = if (isSent) listOf(
-                                            Color(0xFF9CE09F), Color(0xFF60BE7B)
-                                        ) else listOf(
-                                            Color(0xFF4692E1), Color(0xFF1C73D1)
-                                        )
-                                    ),
-                                    shape = RoundedCornerShape(
-                                        topStart = 12.dp,
-                                        topEnd = 12.dp,
-                                        bottomStart = if (isSent) 12.dp else 0.dp,
-                                        bottomEnd = if (isSent) 0.dp else 12.dp
-                                    )
-                                )
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                                .widthIn(max = 250.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = if (isSent) Arrangement.End else Arrangement.Start
                         ) {
-                            Text(
-                                text = chatMessage.message,
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = if (isSent) listOf(
+                                                Color(0xFF9CE09F), Color(0xFF60BE7B)
+                                            ) else listOf(
+                                                Color(0xFF4692E1), Color(0xFF1C73D1)
+                                            )
+                                        ),
+                                        shape = RoundedCornerShape(
+                                            topStart = 12.dp,
+                                            topEnd = 12.dp,
+                                            bottomStart = if (isSent) 12.dp else 0.dp,
+                                            bottomEnd = if (isSent) 0.dp else 12.dp
+                                        )
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                                    .widthIn(max = 250.dp)
+                            ) {
+                                Text(
+                                    text = chatMessage.message ?: "",
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                         }
                     }
                 }
@@ -167,7 +169,7 @@ fun Chatting(
 
             Column {
                 AnimatedVisibility(
-                    visible = state.otherUserOnInput,
+                    visible = otherUserOnInput(),
                     enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                     exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                 ) {
@@ -206,11 +208,15 @@ fun Chatting(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = state.messages[state.messages.size - 1].message,
-                                color = MaterialTheme.colorScheme.onSecondary,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                            val message = state.messages[state.messages.size - 1]
+
+                            if (message is ChatMessage.TextMessage) {
+                                Text(
+                                    text = message.message ?: "",
+                                    color = MaterialTheme.colorScheme.onSecondary,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                             TextButton(onClick = {
                                 scope.launch {
                                     lazyListState.animateScrollToItem(state.messages.size - 1)

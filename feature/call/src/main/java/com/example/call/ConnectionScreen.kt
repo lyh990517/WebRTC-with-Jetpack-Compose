@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -38,6 +37,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import com.example.call.state.CallEvent
 import com.example.call.state.CallState
 import com.example.call.ui.Chatting
 import com.example.call.ui.ControllerUi
@@ -49,11 +49,29 @@ fun ConnectionScreen(
     viewModel: ConnectionViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    var otherUserOnInput by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.fetch()
         delay(200)
         viewModel.connect()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEffect.collect { event ->
+            when (event) {
+                CallEvent.InputEvent -> {
+                    otherUserOnInput = true
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(otherUserOnInput) {
+        if (otherUserOnInput) {
+            delay(800)
+            otherUserOnInput = false
+        }
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
@@ -72,12 +90,12 @@ fun ConnectionScreen(
         is CallState.Success -> {
             CallContent(
                 state = state as CallState.Success,
+                otherUserOnInput = { otherUserOnInput },
                 onToggleVoice = viewModel::toggleVoice,
                 onToggleVideo = viewModel::toggleVideo,
                 onDisconnect = viewModel::disconnect,
                 onMessage = viewModel::sendMessage,
-                onInputChange = viewModel::onInputChange,
-                onInputStopped = viewModel::onInputStopped
+                onInputChange = viewModel::onInputChange
             )
         }
     }
@@ -93,10 +111,10 @@ private fun LoadingContent() {
 @Composable
 private fun CallContent(
     state: CallState.Success,
+    otherUserOnInput: () -> Boolean,
     onToggleVoice: () -> Unit,
     onToggleVideo: () -> Unit,
     onInputChange: () -> Unit,
-    onInputStopped: () -> Unit,
     onDisconnect: () -> Unit,
     onMessage: (String) -> Unit,
 ) {
@@ -145,7 +163,7 @@ private fun CallContent(
                 onMessage = onMessage,
                 onToggleChat = { isChat = !isChat },
                 onInputChange = onInputChange,
-                onInputStopped = onInputStopped
+                otherUserOnInput = otherUserOnInput
             )
         }
     }
