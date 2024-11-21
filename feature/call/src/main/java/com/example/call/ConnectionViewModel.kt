@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.call.navigation.roomIdArg
 import com.example.call.state.CallEvent
 import com.example.call.state.CallState
-import com.example.call.ui.ChatMessage
+import com.example.call.ui.chat.ChatMessage
 import com.example.webrtc.client.api.WebRtcClient
 import com.example.webrtc.client.model.Message
 import dagger.hilt.android.lifecycle.HiltViewModel

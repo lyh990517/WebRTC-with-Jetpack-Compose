@@ -39,7 +39,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.example.call.state.CallEvent
 import com.example.call.state.CallState
-import com.example.call.ui.Chatting
+import com.example.call.ui.chat.Chatting
 import com.example.call.ui.ControllerUi
 import kotlinx.coroutines.delay
 import org.webrtc.SurfaceViewRenderer
