@@ -18,7 +18,7 @@ internal class SignalingImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val sdpManager: SdpManager,
     private val iceManager: IceManager,
-    private val roomStatusManager: RoomStatusManager
+    private val peerStatusManager: PeerStatusManager
 ) : Signaling {
     private var roomID = ""
     private var isHost = false
@@ -45,12 +45,12 @@ internal class SignalingImpl @Inject constructor(
         getRoom(roomID).delete().await()
     }
 
-    override fun sendStatus(roomStatus: RoomStatus) {
-        roomStatusManager.sendStatus(roomId = roomID, isHost = isHost, roomStatus = roomStatus)
+    override fun sendStatus(peerStatus: PeerStatus) {
+        peerStatusManager.sendStatus(roomId = roomID, isHost = isHost, peerStatus = peerStatus)
     }
 
-    override suspend fun getRoomStatus(): Flow<RoomStatus> =
-        roomStatusManager.getStatus(roomID, isHost)
+    override suspend fun getRoomStatus(): Flow<PeerStatus> =
+        peerStatusManager.getStatus(roomID, isHost)
 
     override suspend fun sendIce(
         ice: IceCandidate?,

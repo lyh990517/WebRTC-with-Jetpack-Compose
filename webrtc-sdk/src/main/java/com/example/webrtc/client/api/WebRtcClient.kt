@@ -1,7 +1,7 @@
 package com.example.webrtc.client.api
 
 import com.example.webrtc.client.model.Message
-import com.example.webrtc.client.signaling.RoomStatus
+import com.example.webrtc.client.signaling.PeerStatus
 import kotlinx.coroutines.flow.Flow
 import org.webrtc.SurfaceViewRenderer
 
@@ -10,7 +10,7 @@ interface WebRtcClient {
 
     suspend fun getRoomList(): Flow<List<String>?>
 
-    suspend fun getRoomStatus(): Flow<RoomStatus>
+    suspend fun getRoomStatus(): Flow<PeerStatus>
 
     fun sendMessage(message: String)
 

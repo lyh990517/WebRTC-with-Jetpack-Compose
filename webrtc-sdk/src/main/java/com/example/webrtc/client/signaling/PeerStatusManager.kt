@@ -8,14 +8,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class RoomStatusManager @Inject constructor(
+internal class PeerStatusManager @Inject constructor(
     private val firestore: FirebaseFirestore,
 ) {
-    fun sendStatus(roomId: String, isHost: Boolean, roomStatus: RoomStatus) {
+    fun sendStatus(roomId: String, isHost: Boolean, peerStatus: PeerStatus) {
         if (isHost) {
-            getHostStatus(roomId).set(roomStatus.toMap())
+            getHostStatus(roomId).set(peerStatus.toMap())
         } else {
-            getGuestStatus(roomId).set(roomStatus.toMap())
+            getGuestStatus(roomId).set(peerStatus.toMap())
         }
     }
 
@@ -23,10 +23,10 @@ internal class RoomStatusManager @Inject constructor(
         val status = if (isHost) getGuestStatus(roomId) else getHostStatus(roomId)
 
         val listener = status.addSnapshotListener { snapshot, _ ->
-            val roomStatus = snapshot?.toObject(RoomStatus::class.java)
+            val peerStatus = snapshot?.toObject(PeerStatus::class.java)
 
-            if (roomStatus != null) {
-                trySend(roomStatus)
+            if (peerStatus != null) {
+                trySend(peerStatus)
             }
         }
 
