@@ -87,7 +87,7 @@ fun ConnectionScreen(
                 onToggleVideo = viewModel::toggleVideo,
                 onDisconnect = viewModel::disconnect,
                 onMessage = viewModel::sendMessage,
-                onInputChange = viewModel::onInputChange
+                onInputChange = viewModel::sendInputEvent
             )
         }
     }

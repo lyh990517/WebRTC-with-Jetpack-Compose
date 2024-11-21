@@ -103,7 +103,7 @@ class ConnectionViewModel @Inject constructor(
         webRtcClient.sendMessage(message)
     }
 
-    fun onInputChange() = viewModelScope.launch {
+    fun sendInputEvent() = viewModelScope.launch {
         webRtcClient.sendInputEvent()
     }
 
