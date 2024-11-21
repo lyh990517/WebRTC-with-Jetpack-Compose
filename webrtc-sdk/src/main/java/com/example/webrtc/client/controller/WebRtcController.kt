@@ -22,6 +22,8 @@ import org.webrtc.VideoTrack
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// TODO Turn 서버 지정
+
 @Singleton
 internal class WebRtcController @Inject constructor(
     private val peerConnectionFactory: PeerConnectionFactory,
@@ -33,6 +35,7 @@ internal class WebRtcController @Inject constructor(
 
     private val constraints = MediaConstraints().apply {
         mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
+        mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
     }
     private val controllerEvent = MutableSharedFlow<WebRtcEvent>(extraBufferCapacity = 100)
 
