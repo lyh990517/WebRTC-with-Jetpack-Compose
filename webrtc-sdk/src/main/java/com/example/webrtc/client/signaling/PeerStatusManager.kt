@@ -11,7 +11,7 @@ import javax.inject.Singleton
 internal class PeerStatusManager @Inject constructor(
     private val firestore: FirebaseFirestore,
 ) {
-    fun sendStatus(roomId: String, isHost: Boolean, peerStatus: PeerStatus) {
+    fun sendMyStatus(roomId: String, isHost: Boolean, peerStatus: PeerStatus) {
         if (isHost) {
             getHostStatus(roomId).set(peerStatus.toMap())
         } else {
@@ -19,7 +19,7 @@ internal class PeerStatusManager @Inject constructor(
         }
     }
 
-    fun getStatus(roomId: String, isHost: Boolean) = callbackFlow {
+    fun getPeerStatus(roomId: String, isHost: Boolean) = callbackFlow {
         val status = if (isHost) getGuestStatus(roomId) else getHostStatus(roomId)
 
         val listener = status.addSnapshotListener { snapshot, _ ->

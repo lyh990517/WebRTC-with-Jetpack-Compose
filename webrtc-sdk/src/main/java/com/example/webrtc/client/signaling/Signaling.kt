@@ -9,8 +9,8 @@ interface Signaling {
     suspend fun getRoomExists(roomID: String): Boolean
     suspend fun getRoomList(): Flow<List<String>?>
     suspend fun terminate()
-    fun sendStatus(peerStatus: PeerStatus)
-    suspend fun getRoomStatus(): Flow<PeerStatus>
+    fun sendMyStatus(peerStatus: PeerStatus)
+    suspend fun getPeerStatus(): Flow<PeerStatus>
     suspend fun sendIce(ice: IceCandidate?, type: SignalType)
     suspend fun sendSdp(sdp: SessionDescription)
     suspend fun start(roomID: String, isHost: Boolean)

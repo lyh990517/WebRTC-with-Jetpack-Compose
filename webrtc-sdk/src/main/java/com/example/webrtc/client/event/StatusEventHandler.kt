@@ -29,7 +29,7 @@ internal class StatusEventHandler @Inject constructor(
                 )
                 lastIceConnectionStatus = event.state?.name ?: ""
 
-                sendStatus()
+                sendMyStatus()
             }
 
             is WebRtcEvent.StateChange.IceGathering -> {
@@ -46,7 +46,7 @@ internal class StatusEventHandler @Inject constructor(
                 )
                 lastSignalingStatus = event.state?.name ?: ""
 
-                sendStatus()
+                sendMyStatus()
             }
 
             is WebRtcEvent.StateChange.Buffer -> {
@@ -65,8 +65,8 @@ internal class StatusEventHandler @Inject constructor(
         }
     }
 
-    private fun sendStatus() {
-        signaling.sendStatus(
+    private fun sendMyStatus() {
+        signaling.sendMyStatus(
             PeerStatus(
                 iceConnection = lastIceConnectionStatus,
                 signaling = lastSignalingStatus

@@ -37,7 +37,7 @@ internal class WebRtcClientImpl @Inject constructor(
     }
 
     override suspend fun getRoomList(): Flow<List<String>?> = signaling.getRoomList()
-    override suspend fun getRoomStatus(): Flow<PeerStatus> = signaling.getRoomStatus()
+    override suspend fun getPeerStatus(): Flow<PeerStatus> = signaling.getPeerStatus()
 
     override fun sendMessage(message: String) {
         webRtcController.sendMessage(message)

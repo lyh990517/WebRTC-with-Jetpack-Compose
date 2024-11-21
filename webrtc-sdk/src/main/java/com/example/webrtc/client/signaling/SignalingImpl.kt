@@ -45,12 +45,12 @@ internal class SignalingImpl @Inject constructor(
         getRoom(roomID).delete().await()
     }
 
-    override fun sendStatus(peerStatus: PeerStatus) {
-        peerStatusManager.sendStatus(roomId = roomID, isHost = isHost, peerStatus = peerStatus)
+    override fun sendMyStatus(peerStatus: PeerStatus) {
+        peerStatusManager.sendMyStatus(roomId = roomID, isHost = isHost, peerStatus = peerStatus)
     }
 
-    override suspend fun getRoomStatus(): Flow<PeerStatus> =
-        peerStatusManager.getStatus(roomID, isHost)
+    override suspend fun getPeerStatus(): Flow<PeerStatus> =
+        peerStatusManager.getPeerStatus(roomID, isHost)
 
     override suspend fun sendIce(
         ice: IceCandidate?,

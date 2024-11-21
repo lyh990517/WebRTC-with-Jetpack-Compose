@@ -11,6 +11,7 @@ import com.example.call.state.CallState
 import com.example.call.ui.chat.ChatMessage
 import com.example.webrtc.client.api.WebRtcClient
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +50,19 @@ class ConnectionViewModel @Inject constructor(
                 .getMessages()
                 .mapToChatMessage()
                 .consumeMessage()
+        }
+
+        viewModelScope.launch {
+            delay(1000) // TODO 방식 변경
+
+            webRtcClient.getPeerStatus().collect { peer ->
+                Log.i(
+                    "Webrtc Peer Status",
+                    "signaling: ${peer.signaling}\n" +
+                            "IceConnection: ${peer.iceConnection}\n" +
+                            "lastUpdated: ${peer.lastUpdated}"
+                )
+            }
         }
     }
 

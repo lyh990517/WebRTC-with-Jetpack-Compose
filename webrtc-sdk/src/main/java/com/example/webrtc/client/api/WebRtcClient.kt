@@ -10,7 +10,7 @@ interface WebRtcClient {
 
     suspend fun getRoomList(): Flow<List<String>?>
 
-    suspend fun getRoomStatus(): Flow<PeerStatus>
+    suspend fun getPeerStatus(): Flow<PeerStatus>
 
     fun sendMessage(message: String)
 
