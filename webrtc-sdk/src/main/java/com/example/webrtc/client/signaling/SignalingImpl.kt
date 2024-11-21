@@ -65,7 +65,7 @@ internal class SignalingImpl @Inject constructor(
         sdpManager.sendSdp(sdp)
     }
 
-    override suspend fun start(roomID: String, isHost: Boolean) {
+    override fun start(roomID: String, isHost: Boolean) {
         this.roomID = roomID
         this.isHost = isHost
 

@@ -45,39 +45,8 @@ class ConnectionViewModel @Inject constructor(
     private val roomId = savedStateHandle.get<String>(roomIdArg) ?: ""
 
     init {
-        viewModelScope.launch {
-            webRtcClient
-                .getMessages()
-                .mapToChatMessage()
-                .consumeMessage()
-        }
-
-        viewModelScope.launch {
-            delay(1000) // TODO 방식 변경
-
-            webRtcClient.getPeerStatus().collect { peer ->
-                Log.i(
-                    "Webrtc Peer Status",
-                    "signaling: ${peer.signaling}\n" +
-                            "IceConnection: ${peer.iceConnection}\n" +
-                            "lastUpdated: ${peer.lastUpdated}"
-                )
-            }
-        }
-    }
-
-    fun fetch() = viewModelScope.launch {
-        _uiState.update {
-            CallState.Success(
-                local = webRtcClient.getLocalSurface(),
-                remote = webRtcClient.getRemoteSurface(),
-                messages = emptyList()
-            )
-        }
-    }
-
-    fun connect() = viewModelScope.launch {
-        webRtcClient.connect(roomId)
+        fetch()
+        collectMessage()
     }
 
     fun toggleVoice() = viewModelScope.launch {
@@ -105,6 +74,38 @@ class ConnectionViewModel @Inject constructor(
 
     fun sendInputEvent() = viewModelScope.launch {
         webRtcClient.sendInputEvent()
+    }
+
+    private fun collectMessage() {
+        viewModelScope.launch {
+            webRtcClient
+                .getMessages()
+                .mapToChatMessage()
+                .consumeMessage()
+        }
+    }
+
+    private fun fetch() {
+        viewModelScope.launch {
+            _uiState.update {
+                CallState.Success(
+                    local = webRtcClient.getLocalSurface(),
+                    remote = webRtcClient.getRemoteSurface(),
+                    messages = emptyList()
+                )
+            }
+
+            webRtcClient.connect(roomId).join()
+
+            webRtcClient.getPeerStatus().collect { peer ->
+                Log.i(
+                    "Webrtc Peer Status",
+                    "signaling: ${peer.signaling}\n" +
+                            "IceConnection: ${peer.iceConnection}\n" +
+                            "lastUpdated: ${peer.lastUpdated}"
+                )
+            }
+        }
     }
 
     private fun updateState(update: (CallState.Success) -> CallState.Success) {

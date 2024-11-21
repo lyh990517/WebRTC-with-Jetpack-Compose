@@ -2,11 +2,12 @@ package com.example.webrtc.client.api
 
 import com.example.webrtc.client.model.Message
 import com.example.webrtc.client.signaling.PeerStatus
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import org.webrtc.SurfaceViewRenderer
 
 interface WebRtcClient {
-    fun connect(roomID: String)
+    fun connect(roomID: String): Job
 
     suspend fun getRoomList(): Flow<List<String>?>
 

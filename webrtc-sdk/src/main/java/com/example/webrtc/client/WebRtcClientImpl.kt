@@ -22,18 +22,16 @@ internal class WebRtcClientImpl @Inject constructor(
     private val localResourceController: Controller.LocalResource,
     private val signaling: Signaling
 ) : WebRtcClient {
-    override fun connect(roomID: String) {
-        webRtcScope.launch {
-            val isHost = !signaling.getRoomExists(roomID)
+    override fun connect(roomID: String) = webRtcScope.launch {
+        val isHost = !signaling.getRoomExists(roomID)
 
-            launch { eventHandler.start() }
+        launch { eventHandler.start() }
 
-            launch { signaling.start(roomID, isHost) }
+        signaling.start(roomID, isHost)
 
-            webRtcController.connect(roomID, isHost)
+        webRtcController.connect(roomID, isHost)
 
-            localResourceController.startCapture()
-        }
+        localResourceController.startCapture()
     }
 
     override suspend fun getRoomList(): Flow<List<String>?> = signaling.getRoomList()

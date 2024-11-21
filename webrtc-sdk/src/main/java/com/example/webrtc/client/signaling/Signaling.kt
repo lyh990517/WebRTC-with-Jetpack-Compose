@@ -13,6 +13,6 @@ interface Signaling {
     suspend fun getPeerStatus(): Flow<PeerStatus>
     suspend fun sendIce(ice: IceCandidate?, type: SignalType)
     suspend fun sendSdp(sdp: SessionDescription)
-    suspend fun start(roomID: String, isHost: Boolean)
+    fun start(roomID: String, isHost: Boolean)
     fun getEvent(): Flow<WebRtcEvent>
 }
