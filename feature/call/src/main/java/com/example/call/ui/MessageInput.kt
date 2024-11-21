@@ -1,6 +1,7 @@
 package com.example.call.ui
 
 import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -55,12 +56,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toFile
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun MessageInputUi(onMessage: (ChatMessage) -> Unit, onInputChange: () -> Unit) {
     var message by remember { mutableStateOf("") }
     var isAdditionalUiVisible by remember { mutableStateOf(false) }
     var selectedImage by remember { mutableStateOf<List<ImageBitmap>>(emptyList()) }
+    var selectedFile by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
     Column {
         Row(
@@ -95,10 +100,12 @@ fun MessageInputUi(onMessage: (ChatMessage) -> Unit, onInputChange: () -> Unit) 
 
             SendButton(
                 selectedImage = selectedImage,
+                selectedFiles = selectedFile,
                 onMessage = {
                     onMessage(it)
                     message = ""
                     selectedImage = emptyList()
+                    selectedFile = emptyList()
                 },
                 message = message
             )
@@ -106,10 +113,15 @@ fun MessageInputUi(onMessage: (ChatMessage) -> Unit, onInputChange: () -> Unit) 
 
         AdditionalUi(
             isAdditionalUiVisible = isAdditionalUiVisible,
-            selectedImage = selectedImage
-        ) {
-            selectedImage = it
-        }
+            selectedImage = selectedImage,
+            selectedFiles = selectedFile,
+            onSelectImage = {
+                selectedImage = it
+            },
+            onSelectFiles = {
+                selectedFile = it
+            }
+        )
     }
 }
 
@@ -134,10 +146,13 @@ private fun AddButton(isAdditionalUiVisible: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun SendButton(
+    selectedFiles: List<Uri>,
     selectedImage: List<ImageBitmap>,
     onMessage: (ChatMessage) -> Unit,
     message: String
 ) {
+    val context = LocalContext.current
+
     Button(
         onClick = {
             when {
@@ -147,6 +162,25 @@ private fun SendButton(
                             ChatMessage.Image(
                                 type = ChatMessage.ChatType.ME,
                                 image = image
+                            )
+                        )
+                    }
+                }
+
+                selectedFiles.isNotEmpty() -> {
+                    selectedFiles.forEach { uri ->
+                        val inputStream = context.contentResolver.openInputStream(uri)
+                        val tempFile = File(context.cacheDir, "temp_image.jpg")
+                        val outputStream = FileOutputStream(tempFile)
+
+                        inputStream?.copyTo(outputStream)
+                        inputStream?.close()
+                        outputStream.close()
+
+                        onMessage(
+                            ChatMessage.File(
+                                type = ChatMessage.ChatType.ME,
+                                file = tempFile
                             )
                         )
                     }
@@ -192,7 +226,9 @@ private fun SendButton(
 private fun ColumnScope.AdditionalUi(
     isAdditionalUiVisible: Boolean,
     selectedImage: List<ImageBitmap>,
-    onSelectImage: (List<ImageBitmap>) -> Unit
+    selectedFiles: List<Uri>, // Track selected files
+    onSelectImage: (List<ImageBitmap>) -> Unit,
+    onSelectFiles: (List<Uri>) -> Unit // Callback for selected files
 ) {
     val context = LocalContext.current
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -202,6 +238,13 @@ private fun ColumnScope.AdditionalUi(
             val stream = context.contentResolver.openInputStream(uri)
             BitmapFactory.decodeStream(stream)?.asImageBitmap()
         })
+    }
+
+    // File picker launcher for selecting multiple files
+    val fileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        onSelectFiles(uris)
     }
 
     AnimatedVisibility(
@@ -217,6 +260,7 @@ private fun ColumnScope.AdditionalUi(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Image selection button
                 Button(
                     onClick = {
                         galleryLauncher.launch("image/*")
@@ -228,8 +272,10 @@ private fun ColumnScope.AdditionalUi(
                     Text("Select Image")
                 }
 
+                // File selection button
                 Button(
                     onClick = {
+                        fileLauncher.launch("*/*") // To select any file type
                     },
                     modifier = Modifier.weight(1f)
                 ) {
@@ -241,6 +287,7 @@ private fun ColumnScope.AdditionalUi(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Display selected images
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -253,6 +300,23 @@ private fun ColumnScope.AdditionalUi(
                             .size(100.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant)
+                    )
+                }
+            }
+
+            // Display selected files (file names or icons)
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(selectedFiles) { fileUri ->
+                    Text(
+                        text = fileUri.lastPathSegment ?: "Unknown file",
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clip(RoundedCornerShape(4.dp))
+                            .padding(8.dp)
                     )
                 }
             }

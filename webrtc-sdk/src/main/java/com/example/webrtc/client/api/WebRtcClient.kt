@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import com.example.webrtc.client.model.Message
 import kotlinx.coroutines.flow.Flow
 import org.webrtc.SurfaceViewRenderer
+import java.io.File
 
 interface WebRtcClient {
     fun connect(roomID: String)
@@ -14,7 +15,7 @@ interface WebRtcClient {
 
     fun sendImage(bitmap: Bitmap)
 
-    fun sendFile(bytes: ByteArray)
+    fun sendFile(file: File)
 
     fun getMessages(): Flow<Message>
 

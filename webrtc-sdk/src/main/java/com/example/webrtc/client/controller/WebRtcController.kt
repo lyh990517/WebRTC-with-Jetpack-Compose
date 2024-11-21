@@ -18,6 +18,7 @@ import org.webrtc.RtpTransceiver
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 import org.webrtc.VideoTrack
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -67,8 +68,8 @@ internal class WebRtcController @Inject constructor(
         dataChannelManager.sendImage(bitmap)
     }
 
-    override fun sendFile(bytes: ByteArray) {
-        dataChannelManager.sendFile(bytes)
+    override fun sendFile(file: File) {
+        dataChannelManager.sendFile(file)
     }
 
     override fun getMessages(): Flow<Message> =

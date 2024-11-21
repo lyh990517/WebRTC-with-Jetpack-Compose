@@ -53,7 +53,7 @@ sealed interface ChatMessage {
 
     data class File(
         override val type: ChatType,
-        val files: List<java.io.File>,
+        val file: java.io.File,
     ) : ChatMessage
 
     enum class ChatType {
@@ -145,7 +145,15 @@ fun Chatting(
                     onMessage = { message ->
                         when (message) {
                             is ChatMessage.File -> {
+                                scope.launch {
+                                    val isAtBottom =
+                                        lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index == state.messages.size - 1
+                                    onMessage(message)
 
+                                    if (isAtBottom) {
+                                        lazyListState.animateScrollToItem(state.messages.size - 1)
+                                    }
+                                }
                             }
 
                             is ChatMessage.Image -> {

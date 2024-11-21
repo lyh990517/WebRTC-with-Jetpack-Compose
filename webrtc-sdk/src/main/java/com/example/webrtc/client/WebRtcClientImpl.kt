@@ -11,6 +11,7 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.webrtc.SurfaceViewRenderer
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,8 +47,8 @@ internal class WebRtcClientImpl @Inject constructor(
         webRtcController.sendImage(bitmap)
     }
 
-    override fun sendFile(bytes: ByteArray) {
-        webRtcController.sendFile(bytes)
+    override fun sendFile(file: File) {
+        webRtcController.sendFile(file)
     }
 
     override fun getMessages(): Flow<Message> = webRtcController.getMessages()

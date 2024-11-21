@@ -11,6 +11,7 @@ import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 import org.webrtc.SurfaceViewRenderer
 import org.webrtc.VideoTrack
+import java.io.File
 
 sealed interface Controller {
     interface LocalResource {
@@ -29,7 +30,7 @@ sealed interface Controller {
         fun connect(roomID: String, isHost: Boolean)
         fun sendMessage(message: String)
         fun sendImage(bitmap: Bitmap)
-        fun sendFile(bytes: ByteArray)
+        fun sendFile(file: File)
         fun getMessages() : Flow<Message>
         fun createOffer()
         fun createAnswer()

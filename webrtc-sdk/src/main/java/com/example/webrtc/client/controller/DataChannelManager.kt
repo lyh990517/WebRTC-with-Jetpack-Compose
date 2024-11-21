@@ -13,6 +13,7 @@ import org.webrtc.DataChannel
 import org.webrtc.DataChannel.Buffer
 import org.webrtc.PeerConnection
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.nio.ByteBuffer
 import javax.inject.Inject
 
@@ -51,12 +52,22 @@ class DataChannelManager @Inject constructor(
         dataChannel.send(data)
     }
 
-    fun sendFile(bytes: ByteArray) {
+    fun sendFile(file: File) {
         val dataChannel = dataChannel ?: return
 
-        val buffer = ByteBuffer.wrap(bytes)
+        val bytes = file.readBytes()
 
-        dataChannel.send(Buffer(buffer, true))
+        var offset = 0
+        while (offset < bytes.size) {
+            val chunkSize = minOf(128, bytes.size - offset)
+            val chunk = bytes.copyOfRange(offset, offset + chunkSize)
+
+            val buffer = ByteBuffer.wrap(chunk)
+
+            dataChannel.send(Buffer(buffer, true))
+
+            offset += chunkSize
+        }
     }
 
     private fun bitmapToByteArray(bitmap: Bitmap): ByteArray {

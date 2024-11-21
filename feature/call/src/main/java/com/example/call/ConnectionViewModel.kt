@@ -15,7 +15,6 @@ import com.example.webrtc.client.model.Message
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -45,7 +44,7 @@ class ConnectionViewModel @Inject constructor(
                     when (it) {
                         is Message.File -> ChatMessage.File(
                             type = ChatMessage.ChatType.OTHER,
-                            files = emptyList()
+                            file = it.file
                         )
 
                         is Message.PlainString -> {
@@ -133,7 +132,12 @@ class ConnectionViewModel @Inject constructor(
             if (state is CallState.Success) {
                 when (message) {
                     is ChatMessage.File -> {
-                        state
+                        state.copy(
+                            messages = state.messages + ChatMessage.File(
+                                type = ChatMessage.ChatType.ME,
+                                file = message.file
+                            )
+                        )
                     }
 
                     is ChatMessage.Image -> {
@@ -158,7 +162,7 @@ class ConnectionViewModel @Inject constructor(
         }
         when (message) {
             is ChatMessage.File -> {
-//                webRtcClient.sendFile()
+                webRtcClient.sendFile(message.file)
             }
 
             is ChatMessage.Image -> {
