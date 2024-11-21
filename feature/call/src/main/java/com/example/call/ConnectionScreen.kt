@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -116,7 +117,9 @@ private fun CallContent(
                 .padding(vertical = 16.dp, horizontal = 32.dp)
         ) {
             ControllerUi(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding(),
                 onToggleVoice = onToggleVoice,
                 onToggleVideo = onToggleVideo,
                 onToggleChat = { isChat = !isChat },
