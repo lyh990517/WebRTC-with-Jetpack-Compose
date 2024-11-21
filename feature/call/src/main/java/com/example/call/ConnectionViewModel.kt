@@ -85,16 +85,20 @@ class ConnectionViewModel @Inject constructor(
     }
 
     fun sendMessage(message: String) = viewModelScope.launch {
-        updateState { state ->
-            val updatedMessages = state.messages.addChatMessage(message, ChatMessage.ChatType.ME)
-
-            state.copy(messages = updatedMessages)
-        }
+        updateMessages(message, ChatMessage.ChatType.ME)
         webRtcClient.sendMessage(message)
     }
 
     fun sendInputEvent() = viewModelScope.launch {
         webRtcClient.sendInputEvent()
+    }
+
+    private fun updateMessages(message: String, type: ChatMessage.ChatType) {
+        updateState { state ->
+            val updatedMessages = state.messages.addChatMessage(message, type)
+
+            state.copy(messages = updatedMessages)
+        }
     }
 
     private fun updateState(update: (CallState.Success) -> CallState.Success) {
@@ -115,14 +119,7 @@ class ConnectionViewModel @Inject constructor(
                 }
 
                 is ChatMessage.TextMessage -> {
-                    updateState { state ->
-                        val updatedMessages = state.messages.addChatMessage(
-                            message.message,
-                            ChatMessage.ChatType.OTHER
-                        )
-
-                        state.copy(messages = updatedMessages)
-                    }
+                    updateMessages(message.message, ChatMessage.ChatType.OTHER)
                 }
             }
         }
