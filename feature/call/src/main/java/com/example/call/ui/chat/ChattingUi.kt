@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 sealed interface ChatMessage {
     data class TextMessage(
         val type: ChatType,
-        val message: String? = null,
+        val message: String
     ) : ChatMessage
 
     data object InputEvent : ChatMessage

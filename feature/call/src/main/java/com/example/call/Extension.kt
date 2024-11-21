@@ -21,3 +21,5 @@ fun String.toChatMessage() = ChatMessage.TextMessage(
     type = ChatMessage.ChatType.ME,
     message = this
 )
+
+fun List<ChatMessage>.addChatMessage(message: String) = this + message.toChatMessage()

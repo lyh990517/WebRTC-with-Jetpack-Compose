@@ -11,6 +11,7 @@ import com.example.call.state.CallState
 import com.example.call.ui.chat.ChatMessage
 import com.example.webrtc.client.api.WebRtcClient
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -47,30 +48,15 @@ class ConnectionViewModel @Inject constructor(
             webRtcClient
                 .getMessages()
                 .mapToChatMessage()
-                .collect { message ->
-                    when (message) {
-                        ChatMessage.InputEvent -> {
-                            _uiEffect.emit(CallEvent.InputEvent)
-                        }
-
-                        is ChatMessage.TextMessage -> {
-                            updateState { state ->
-                                state.copy(messages = state.messages + message)
-                            }
-                        }
-                    }
-                }
+                .consumeMessage()
         }
     }
 
     fun fetch() = viewModelScope.launch {
-        val localSurface = webRtcClient.getLocalSurface()
-        val remoteSurface = webRtcClient.getRemoteSurface()
-
         _uiState.update {
             CallState.Success(
-                local = localSurface,
-                remote = remoteSurface,
+                local = webRtcClient.getLocalSurface(),
+                remote = webRtcClient.getRemoteSurface(),
                 messages = emptyList()
             )
         }
@@ -116,4 +102,21 @@ class ConnectionViewModel @Inject constructor(
             }
         }
     }
+
+    private suspend fun Flow<ChatMessage>.consumeMessage() =
+        collect { message ->
+            when (message) {
+                ChatMessage.InputEvent -> {
+                    _uiEffect.emit(CallEvent.InputEvent)
+                }
+
+                is ChatMessage.TextMessage -> {
+                    updateState { state ->
+                        val updatedMessages = state.messages.addChatMessage(message.message)
+
+                        state.copy(messages = updatedMessages)
+                    }
+                }
+            }
+        }
 }
