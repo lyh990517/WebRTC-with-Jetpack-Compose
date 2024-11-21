@@ -1,5 +1,6 @@
 package com.example.webrtc.client.controller
 
+import android.graphics.Bitmap
 import com.example.webrtc.client.event.WebRtcEvent
 import com.example.webrtc.client.model.Message
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,7 @@ sealed interface Controller {
     interface WebRtc {
         fun connect(roomID: String, isHost: Boolean)
         fun sendMessage(message: String)
+        fun sendImage(bitmap: Bitmap)
         fun sendFile(bytes: ByteArray)
         fun getMessages() : Flow<Message>
         fun createOffer()

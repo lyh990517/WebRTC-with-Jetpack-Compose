@@ -48,7 +48,7 @@ sealed interface ChatMessage {
 
     data class Image(
         override val type: ChatType,
-        val images: List<ImageBitmap>,
+        val image: ImageBitmap,
     ) : ChatMessage
 
     data class File(

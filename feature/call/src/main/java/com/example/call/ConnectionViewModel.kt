@@ -2,6 +2,8 @@ package com.example.call
 
 import android.app.Application
 import android.util.Log
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -39,7 +41,6 @@ class ConnectionViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             webRtcClient.getMessages()
-                .filter { it is Message.PlainString }
                 .map {
                     when (it) {
                         is Message.File -> ChatMessage.File(
@@ -53,17 +54,28 @@ class ConnectionViewModel @Inject constructor(
                                 message = it.data
                             )
                         }
+
+                        is Message.Image -> {
+                            ChatMessage.Image(
+                                type = ChatMessage.ChatType.OTHER,
+                                image = it.bitmaps.asImageBitmap()
+                            )
+                        }
                     }
                 }.collect { message ->
                     _uiState.update { state ->
                         if (state is CallState.Success) {
                             when (message) {
                                 is ChatMessage.File -> {
-                                    state
+                                    state.copy(
+                                        messages = state.messages + message
+                                    )
                                 }
 
                                 is ChatMessage.Image -> {
-                                    state
+                                    state.copy(
+                                        messages = state.messages + message
+                                    )
                                 }
 
                                 is ChatMessage.Message -> {
@@ -128,7 +140,7 @@ class ConnectionViewModel @Inject constructor(
                         state.copy(
                             messages = state.messages + ChatMessage.Image(
                                 type = ChatMessage.ChatType.ME,
-                                images = message.images
+                                image = message.image
                             )
                         )
                     }
@@ -150,7 +162,7 @@ class ConnectionViewModel @Inject constructor(
             }
 
             is ChatMessage.Image -> {
-//                webRtcClient.sendFile()
+                webRtcClient.sendImage(message.image.asAndroidBitmap())
             }
 
             is ChatMessage.Message -> {

@@ -1,5 +1,6 @@
 package com.example.webrtc.client.api
 
+import android.graphics.Bitmap
 import com.example.webrtc.client.model.Message
 import kotlinx.coroutines.flow.Flow
 import org.webrtc.SurfaceViewRenderer
@@ -10,6 +11,8 @@ interface WebRtcClient {
     suspend fun getRoomList() : Flow<List<String>?>
 
     fun sendMessage(message: String)
+
+    fun sendImage(bitmap: Bitmap)
 
     fun sendFile(bytes: ByteArray)
 

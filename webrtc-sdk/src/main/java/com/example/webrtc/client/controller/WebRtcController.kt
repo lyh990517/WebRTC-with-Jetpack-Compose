@@ -1,13 +1,12 @@
 package com.example.webrtc.client.controller
 
+import android.graphics.Bitmap
 import com.example.webrtc.client.event.WebRtcEvent
 import com.example.webrtc.client.model.Message
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.launch
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaConstraints
@@ -61,6 +60,10 @@ internal class WebRtcController @Inject constructor(
 
     override fun sendMessage(message: String) {
         dataChannelManager.sendMessage(message)
+    }
+
+    override fun sendImage(bitmap: Bitmap) {
+        dataChannelManager.sendImage(bitmap)
     }
 
     override fun sendFile(bytes: ByteArray) {

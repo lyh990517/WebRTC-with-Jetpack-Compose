@@ -142,12 +142,14 @@ private fun SendButton(
         onClick = {
             when {
                 selectedImage.isNotEmpty() -> {
-                    onMessage(
-                        ChatMessage.Image(
-                            type = ChatMessage.ChatType.ME,
-                            images = selectedImage
+                    selectedImage.forEach { image ->
+                        onMessage(
+                            ChatMessage.Image(
+                                type = ChatMessage.ChatType.ME,
+                                image = image
+                            )
                         )
-                    )
+                    }
                 }
 
                 else -> {

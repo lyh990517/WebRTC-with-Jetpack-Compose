@@ -1,5 +1,6 @@
 package com.example.webrtc.client
 
+import android.graphics.Bitmap
 import com.example.webrtc.client.api.WebRtcClient
 import com.example.webrtc.client.controller.Controller
 import com.example.webrtc.client.signaling.Signaling
@@ -39,6 +40,10 @@ internal class WebRtcClientImpl @Inject constructor(
 
     override fun sendMessage(message: String) {
         webRtcController.sendMessage(message)
+    }
+
+    override fun sendImage(bitmap: Bitmap) {
+        webRtcController.sendImage(bitmap)
     }
 
     override fun sendFile(bytes: ByteArray) {

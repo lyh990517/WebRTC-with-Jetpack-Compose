@@ -102,15 +102,11 @@ private fun ImageChat(isSent: Boolean, chatMessage: ChatMessage.Image) {
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .widthIn(max = 250.dp)
         ) {
-            Column {
-                chatMessage.images.forEach {
-                    Image(
-                        bitmap = it,
-                        contentDescription = "",
-                        modifier = Modifier.size(100.dp)
-                    )
-                }
-            }
+            Image(
+                bitmap = chatMessage.image,
+                contentDescription = "",
+                modifier = Modifier.size(100.dp)
+            )
         }
     }
 }
