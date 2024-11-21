@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.call.state.CallState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 sealed interface ChatMessage {
@@ -88,60 +89,19 @@ fun Chatting(
                     enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                     exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.secondary)
-                            .padding(8.dp)
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "other user on input",
-                                color = MaterialTheme.colorScheme.onSecondary,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
+                    OtherUserOnInputNotification()
                 }
                 AnimatedVisibility(
                     visible = showNewMessageNotification,
                     enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                     exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.secondary)
-                            .padding(8.dp)
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            val message = state.messages[state.messages.size - 1]
-
-                            if (message is ChatMessage.TextMessage) {
-                                Text(
-                                    text = message.message ?: "",
-                                    color = MaterialTheme.colorScheme.onSecondary,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                            TextButton(onClick = {
-                                scope.launch {
-                                    lazyListState.animateScrollToItem(state.messages.size - 1)
-                                }
-                                showNewMessageNotification = false
-                            }) {
-                                Text("View", color = Color.White)
-                            }
-                        }
-                    }
+                    NewMessageReceivedNotification(
+                        state = state,
+                        scope = scope,
+                        lazyListState = lazyListState,
+                        onClick = { showNewMessageNotification = false }
+                    )
                 }
                 ChatMessageInput(
                     onMessage = {
