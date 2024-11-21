@@ -1,5 +1,6 @@
 package com.example.call.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -89,6 +90,10 @@ fun Chatting(
             delay(800)
             onInputStopped()
         }
+    }
+
+    BackHandler {
+        onToggleChat()
     }
 
     Box(modifier = modifier.fillMaxSize()) {
