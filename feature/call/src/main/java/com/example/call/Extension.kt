@@ -17,9 +17,13 @@ fun Flow<Message>.mapToChatMessage() = map { message ->
     }
 }
 
-fun String.toChatMessage() = ChatMessage.TextMessage(
-    type = ChatMessage.ChatType.ME,
+fun String.toChatMessage(type: ChatMessage.ChatType) = ChatMessage.TextMessage(
+    type = type,
     message = this
 )
 
-fun List<ChatMessage>.addChatMessage(message: String) = this + message.toChatMessage()
+fun List<ChatMessage>.addChatMessage(
+    message: String,
+    type: ChatMessage.ChatType
+) =
+    this + message.toChatMessage(type)
