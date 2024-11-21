@@ -6,15 +6,16 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.call.navigation.roomIdArg
-import com.example.call.ui.ChatMessage
+import com.example.call.state.CallEvent
 import com.example.call.state.CallState
+import com.example.call.ui.chat.ChatMessage
 import com.example.webrtc.client.api.WebRtcClient
-import com.example.webrtc.client.model.Message
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -34,37 +35,30 @@ class ConnectionViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000)
     )
 
+    private val _uiEffect = MutableSharedFlow<CallEvent>()
+    val uiEffect = _uiEffect.shareIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000)
+    )
+
     private val roomId = savedStateHandle.get<String>(roomIdArg) ?: ""
+
+    val webrtcEvents = webRtcClient.getEvent()
 
     init {
         viewModelScope.launch {
-            webRtcClient.getMessages()
-                .filter { it is Message.PlainString }
-                .map {
-                    ChatMessage(
-                        type = ChatMessage.ChatType.OTHER,
-                        message = (it as Message.PlainString).data
-                    )
-                }.collect { message ->
-                    _uiState.update { state ->
-                        if (state is CallState.Success) {
-                            state.copy(
-                                messages = state.messages + message
-                            )
-                        } else state
-                    }
-                }
+            webRtcClient
+                .getMessages()
+                .mapToChatMessage()
+                .consumeMessage()
         }
     }
 
     fun fetch() = viewModelScope.launch {
-        val localSurface = webRtcClient.getLocalSurface()
-        val remoteSurface = webRtcClient.getRemoteSurface()
-
         _uiState.update {
             CallState.Success(
-                local = localSurface,
-                remote = remoteSurface,
+                local = webRtcClient.getLocalSurface(),
+                remote = webRtcClient.getRemoteSurface(),
                 messages = emptyList()
             )
         }
@@ -91,16 +85,42 @@ class ConnectionViewModel @Inject constructor(
     }
 
     fun sendMessage(message: String) = viewModelScope.launch {
-        _uiState.update { state ->
-            if (state is CallState.Success) {
-                state.copy(
-                    messages = state.messages + ChatMessage(
-                        type = ChatMessage.ChatType.ME,
-                        message = message
-                    )
-                )
-            } else state
-        }
+        updateMessages(message, ChatMessage.ChatType.ME)
         webRtcClient.sendMessage(message)
     }
+
+    fun sendInputEvent() = viewModelScope.launch {
+        webRtcClient.sendInputEvent()
+    }
+
+    private fun updateMessages(message: String, type: ChatMessage.ChatType) {
+        updateState { state ->
+            val updatedMessages = state.messages.addChatMessage(message, type)
+
+            state.copy(messages = updatedMessages)
+        }
+    }
+
+    private fun updateState(update: (CallState.Success) -> CallState.Success) {
+        _uiState.update { currentState ->
+            if (currentState is CallState.Success) {
+                update(currentState)
+            } else {
+                currentState
+            }
+        }
+    }
+
+    private suspend fun Flow<ChatMessage>.consumeMessage() =
+        collect { message ->
+            when (message) {
+                ChatMessage.InputEvent -> {
+                    _uiEffect.emit(CallEvent.InputEvent)
+                }
+
+                is ChatMessage.TextMessage -> {
+                    updateMessages(message.message, ChatMessage.ChatType.OTHER)
+                }
+            }
+        }
 }

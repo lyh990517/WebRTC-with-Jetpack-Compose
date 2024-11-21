@@ -7,6 +7,8 @@ import org.webrtc.SessionDescription
 
 sealed interface WebRtcEvent {
 
+    data object None : WebRtcEvent
+
     sealed interface StateChange : WebRtcEvent {
         data class IceConnection(val state: PeerConnection.IceConnectionState?) : StateChange
         data class IceGathering(val state: PeerConnection.IceGatheringState?) : StateChange

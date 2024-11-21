@@ -13,18 +13,23 @@ internal class EventHandler @Inject constructor(
     private val webRtcController: Controller.WebRtc,
     private val signaling: Signaling
 ) {
+    private val events = merge(
+        webRtcController.getEvent(),
+        signaling.getEvent()
+    )
+
     suspend fun start() {
-        merge(
-            webRtcController.getEvent(),
-            signaling.getEvent()
-        ).collect { event ->
+        events.collect { event ->
             when (event) {
                 is WebRtcEvent.Host -> handleHostEvent(event)
                 is WebRtcEvent.Guest -> handleGuestEvent(event)
                 is WebRtcEvent.StateChange -> handleStateChangeEvent(event)
+                WebRtcEvent.None -> {}
             }
         }
     }
+
+    fun getEvents() = events
 
     private fun handleStateChangeEvent(event: WebRtcEvent.StateChange) {
         when (event) {

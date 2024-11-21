@@ -6,18 +6,15 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,27 +24,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
+import com.example.call.state.CallEvent
 import com.example.call.state.CallState
-import com.example.call.ui.Chatting
 import com.example.call.ui.ControllerUi
+import com.example.call.ui.LocalSurface
+import com.example.call.ui.RemoteSurface
+import com.example.call.ui.chat.Chatting
+import com.example.webrtc.client.event.WebRtcEvent
 import kotlinx.coroutines.delay
-import org.webrtc.SurfaceViewRenderer
+import org.webrtc.DataChannel
+import org.webrtc.PeerConnection
 
 @Composable
 fun ConnectionScreen(
     viewModel: ConnectionViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val webrtcEvent by viewModel.webrtcEvents.collectAsState(WebRtcEvent.None)
+    var isShowStatus by remember { mutableStateOf(true) }
+    var otherUserOnInput by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.fetch()
@@ -55,26 +53,66 @@ fun ConnectionScreen(
         viewModel.connect()
     }
 
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
-        viewModel.disconnect()
+    LaunchedEffect(Unit) {
+        viewModel.uiEffect.collect { event ->
+            when (event) {
+                CallEvent.InputEvent -> {
+                    otherUserOnInput = true
+                }
+            }
+        }
     }
 
-    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
-        viewModel.disconnect()
-    }
+    LaunchedEffect(webrtcEvent) {
+        val shouldHideStatus = when (webrtcEvent) {
+            is WebRtcEvent.StateChange.DataChannel ->
+                (webrtcEvent as WebRtcEvent.StateChange.DataChannel).state == DataChannel.State.OPEN
 
-    when (state) {
-        CallState.Loading -> {
-            LoadingContent()
+            is WebRtcEvent.StateChange.IceConnection ->
+                (webrtcEvent as WebRtcEvent.StateChange.IceConnection).state == PeerConnection.IceConnectionState.CONNECTED
+
+            is WebRtcEvent.StateChange.Signaling ->
+                (webrtcEvent as WebRtcEvent.StateChange.Signaling).state == PeerConnection.SignalingState.STABLE
+
+            else -> false
         }
 
-        is CallState.Success -> {
-            CallContent(
-                state = state as CallState.Success,
-                onToggleVoice = viewModel::toggleVoice,
-                onToggleVideo = viewModel::toggleVideo,
-                onDisconnect = viewModel::disconnect,
-                onMessage = viewModel::sendMessage
+        if (shouldHideStatus) {
+            isShowStatus = false
+        }
+    }
+
+
+    LaunchedEffect(otherUserOnInput) {
+        if (otherUserOnInput) {
+            delay(800)
+            otherUserOnInput = false
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        when (state) {
+            CallState.Loading -> {
+                LoadingContent()
+            }
+
+            is CallState.Success -> {
+                CallContent(
+                    state = state as CallState.Success,
+                    otherUserOnInput = { otherUserOnInput },
+                    onToggleVoice = viewModel::toggleVoice,
+                    onToggleVideo = viewModel::toggleVideo,
+                    onDisconnect = viewModel::disconnect,
+                    onMessage = viewModel::sendMessage,
+                    onInputChange = viewModel::sendInputEvent
+                )
+            }
+        }
+        if (isShowStatus) {
+            Text(
+                modifier = Modifier.align(Alignment.Center),
+                text = webrtcEvent.toString(),
+                color = Color.White
             )
         }
     }
@@ -90,8 +128,10 @@ private fun LoadingContent() {
 @Composable
 private fun CallContent(
     state: CallState.Success,
+    otherUserOnInput: () -> Boolean,
     onToggleVoice: () -> Unit,
     onToggleVideo: () -> Unit,
+    onInputChange: () -> Unit,
     onDisconnect: () -> Unit,
     onMessage: (String) -> Unit,
 ) {
@@ -112,7 +152,9 @@ private fun CallContent(
                 .padding(vertical = 16.dp, horizontal = 32.dp)
         ) {
             ControllerUi(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding(),
                 onToggleVoice = onToggleVoice,
                 onToggleVideo = onToggleVideo,
                 onToggleChat = { isChat = !isChat },
@@ -136,41 +178,10 @@ private fun CallContent(
                     ),
                 state = state,
                 onMessage = onMessage,
-                onToggleChat = { isChat = !isChat }
+                onToggleChat = { isChat = !isChat },
+                onInputChange = onInputChange,
+                otherUserOnInput = otherUserOnInput
             )
         }
-    }
-}
-
-@Composable
-private fun RemoteSurface(remoteSurface: SurfaceViewRenderer) {
-    AndroidView(
-        modifier = Modifier.fillMaxSize(),
-        factory = { remoteSurface }
-    )
-}
-
-@Composable
-private fun LocalSurface(
-    localSurface: SurfaceViewRenderer,
-) {
-    var localViewOffset by remember { mutableStateOf(Offset(16f, 16f)) }
-
-    Box(Modifier.fillMaxSize()) {
-        AndroidView(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(20.dp)
-                .size(100.dp)
-                .offset { IntOffset(localViewOffset.x.toInt(), localViewOffset.y.toInt()) }
-                .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        localViewOffset += dragAmount
-                    }
-                }
-                .clip(CircleShape),
-            factory = { localSurface }
-        )
     }
 }

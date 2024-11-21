@@ -2,17 +2,17 @@ package com.example.webrtc.client.controller
 
 import com.example.webrtc.client.event.WebRtcEvent
 import com.example.webrtc.client.model.Message
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.launch
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaConstraints
 import org.webrtc.MediaStream
 import org.webrtc.PeerConnection
+import org.webrtc.PeerConnection.Observer
+import org.webrtc.PeerConnection.RTCConfiguration
 import org.webrtc.PeerConnectionFactory
 import org.webrtc.RtpReceiver
 import org.webrtc.RtpTransceiver
@@ -22,9 +22,10 @@ import org.webrtc.VideoTrack
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// TODO Turn 서버 지정
+
 @Singleton
 internal class WebRtcController @Inject constructor(
-    private val webRtcScope: CoroutineScope,
     private val peerConnectionFactory: PeerConnectionFactory,
     private val localResourceController: Controller.LocalResource,
     private val dataChannelManager: DataChannelManager
@@ -34,31 +35,21 @@ internal class WebRtcController @Inject constructor(
 
     private val constraints = MediaConstraints().apply {
         mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
+        mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
     }
-    private val controllerEvent = MutableSharedFlow<WebRtcEvent>()
+    private val controllerEvent = MutableSharedFlow<WebRtcEvent>(extraBufferCapacity = 100)
 
     private var peerConnection: PeerConnection? = null
 
     override fun connect(roomID: String, isHost: Boolean) {
-        webRtcScope.launch {
-            val rtcConfig = PeerConnection.RTCConfiguration(iceServer).apply {
-                sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
-                enableRtpDataChannel = true
-            }
+        peerConnection = peerConnectionFactory.createPeerConnection(isHost)
 
-            peerConnection = peerConnectionFactory.createPeerConnection(
-                rtcConfig,
-                createPeerConnectionObserver(isHost)
-            )
+        peerConnection?.createDataChannel()
 
-            peerConnection?.let(dataChannelManager::initialize)
+        peerConnection?.initializeLocalResource()
 
-            peerConnection?.addTrack(localResourceController.getVideoTrack())
-            peerConnection?.addTrack(localResourceController.getAudioTrack())
-
-            if (isHost) {
-                controllerEvent.emit(WebRtcEvent.Host.SendOffer)
-            }
+        if (isHost) {
+            controllerEvent.tryEmit(WebRtcEvent.Host.SendOffer)
         }
     }
 
@@ -66,8 +57,8 @@ internal class WebRtcController @Inject constructor(
         dataChannelManager.sendMessage(message)
     }
 
-    override fun sendFile(bytes: ByteArray) {
-        dataChannelManager.sendFile(bytes)
+    override fun sendInputEvent() {
+        dataChannelManager.sendInputEvent()
     }
 
     override fun getMessages(): Flow<Message> =
@@ -77,11 +68,9 @@ internal class WebRtcController @Inject constructor(
     override fun createOffer() {
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
-                webRtcScope.launch {
-                    controllerEvent.emit(WebRtcEvent.Host.SetLocalSdp(observer, sdp))
+                controllerEvent.tryEmit(WebRtcEvent.Host.SetLocalSdp(observer, sdp))
 
-                    controllerEvent.emit(WebRtcEvent.Host.SendSdpToGuest(sdp))
-                }
+                controllerEvent.tryEmit(WebRtcEvent.Host.SendSdpToGuest(sdp))
             }
         )
 
@@ -91,11 +80,9 @@ internal class WebRtcController @Inject constructor(
     override fun createAnswer() {
         val sdpObserver = createSdpObserver(
             onSdpCreationSuccess = { sdp, observer ->
-                webRtcScope.launch {
-                    controllerEvent.emit(WebRtcEvent.Guest.SetLocalSdp(observer, sdp))
+                controllerEvent.tryEmit(WebRtcEvent.Guest.SetLocalSdp(observer, sdp))
 
-                    controllerEvent.emit(WebRtcEvent.Guest.SendSdpToHost(sdp))
-                }
+                controllerEvent.tryEmit(WebRtcEvent.Guest.SendSdpToHost(sdp))
             }
         )
 
@@ -125,6 +112,30 @@ internal class WebRtcController @Inject constructor(
         dataChannelManager.getEvent()
     )
 
+    private fun PeerConnection.initializeLocalResource() {
+        addTrack(localResourceController.getVideoTrack())
+        addTrack(localResourceController.getAudioTrack())
+    }
+
+    private fun PeerConnectionFactory.createPeerConnection(
+        isHost: Boolean
+    ): PeerConnection? {
+        val rtcConfig = createRtcConfig()
+        val peerConnectionObserver = createPeerConnectionObserver(isHost)
+
+        return createPeerConnection(
+            rtcConfig,
+            peerConnectionObserver
+        )
+    }
+
+    private fun PeerConnection.createDataChannel() = dataChannelManager.initialize(this)
+
+    private fun createRtcConfig() = RTCConfiguration(iceServer).apply {
+        sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
+        enableRtpDataChannel = true
+    }
+
     private fun createSdpObserver(onSdpCreationSuccess: ((SessionDescription, SdpObserver) -> Unit)? = null) =
         object : SdpObserver {
             override fun onCreateSuccess(p0: SessionDescription?) {
@@ -138,42 +149,31 @@ internal class WebRtcController @Inject constructor(
 
     private fun createPeerConnectionObserver(
         isHost: Boolean
-    ): PeerConnection.Observer =
-        object : PeerConnection.Observer {
+    ): Observer =
+        object : Observer {
             override fun onConnectionChange(newState: PeerConnection.PeerConnectionState?) {
-                super.onConnectionChange(newState)
-                webRtcScope.launch {
-                    controllerEvent.emit(WebRtcEvent.StateChange.Connection(newState))
-                }
+                controllerEvent.tryEmit(WebRtcEvent.StateChange.Connection(newState))
             }
 
             override fun onSignalingChange(p0: PeerConnection.SignalingState?) {
-                webRtcScope.launch {
-                    controllerEvent.emit(WebRtcEvent.StateChange.Signaling(p0))
-                }
+                controllerEvent.tryEmit(WebRtcEvent.StateChange.Signaling(p0))
             }
 
             override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {
-                webRtcScope.launch {
-                    controllerEvent.emit(WebRtcEvent.StateChange.IceConnection(p0))
-                }
+                controllerEvent.tryEmit(WebRtcEvent.StateChange.IceConnection(p0))
             }
 
             override fun onIceConnectionReceivingChange(p0: Boolean) {}
             override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {
-                webRtcScope.launch {
-                    controllerEvent.emit(WebRtcEvent.StateChange.IceGathering(p0))
-                }
+                controllerEvent.tryEmit(WebRtcEvent.StateChange.IceGathering(p0))
             }
 
             override fun onIceCandidate(p0: IceCandidate?) {
                 p0?.let { ice ->
-                    webRtcScope.launch {
-                        if (isHost) {
-                            controllerEvent.emit(WebRtcEvent.Host.SendIceToGuest(ice))
-                        } else {
-                            controllerEvent.emit(WebRtcEvent.Guest.SendIceToHost(ice))
-                        }
+                    if (isHost) {
+                        controllerEvent.tryEmit(WebRtcEvent.Host.SendIceToGuest(ice))
+                    } else {
+                        controllerEvent.tryEmit(WebRtcEvent.Guest.SendIceToHost(ice))
                     }
                 }
             }

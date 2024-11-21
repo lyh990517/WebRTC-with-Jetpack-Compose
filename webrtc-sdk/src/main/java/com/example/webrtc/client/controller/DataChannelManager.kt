@@ -37,12 +37,12 @@ class DataChannelManager @Inject constructor(
         dataChannel.send(Buffer(buffer, false))
     }
 
-    fun sendFile(bytes: ByteArray) {
+    fun sendInputEvent() {
         val dataChannel = dataChannel ?: return
 
-        val buffer = ByteBuffer.wrap(bytes)
+        val buffer = ByteBuffer.wrap(INPUT_EVENT.toByteArray(Charsets.UTF_8))
 
-        dataChannel.send(Buffer(buffer, true))
+        dataChannel.send(Buffer(buffer, false))
     }
 
     fun getMessages() = messages.asSharedFlow()
@@ -71,16 +71,21 @@ class DataChannelManager @Inject constructor(
 
             webRtcScope.launch {
                 try {
-                    if (!p0.binary) {
-                        val message = String(bytes, Charsets.UTF_8)
-                        messages.emit(Message.PlainString(message))
+                    val message = String(bytes, Charsets.UTF_8)
+
+                    if (message == INPUT_EVENT) {
+                        messages.emit(Message.InputEvent)
                     } else {
-                        messages.emit(Message.File(bytes))
+                        messages.emit(Message.PlainString(message))
                     }
                 } catch (e: Exception) {
                     Log.e("WebRTC Event", "Failed to process message: ${e.message}")
                 }
             }
         }
+    }
+
+    companion object {
+        private const val INPUT_EVENT = "<INPUT EVENT>"
     }
 }

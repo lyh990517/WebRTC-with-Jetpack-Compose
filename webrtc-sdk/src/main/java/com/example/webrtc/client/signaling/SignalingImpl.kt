@@ -2,7 +2,10 @@ package com.example.webrtc.client.signaling
 
 import com.example.webrtc.client.event.WebRtcEvent
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.tasks.await
 import org.webrtc.IceCandidate
@@ -28,6 +31,13 @@ internal class SignalingImpl @Inject constructor(
         }
 
         return roomExists
+    }
+
+    override suspend fun getRoomList() = callbackFlow {
+        val listener = firestore.collection(ROOT).addSnapshotListener { value, error ->
+            trySend(value?.documents?.map { it.id })
+        }
+        awaitClose { listener.remove() }
     }
 
     override suspend fun terminate() {

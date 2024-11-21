@@ -1,6 +1,6 @@
 package com.example.call.state
 
-import com.example.call.ui.ChatMessage
+import com.example.call.ui.chat.ChatMessage
 import org.webrtc.SurfaceViewRenderer
 
 sealed interface CallState {
@@ -11,4 +11,8 @@ sealed interface CallState {
         val remote: SurfaceViewRenderer,
         val messages: List<ChatMessage>
     ) : CallState
+}
+
+sealed interface CallEvent {
+    data object InputEvent : CallEvent
 }
