@@ -50,6 +50,12 @@ class ConnectionViewModel @Inject constructor(
                 .mapToChatMessage()
                 .consumeMessage()
         }
+
+        viewModelScope.launch {
+            webRtcClient.getEvent().collect { event ->
+                Log.i("WebRtc Event", "$event")
+            }
+        }
     }
 
     fun fetch() = viewModelScope.launch {

@@ -1,11 +1,14 @@
 package com.example.webrtc.client.api
 
+import com.example.webrtc.client.event.WebRtcEvent
 import com.example.webrtc.client.model.Message
 import kotlinx.coroutines.flow.Flow
 import org.webrtc.SurfaceViewRenderer
 
 interface WebRtcClient {
     fun connect(roomID: String)
+
+    fun getEvent(): Flow<WebRtcEvent>
 
     suspend fun getRoomList(): Flow<List<String>?>
 

@@ -4,6 +4,7 @@ import com.example.webrtc.client.api.WebRtcClient
 import com.example.webrtc.client.controller.Controller
 import com.example.webrtc.client.signaling.Signaling
 import com.example.webrtc.client.event.EventHandler
+import com.example.webrtc.client.event.WebRtcEvent
 import com.example.webrtc.client.model.Message
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancelChildren
@@ -34,6 +35,8 @@ internal class WebRtcClientImpl @Inject constructor(
             localResourceController.startCapture()
         }
     }
+
+    override fun getEvent(): Flow<WebRtcEvent> = eventHandler.getEvents()
 
     override suspend fun getRoomList(): Flow<List<String>?> = signaling.getRoomList()
 
