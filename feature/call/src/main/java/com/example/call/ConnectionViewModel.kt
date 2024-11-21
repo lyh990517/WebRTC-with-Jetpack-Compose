@@ -111,15 +111,15 @@ class ConnectionViewModel @Inject constructor(
     }
 
     fun sendMessage(message: String) = viewModelScope.launch {
-        _uiState.update { state ->
-            if (state is CallState.Success) {
-                state.copy(
-                    messages = state.messages + ChatMessage.TextMessage(
-                        type = ChatMessage.ChatType.ME,
-                        message = message
-                    )
+        _uiState.update {
+            val state = it as CallState.Success
+
+            state.copy(
+                messages = state.messages + ChatMessage.TextMessage(
+                    type = ChatMessage.ChatType.ME,
+                    message = message
                 )
-            } else state
+            )
         }
         webRtcClient.sendMessage(message)
     }
