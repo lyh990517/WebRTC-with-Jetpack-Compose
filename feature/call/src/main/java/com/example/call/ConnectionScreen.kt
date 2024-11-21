@@ -26,8 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import com.example.call.state.CallEvent
 import com.example.call.state.CallState
 import com.example.call.ui.ControllerUi
@@ -64,14 +62,6 @@ fun ConnectionScreen(
             delay(800)
             otherUserOnInput = false
         }
-    }
-
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
-        viewModel.disconnect()
-    }
-
-    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
-        viewModel.disconnect()
     }
 
     when (state) {
