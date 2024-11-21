@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +33,7 @@ import com.example.call.ui.ControllerUi
 import com.example.call.ui.LocalSurface
 import com.example.call.ui.RemoteSurface
 import com.example.call.ui.chat.Chatting
+import com.example.webrtc.client.event.WebRtcEvent
 import kotlinx.coroutines.delay
 
 @Composable
@@ -39,6 +41,7 @@ fun ConnectionScreen(
     viewModel: ConnectionViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val webrtcEvent by viewModel.webrtcEvents.collectAsState(WebRtcEvent.None)
     var otherUserOnInput by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -64,22 +67,29 @@ fun ConnectionScreen(
         }
     }
 
-    when (state) {
-        CallState.Loading -> {
-            LoadingContent()
-        }
+    Box(Modifier.fillMaxSize()) {
+        when (state) {
+            CallState.Loading -> {
+                LoadingContent()
+            }
 
-        is CallState.Success -> {
-            CallContent(
-                state = state as CallState.Success,
-                otherUserOnInput = { otherUserOnInput },
-                onToggleVoice = viewModel::toggleVoice,
-                onToggleVideo = viewModel::toggleVideo,
-                onDisconnect = viewModel::disconnect,
-                onMessage = viewModel::sendMessage,
-                onInputChange = viewModel::sendInputEvent
-            )
+            is CallState.Success -> {
+                CallContent(
+                    state = state as CallState.Success,
+                    otherUserOnInput = { otherUserOnInput },
+                    onToggleVoice = viewModel::toggleVoice,
+                    onToggleVideo = viewModel::toggleVideo,
+                    onDisconnect = viewModel::disconnect,
+                    onMessage = viewModel::sendMessage,
+                    onInputChange = viewModel::sendInputEvent
+                )
+            }
         }
+        Text(
+            modifier = Modifier.align(Alignment.Center),
+            text = webrtcEvent.toString(),
+            color = Color.White
+        )
     }
 }
 

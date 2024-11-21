@@ -43,18 +43,14 @@ class ConnectionViewModel @Inject constructor(
 
     private val roomId = savedStateHandle.get<String>(roomIdArg) ?: ""
 
+    val webrtcEvents = webRtcClient.getEvent()
+
     init {
         viewModelScope.launch {
             webRtcClient
                 .getMessages()
                 .mapToChatMessage()
                 .consumeMessage()
-        }
-
-        viewModelScope.launch {
-            webRtcClient.getEvent().collect { event ->
-                Log.i("WebRtc Event", "$event")
-            }
         }
     }
 

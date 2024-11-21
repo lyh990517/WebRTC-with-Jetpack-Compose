@@ -24,6 +24,7 @@ internal class EventHandler @Inject constructor(
                 is WebRtcEvent.Host -> handleHostEvent(event)
                 is WebRtcEvent.Guest -> handleGuestEvent(event)
                 is WebRtcEvent.StateChange -> handleStateChangeEvent(event)
+                WebRtcEvent.None -> {}
             }
         }
     }
