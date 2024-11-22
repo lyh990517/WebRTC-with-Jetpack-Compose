@@ -6,6 +6,7 @@ import com.example.webrtc.client.signaling.Signaling
 import com.example.webrtc.client.event.EventHandler
 import com.example.webrtc.client.event.WebRtcEvent
 import com.example.webrtc.client.model.Message
+import com.example.webrtc.client.stts.SpeechRecognitionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.Flow
@@ -20,7 +21,8 @@ internal class WebRtcClientImpl @Inject constructor(
     private val eventHandler: EventHandler,
     private val webRtcController: Controller.WebRtc,
     private val localResourceController: Controller.LocalResource,
-    private val signaling: Signaling
+    private val signaling: Signaling,
+    private val speechRecognitionManager: SpeechRecognitionManager
 ) : WebRtcClient {
     override fun connect(roomID: String) {
         webRtcScope.launch {
@@ -39,6 +41,10 @@ internal class WebRtcClientImpl @Inject constructor(
     override fun getEvent(): Flow<WebRtcEvent> = eventHandler.getEvents()
 
     override suspend fun getRoomList(): Flow<List<String>?> = signaling.getRoomList()
+
+    override fun startSpeech() {
+        speechRecognitionManager.startListen()
+    }
 
     override fun sendMessage(message: String) {
         webRtcController.sendMessage(message)

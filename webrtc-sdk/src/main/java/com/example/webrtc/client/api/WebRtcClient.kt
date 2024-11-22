@@ -12,6 +12,8 @@ interface WebRtcClient {
 
     suspend fun getRoomList(): Flow<List<String>?>
 
+    fun startSpeech()
+
     fun sendMessage(message: String)
 
     fun sendInputEvent()

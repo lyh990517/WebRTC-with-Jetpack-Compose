@@ -3,18 +3,23 @@ package com.example.webrtc.client.controller
 import android.util.Log
 import com.example.webrtc.client.event.WebRtcEvent
 import com.example.webrtc.client.model.Message
+import com.example.webrtc.client.stts.SpeechRecognitionManager
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.webrtc.DataChannel
 import org.webrtc.DataChannel.Buffer
 import org.webrtc.PeerConnection
 import java.nio.ByteBuffer
 import javax.inject.Inject
 
-class DataChannelManager @Inject constructor(
-    private val webRtcScope: CoroutineScope
+internal class DataChannelManager @Inject constructor(
+    private val webRtcScope: CoroutineScope,
+    private val speechRecognitionManager: SpeechRecognitionManager
 ) {
     private var dataChannel: DataChannel? = null
     private val dataChannelEvent = MutableSharedFlow<WebRtcEvent>()
@@ -27,6 +32,12 @@ class DataChannelManager @Inject constructor(
         )
 
         dataChannel?.registerObserver(createChannelObserver())
+
+        webRtcScope.launch {
+            withContext(Dispatchers.Main){
+                speechRecognitionManager.getResult().collect(::sendMessage)
+            }
+        }
     }
 
     fun sendMessage(message: String) {
