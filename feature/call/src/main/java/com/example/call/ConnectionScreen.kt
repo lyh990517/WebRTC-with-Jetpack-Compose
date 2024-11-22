@@ -48,12 +48,6 @@ fun ConnectionScreen(
     var otherUserOnInput by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        viewModel.fetch()
-        delay(200)
-        viewModel.connect()
-    }
-
-    LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { event ->
             when (event) {
                 CallEvent.InputEvent -> {

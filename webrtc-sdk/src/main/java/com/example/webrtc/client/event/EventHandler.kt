@@ -25,20 +25,7 @@ internal class EventHandler @Inject constructor(
                 is WebRtcEvent.Host -> handleHostEvent(event)
                 is WebRtcEvent.Guest -> handleGuestEvent(event)
                 is WebRtcEvent.StateChange -> handleStateChangeEvent(event)
-                is WebRtcEvent.Speech -> handleSpeechEvent(event)
                 WebRtcEvent.None -> {}
-            }
-        }
-    }
-
-    private fun handleSpeechEvent(event: WebRtcEvent.Speech) {
-        when (event) {
-            WebRtcEvent.Speech.End -> {
-                webRtcController.addAudioTrack()
-            }
-
-            WebRtcEvent.Speech.Start -> {
-                webRtcController.removeAudioTrack()
             }
         }
     }

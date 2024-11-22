@@ -24,7 +24,7 @@ internal class WebRtcClientImpl @Inject constructor(
     private val signaling: Signaling,
     private val speechRecognitionManager: SpeechRecognitionManager
 ) : WebRtcClient {
-    override fun connect(roomID: String) {
+    override fun connect(roomID: String, speechModeOn: Boolean) {
         webRtcScope.launch {
             val isHost = !signaling.getRoomExists(roomID)
 
@@ -32,7 +32,7 @@ internal class WebRtcClientImpl @Inject constructor(
 
             launch { signaling.start(roomID, isHost) }
 
-            webRtcController.connect(roomID, isHost)
+            webRtcController.connect(roomID, isHost, speechModeOn)
 
             localResourceController.startCapture()
         }

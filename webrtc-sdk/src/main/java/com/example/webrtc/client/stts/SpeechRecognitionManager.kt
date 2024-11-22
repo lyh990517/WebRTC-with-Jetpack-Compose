@@ -6,10 +6,7 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
-import com.example.webrtc.client.event.WebRtcEvent
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
 import java.util.Locale
 import javax.inject.Inject
@@ -19,7 +16,6 @@ import javax.inject.Singleton
 internal class SpeechRecognitionManager @Inject constructor(
     private val speechRecognizer: SpeechRecognizer
 ) {
-    private val speechEvent = MutableSharedFlow<WebRtcEvent>(extraBufferCapacity = 100)
     private val speechRecognizerIntent =
         Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(
@@ -53,7 +49,6 @@ internal class SpeechRecognitionManager @Inject constructor(
 
             override fun onEndOfSpeech() {
                 Log.d("SpeechRecognizer", "onEndOfSpeech called")
-                speechEvent.tryEmit(WebRtcEvent.Speech.End)
             }
 
             override fun onError(i: Int) {
@@ -80,10 +75,7 @@ internal class SpeechRecognitionManager @Inject constructor(
         awaitClose { }
     }
 
-    fun getEvent() = speechEvent.asSharedFlow()
-
     fun startListen() {
-        speechEvent.tryEmit(WebRtcEvent.Speech.Start)
         speechRecognizer.startListening(speechRecognizerIntent)
     }
 }

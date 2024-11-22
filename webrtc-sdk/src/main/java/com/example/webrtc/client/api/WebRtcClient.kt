@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import org.webrtc.SurfaceViewRenderer
 
 interface WebRtcClient {
-    fun connect(roomID: String)
+    fun connect(roomID: String, speechModeOn: Boolean = false)
 
     fun getEvent(): Flow<WebRtcEvent>
 

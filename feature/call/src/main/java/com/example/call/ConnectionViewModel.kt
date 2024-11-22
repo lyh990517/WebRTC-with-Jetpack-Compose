@@ -52,20 +52,30 @@ class ConnectionViewModel @Inject constructor(
                 .mapToChatMessage()
                 .consumeMessage()
         }
-    }
 
-    fun fetch() = viewModelScope.launch {
-        _uiState.update {
-            CallState.Success(
-                local = webRtcClient.getLocalSurface(),
-                remote = webRtcClient.getRemoteSurface(),
-                messages = emptyList()
-            )
+        viewModelScope.launch {
+            _uiState.update {
+                CallState.Success(
+                    local = webRtcClient.getLocalSurface(),
+                    remote = webRtcClient.getRemoteSurface(),
+                    messages = emptyList()
+                )
+            }
+
+            if (roomId.contains("<s>")) {
+                connectWithSpeechMode()
+            } else {
+                connect()
+            }
         }
     }
 
-    fun connect() = viewModelScope.launch {
+    private fun connect() = viewModelScope.launch {
         webRtcClient.connect(roomId)
+    }
+
+    private fun connectWithSpeechMode() = viewModelScope.launch {
+        webRtcClient.connect(roomId, true)
     }
 
     fun toggleVoice() = viewModelScope.launch {

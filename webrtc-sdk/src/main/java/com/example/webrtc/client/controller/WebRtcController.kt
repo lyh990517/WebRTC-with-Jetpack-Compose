@@ -1,6 +1,5 @@
 package com.example.webrtc.client.controller
 
-import android.util.Log
 import com.example.webrtc.client.event.WebRtcEvent
 import com.example.webrtc.client.model.Message
 import com.example.webrtc.client.stts.SpeechRecognitionManager
@@ -12,7 +11,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.webrtc.AudioTrack
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaConstraints
@@ -50,7 +48,7 @@ internal class WebRtcController @Inject constructor(
 
     private var peerConnection: PeerConnection? = null
 
-    override fun connect(roomID: String, isHost: Boolean) {
+    override fun connect(roomID: String, isHost: Boolean, speechModeOn: Boolean) {
         peerConnection = peerConnectionFactory.createPeerConnection(isHost)
 
         peerConnection?.createDataChannel()
@@ -61,7 +59,7 @@ internal class WebRtcController @Inject constructor(
             }
         }
 
-        peerConnection?.initializeLocalResource()
+        peerConnection?.initializeLocalResource(speechModeOn)
 
         if (isHost) {
             controllerEvent.tryEmit(WebRtcEvent.Host.SendOffer)
@@ -108,24 +106,6 @@ internal class WebRtcController @Inject constructor(
         peerConnection?.close()
     }
 
-    override fun removeAudioTrack() {
-        val audioSender = peerConnection?.senders?.find { sender ->
-            sender.track() is AudioTrack
-        }
-
-        if (audioSender != null) {
-            peerConnection?.removeTrack(audioSender)
-            Log.e("SpeechRecognizer", "Audio track removed successfully.")
-        } else {
-            Log.e("SpeechRecognizer", "Audio track failed.")
-        }
-    }
-
-    override fun addAudioTrack() {
-        Log.e("SpeechRecognizer", "add track successfully.")
-        peerConnection?.addTrack(localResourceController.getAudioTrack())
-    }
-
     override fun setLocalDescription(sdp: SessionDescription, observer: SdpObserver) {
         peerConnection?.setLocalDescription(observer, sdp)
     }
@@ -142,13 +122,12 @@ internal class WebRtcController @Inject constructor(
 
     override fun getEvent(): Flow<WebRtcEvent> = merge(
         controllerEvent.asSharedFlow(),
-        dataChannelManager.getEvent(),
-        speechRecognitionManager.getEvent()
+        dataChannelManager.getEvent()
     )
 
-    private fun PeerConnection.initializeLocalResource() {
+    private fun PeerConnection.initializeLocalResource(speechModeOn: Boolean) {
         addTrack(localResourceController.getVideoTrack())
-        addTrack(localResourceController.getAudioTrack())
+        if (!speechModeOn) addTrack(localResourceController.getAudioTrack())
     }
 
     private fun PeerConnectionFactory.createPeerConnection(
