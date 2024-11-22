@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ControllerUi(
     modifier: Modifier = Modifier,
+    onSpeech: () -> Unit = {},
     onToggleVoice: () -> Unit = {},
     onToggleVideo: () -> Unit = {},
     onToggleChat: () -> Unit = {},
@@ -40,6 +42,15 @@ fun ControllerUi(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
+        ControllerButton(
+            label = "Speech",
+            isActive = true,
+            onClick = {
+                onSpeech()
+            },
+            icon = Icons.Default.PlayArrow,
+            activeColor = Color.Green
+        )
         ControllerButton(
             label = "Voice",
             isActive = isCallClicked.value,

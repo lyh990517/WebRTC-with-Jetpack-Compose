@@ -72,6 +72,10 @@ class ConnectionViewModel @Inject constructor(
         webRtcClient.toggleVoice()
     }
 
+    fun startSpeech() = viewModelScope.launch {
+        webRtcClient.startSpeech()
+    }
+
     fun toggleVideo() = viewModelScope.launch {
         webRtcClient.toggleVideo()
     }
