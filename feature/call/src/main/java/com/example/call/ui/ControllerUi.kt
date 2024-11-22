@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ControllerUi(
     modifier: Modifier = Modifier,
+    speechMode: Boolean,
     onSpeech: () -> Unit = {},
     onToggleVoice: () -> Unit = {},
     onToggleVideo: () -> Unit = {},
@@ -42,24 +43,27 @@ fun ControllerUi(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        ControllerButton(
-            label = "Speech",
-            isActive = true,
-            onClick = {
-                onSpeech()
-            },
-            icon = Icons.Default.PlayArrow,
-            activeColor = Color.Green
-        )
-        ControllerButton(
-            label = "Voice",
-            isActive = isCallClicked.value,
-            onClick = {
-                isCallClicked.value = !isCallClicked.value
-                onToggleVoice()
-            },
-            icon = Icons.Default.Call
-        )
+        if (speechMode) {
+            ControllerButton(
+                label = "Speech",
+                isActive = true,
+                onClick = {
+                    onSpeech()
+                },
+                icon = Icons.Default.PlayArrow,
+                activeColor = Color.Green
+            )
+        } else {
+            ControllerButton(
+                label = "Voice",
+                isActive = isCallClicked.value,
+                onClick = {
+                    isCallClicked.value = !isCallClicked.value
+                    onToggleVoice()
+                },
+                icon = Icons.Default.Call
+            )
+        }
         ControllerButton(
             label = "Video",
             isActive = isVideoClicked.value,
@@ -121,6 +125,12 @@ fun ControllerButton(
 
 @Composable
 @Preview
+fun ControllerSpeechPreview() {
+    ControllerUi(speechMode = true)
+}
+
+@Composable
+@Preview
 fun ControllerPreview() {
-    ControllerUi()
+    ControllerUi(speechMode = false)
 }

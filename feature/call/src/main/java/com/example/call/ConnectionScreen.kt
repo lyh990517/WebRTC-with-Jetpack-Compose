@@ -92,6 +92,7 @@ fun ConnectionScreen(
 
             is CallState.Success -> {
                 CallContent(
+                    speechMode = viewModel.isSpeechMode,
                     state = state as CallState.Success,
                     otherUserOnInput = { otherUserOnInput },
                     onToggleVoice = viewModel::toggleVoice,
@@ -122,6 +123,7 @@ private fun LoadingContent() {
 
 @Composable
 private fun CallContent(
+    speechMode: Boolean,
     state: CallState.Success,
     otherUserOnInput: () -> Boolean,
     onSpeech: () -> Unit,
@@ -155,7 +157,8 @@ private fun CallContent(
                 onToggleVideo = onToggleVideo,
                 onToggleChat = { isChat = !isChat },
                 onDisconnect = onDisconnect,
-                onSpeech = onSpeech
+                onSpeech = onSpeech,
+                speechMode = speechMode
             )
         }
 

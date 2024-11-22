@@ -43,6 +43,8 @@ class ConnectionViewModel @Inject constructor(
 
     private val roomId = savedStateHandle.get<String>(roomIdArg) ?: ""
 
+    val isSpeechMode = roomId.contains("<s>")
+
     val webrtcEvents = webRtcClient.getEvent()
 
     init {
@@ -62,7 +64,7 @@ class ConnectionViewModel @Inject constructor(
                 )
             }
 
-            if (roomId.contains("<s>")) {
+            if (isSpeechMode) {
                 connectWithSpeechMode()
             } else {
                 connect()

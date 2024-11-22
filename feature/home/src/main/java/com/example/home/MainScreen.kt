@@ -121,8 +121,28 @@ fun MainScreen(
                 colors = ButtonDefaults.buttonColors(Color(0xFF6200EE)),
                 elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
             ) {
-                Text(text = "Create Room", color = Color.White, fontSize = 18.sp)
+                Text(text = "Connect", color = Color.White, fontSize = 18.sp)
             }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                checkCameraAndAudioPermission(
+                    context = context,
+                    goToCall = { goToCall("$roomId<s>") },
+                    permissionsLauncher = permissionsLauncher
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .padding(horizontal = 32.dp),
+            shape = RoundedCornerShape(50),
+            colors = ButtonDefaults.buttonColors(Color(0xFF6200EE)),
+            elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
+        ) {
+            Text(text = "Connect with SpeechMode", color = Color.White, fontSize = 18.sp)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
