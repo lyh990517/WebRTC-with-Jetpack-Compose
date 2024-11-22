@@ -18,6 +18,11 @@ sealed interface WebRtcEvent {
         data class Buffer(val amount: Long) : StateChange
     }
 
+    sealed interface Speech : WebRtcEvent {
+        data object Start : Speech
+        data object End : Speech
+    }
+
     sealed interface Host : WebRtcEvent {
         data object SendOffer : Host
 

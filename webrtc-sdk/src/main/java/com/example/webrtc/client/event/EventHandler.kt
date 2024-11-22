@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.webrtc.client.controller.Controller
 import com.example.webrtc.client.signaling.Signaling
 import com.example.webrtc.client.signaling.SignalType
+import com.example.webrtc.client.stts.SpeechRecognitionManager
 import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -11,11 +12,11 @@ import javax.inject.Singleton
 @Singleton
 internal class EventHandler @Inject constructor(
     private val webRtcController: Controller.WebRtc,
-    private val signaling: Signaling
+    private val signaling: Signaling,
 ) {
     private val events = merge(
         webRtcController.getEvent(),
-        signaling.getEvent()
+        signaling.getEvent(),
     )
 
     suspend fun start() {
@@ -24,7 +25,20 @@ internal class EventHandler @Inject constructor(
                 is WebRtcEvent.Host -> handleHostEvent(event)
                 is WebRtcEvent.Guest -> handleGuestEvent(event)
                 is WebRtcEvent.StateChange -> handleStateChangeEvent(event)
+                is WebRtcEvent.Speech -> handleSpeechEvent(event)
                 WebRtcEvent.None -> {}
+            }
+        }
+    }
+
+    private fun handleSpeechEvent(event: WebRtcEvent.Speech) {
+        when (event) {
+            WebRtcEvent.Speech.End -> {
+                webRtcController.addAudioTrack()
+            }
+
+            WebRtcEvent.Speech.Start -> {
+                webRtcController.removeAudioTrack()
             }
         }
     }

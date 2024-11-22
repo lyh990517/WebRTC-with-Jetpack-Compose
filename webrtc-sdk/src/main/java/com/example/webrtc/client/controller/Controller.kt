@@ -32,6 +32,8 @@ sealed interface Controller {
         fun createOffer()
         fun createAnswer()
         fun closeConnection()
+        fun removeAudioTrack()
+        fun addAudioTrack()
         fun setLocalDescription(sdp: SessionDescription, observer: SdpObserver)
         fun setRemoteDescription(sdp: SessionDescription)
         fun addIceCandidate(iceCandidate: IceCandidate)
