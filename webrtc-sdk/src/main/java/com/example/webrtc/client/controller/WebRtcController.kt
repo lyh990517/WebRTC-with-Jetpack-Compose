@@ -48,21 +48,19 @@ internal class WebRtcController @Inject constructor(
 
     private var peerConnection: PeerConnection? = null
 
-    override fun connect(roomID: String, isHost: Boolean, speechModeOn: Boolean) {
+    override fun initialize(roomID: String, isHost: Boolean, speechModeOn: Boolean) {
         peerConnection = peerConnectionFactory.createPeerConnection(isHost)
 
         peerConnection?.createDataChannel()
-
-        webRtcScope.launch {
-            withContext(Dispatchers.Main) {
-                speechRecognitionManager.getResult().collect(::sendMessage)
-            }
-        }
 
         peerConnection?.initializeLocalResource(speechModeOn)
 
         if (isHost) {
             controllerEvent.tryEmit(WebRtcEvent.Host.SendOffer)
+        }
+
+        if (speechModeOn) {
+            speechRecognitionManager.collectResult()
         }
     }
 
@@ -124,6 +122,12 @@ internal class WebRtcController @Inject constructor(
         controllerEvent.asSharedFlow(),
         dataChannelManager.getEvent()
     )
+
+    private fun SpeechRecognitionManager.collectResult() = webRtcScope.launch {
+        withContext(Dispatchers.IO) {
+            getResult().collect(::sendMessage)
+        }
+    }
 
     private fun PeerConnection.initializeLocalResource(speechModeOn: Boolean) {
         addTrack(localResourceController.getVideoTrack())

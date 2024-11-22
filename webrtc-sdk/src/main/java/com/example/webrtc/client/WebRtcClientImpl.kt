@@ -32,7 +32,7 @@ internal class WebRtcClientImpl @Inject constructor(
 
             launch { signaling.start(roomID, isHost) }
 
-            webRtcController.connect(roomID, isHost, speechModeOn)
+            webRtcController.initialize(roomID, isHost, speechModeOn)
 
             localResourceController.startCapture()
         }
