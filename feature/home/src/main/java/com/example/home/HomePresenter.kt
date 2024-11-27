@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 class HomePresenter @AssistedInject constructor(
     @Assisted private val navigator: Navigator,
-    @Assisted private val webRtcClient: WebRtcClient
+    private val webRtcClient: WebRtcClient
 ) : Presenter<HomeUiState> {
 
     @Composable
@@ -61,8 +61,7 @@ class HomePresenter @AssistedInject constructor(
     @AssistedFactory
     fun interface Factory {
         fun create(
-            navigator: Navigator,
-            webRtcClient: WebRtcClient
+            navigator: Navigator
         ): HomePresenter
     }
 }
