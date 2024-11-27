@@ -10,5 +10,6 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.circuit.runtime)
+    implementation(libs.circuit.foundation)
 }

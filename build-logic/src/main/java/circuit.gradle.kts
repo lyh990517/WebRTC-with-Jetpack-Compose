@@ -4,5 +4,3 @@ plugins {
     id("com.android.library")
     `kotlin-parcelize`
 }
-
-configureCircuit()
