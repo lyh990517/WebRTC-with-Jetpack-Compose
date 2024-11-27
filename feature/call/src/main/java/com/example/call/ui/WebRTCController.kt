@@ -13,13 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.call.ConnectionEvent
 
 @Composable
 fun ControllerUi(
     modifier: Modifier = Modifier,
-    onToggleVoice: () -> Unit,
-    onToggleVideo: () -> Unit,
-    onDisconnect: () -> Unit
+    onEvent: (ConnectionEvent) -> Unit
 ) {
     val isCallClicked = rememberSaveable { mutableStateOf(false) }
     val isVideoClicked = rememberSaveable { mutableStateOf(false) }
@@ -36,7 +35,7 @@ fun ControllerUi(
             state = isCallClicked
         ) {
             isCallClicked.value = !isCallClicked.value
-            onToggleVoice()
+            onEvent(ConnectionEvent.ToggleVoice)
         }
         MenuButton(
             imageVector = Icons.Default.Face,
@@ -45,14 +44,14 @@ fun ControllerUi(
             state = isVideoClicked
         ) {
             isVideoClicked.value = !isVideoClicked.value
-            onToggleVideo()
+            onEvent(ConnectionEvent.ToggleVideo)
         }
         MenuButton(
             imageVector = Icons.Default.Close,
             description = "Close",
             defaultBackgroundColor = Color.Red
         ) {
-            onDisconnect()
+            onEvent(ConnectionEvent.DisConnect)
         }
     }
 }

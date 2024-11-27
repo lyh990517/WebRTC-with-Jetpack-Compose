@@ -21,101 +21,59 @@ import androidx.navigation.navArgument
 import com.example.call.state.CallState
 import com.example.call.ui.ControllerUi
 import com.example.call.viewmodel.ConnectionViewModel
+import com.example.circuit.ConnectScreen
+import com.example.circuit.HomeScreen
+import com.slack.circuit.codegen.annotations.CircuitInject
+import com.slack.circuit.runtime.ui.ui
+import dagger.hilt.android.components.ActivityRetainedComponent
 import kotlinx.coroutines.delay
+import org.webrtc.SurfaceViewRenderer
 
 const val connectionRoute = "connection"
 const val roomIdArg = "roomId"
 const val isHostArg = "isHost"
 
-fun NavHostController.navigateToConnection(
-    roomId: String,
-    isHost: Boolean
-) {
-    val route = "$connectionRoute?$roomIdArg=$roomId&$isHostArg=$isHost"
-
-    navigate(route)
-}
-
-fun NavGraphBuilder.connectionScreen() {
-    composable(
-        route = "$connectionRoute?$roomIdArg={$roomIdArg}" +
-                "&$isHostArg={$isHostArg}",
-        arguments =
-        listOf(
-            navArgument(roomIdArg) {
-                nullable = false
-                type = NavType.StringType
-            },
-            navArgument(isHostArg) {
-                nullable = false
-                type = NavType.BoolType
-            }
-        )
-    ) {
-        ConnectionScreen()
-    }
-}
-
 @Composable
+@CircuitInject(ConnectScreen::class, ActivityRetainedComponent::class)
 fun ConnectionScreen(
-    viewModel: ConnectionViewModel = hiltViewModel(),
+    uiState: ConnectionUiState,
+    modifier: Modifier = Modifier
 ) {
-    val state by viewModel.uiState.collectAsState()
     LaunchedEffect(Unit) {
-        viewModel.fetch()
         delay(200)
-        viewModel.connect()
+        uiState.eventSink(ConnectionEvent.Connect)
     }
 
-    when (state) {
-        CallState.Loading -> {
-            LoadingContent()
-        }
-
-        is CallState.Success -> {
-            CallContent(
-                state = state as CallState.Success,
-                onToggleVoice = viewModel::toggleVoice,
-                onToggleVideo = viewModel::toggleVideo,
-                onDisconnect = viewModel::disconnect,
-            )
-        }
-    }
-}
-
-@Composable
-private fun LoadingContent() {
-    Box(modifier = Modifier.fillMaxSize()) {
-        CircularProgressIndicator(Modifier.align(Alignment.Center))
-    }
+    CallContent(
+        local = uiState.local,
+        remote = uiState.remote,
+        onEvent = uiState.eventSink
+    )
 }
 
 @Composable
 private fun CallContent(
-    state: CallState.Success,
-    onToggleVoice: () -> Unit,
-    onToggleVideo: () -> Unit,
-    onDisconnect: () -> Unit
+    local: SurfaceViewRenderer,
+    remote: SurfaceViewRenderer,
+    onEvent: (ConnectionEvent) -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
-            factory = { state.remote }
+            factory = { remote }
         )
         AndroidView(
             modifier = Modifier
                 .fillMaxHeight(0.5f)
                 .fillMaxWidth(0.5f)
                 .align(Alignment.BottomStart),
-            factory = { state.local }
+            factory = { local }
         )
         ControllerUi(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
-            onToggleVoice = onToggleVoice,
-            onToggleVideo = onToggleVideo,
-            onDisconnect = onDisconnect,
+            onEvent = onEvent
         )
     }
 }
