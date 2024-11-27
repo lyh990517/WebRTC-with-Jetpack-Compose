@@ -13,8 +13,8 @@ import dagger.hilt.android.components.ActivityRetainedComponent
 
 class ConnectionPresenter @AssistedInject constructor(
     @Assisted private val navigator: Navigator,
-    private val webRtcClient: WebRtcClient,
-    private val screen: ConnectScreen
+    @Assisted private val screen: ConnectScreen,
+    private val webRtcClient: WebRtcClient
 ) : Presenter<ConnectionUiState> {
     @Composable
     override fun present(): ConnectionUiState {
@@ -36,7 +36,8 @@ class ConnectionPresenter @AssistedInject constructor(
     @AssistedFactory
     fun interface Factory {
         fun create(
-            navigator: Navigator
+            navigator: Navigator,
+            screen: ConnectScreen
         ): ConnectionPresenter
     }
 }

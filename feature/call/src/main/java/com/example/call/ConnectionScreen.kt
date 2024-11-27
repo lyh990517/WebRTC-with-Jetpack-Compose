@@ -18,9 +18,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.call.state.CallState
 import com.example.call.ui.ControllerUi
-import com.example.call.viewmodel.ConnectionViewModel
 import com.example.circuit.ConnectScreen
 import com.example.circuit.HomeScreen
 import com.slack.circuit.codegen.annotations.CircuitInject
