@@ -1,5 +1,12 @@
-# Overview
-This project is a video call application built using WebRTC technology. With this application, you can make video calls on both web browsers and mobile devices.
+# Overview  
+This project uses a custom SDK that simplifies WebRTC integration to deliver seamless communication capabilities. It includes **video call**, real-time **chat** via data channel, and **screen sharing** using MediaProjection.
+
+| Feature          | Status |
+|-------------------|--------|
+| **Video Call**    | ✅      |
+| **Chat**          | ✅      |
+| **Screen Sharing**| ✅      |
+| **File Transfer** | ❌      |
 
 # Sample App Preview
 <img width="330" alt="스크린샷 2024-11-23 오전 12 52 16" src="https://github.com/user-attachments/assets/dc7416ca-a3b8-4e84-8332-616ffb9c1daa">
