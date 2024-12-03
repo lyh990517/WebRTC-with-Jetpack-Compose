@@ -1,8 +1,8 @@
-package com.example.webrtc.client.signaling
+package com.example.webrtc.sdk.signaling
 
-import com.example.webrtc.client.model.Packet
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
+import com.example.webrtc.sdk.model.Packet
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
 

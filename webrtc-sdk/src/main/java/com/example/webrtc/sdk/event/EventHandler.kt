@@ -1,21 +1,18 @@
-package com.example.webrtc.client.event
+package com.example.webrtc.sdk.event
 
 import android.util.Log
-import com.example.webrtc.client.controller.Controller
-import com.example.webrtc.client.signaling.Signaling
-import com.example.webrtc.client.signaling.SignalType
+import com.example.webrtc.sdk.controller.WebRtcController
+import com.example.webrtc.sdk.signaling.SignalType
+import com.example.webrtc.sdk.signaling.Signaling
 import kotlinx.coroutines.flow.merge
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-internal class EventHandler @Inject constructor(
-    private val webRtcController: Controller.WebRtc,
-    private val signaling: Signaling
+internal class EventHandler(
+    private val webRtcController: WebRtcController,
+    private val signaling: Signaling,
 ) {
     private val events = merge(
         webRtcController.getEvent(),
-        signaling.getEvent()
+        signaling.getEvent(),
     )
 
     suspend fun start() {
@@ -95,14 +92,6 @@ internal class EventHandler @Inject constructor(
                 webRtcController.createAnswer()
             }
 
-            is WebRtcEvent.Guest.SetLocalSdp -> {
-                Log.i(
-                    "WebRTC EventHandler",
-                    "Guest(You): Setting Local SDP [type=${event.sdp.type}]"
-                )
-                webRtcController.setLocalDescription(event.sdp, event.observer)
-            }
-
             is WebRtcEvent.Guest.SendIceToHost -> {
                 Log.i(
                     "WebRTC EventHandler",
@@ -131,6 +120,10 @@ internal class EventHandler @Inject constructor(
                 )
                 webRtcController.addIceCandidate(event.ice)
             }
+
+            is WebRtcEvent.Guest.VideoTrackReceived -> {
+                webRtcController.sinkVideoTrack(event.track)
+            }
         }
     }
 
@@ -142,14 +135,6 @@ internal class EventHandler @Inject constructor(
                     "Host(You) ---> Guest: Sending Offer -> Creating offer SDP"
                 )
                 webRtcController.createOffer()
-            }
-
-            is WebRtcEvent.Host.SetLocalSdp -> {
-                Log.i(
-                    "WebRTC EventHandler",
-                    "Host(You): Setting Local SDP [type=${event.sdp.type}]"
-                )
-                webRtcController.setLocalDescription(event.sdp, event.observer)
             }
 
             is WebRtcEvent.Host.ReceiveAnswer -> {
@@ -187,6 +172,10 @@ internal class EventHandler @Inject constructor(
                     "Guest ---> Host(You): Sending ICE Candidate -> Adding to remote [candidate=${event.ice}]"
                 )
                 webRtcController.addIceCandidate(event.ice)
+            }
+
+            is WebRtcEvent.Host.VideoTrackReceived -> {
+                webRtcController.sinkVideoTrack(event.track)
             }
         }
     }

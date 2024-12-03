@@ -1,4 +1,4 @@
-package com.example.webrtc.client.model
+package com.example.webrtc.sdk.model
 
 sealed interface Message {
     data class PlainString(val data: String) : Message

@@ -1,6 +1,6 @@
-package com.example.webrtc.client.signaling
+package com.example.webrtc.sdk.signaling
 
-import com.example.webrtc.client.event.WebRtcEvent
+import com.example.webrtc.sdk.event.WebRtcEvent
 import kotlinx.coroutines.flow.Flow
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription

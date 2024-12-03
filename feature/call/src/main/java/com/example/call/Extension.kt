@@ -1,7 +1,7 @@
 package com.example.call
 
 import com.example.call.ui.chat.ChatMessage
-import com.example.webrtc.client.model.Message
+import com.example.webrtc.sdk.model.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

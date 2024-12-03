@@ -1,11 +1,11 @@
-package com.example.webrtc.client.signaling
+package com.example.webrtc.sdk.signaling
 
-import com.example.webrtc.client.event.WebRtcEvent
-import com.example.webrtc.client.model.Packet
-import com.example.webrtc.client.model.Packet.Companion.isAnswer
-import com.example.webrtc.client.model.Packet.Companion.isOffer
-import com.example.webrtc.client.signaling.SignalingImpl.Companion.ROOT
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.webrtc.sdk.event.WebRtcEvent
+import com.example.webrtc.sdk.model.Packet
+import com.example.webrtc.sdk.model.Packet.Companion.isAnswer
+import com.example.webrtc.sdk.model.Packet.Companion.isOffer
+import com.example.webrtc.sdk.signaling.SignalingImpl.Companion.ROOT
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,11 +13,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import org.webrtc.SessionDescription
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-internal class SdpManager @Inject constructor(
+internal class SdpManager(
     private val firestore: FirebaseFirestore,
     private val webrtcScope: CoroutineScope
 ) {

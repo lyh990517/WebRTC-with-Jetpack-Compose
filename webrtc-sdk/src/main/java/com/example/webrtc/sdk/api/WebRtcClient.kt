@@ -1,12 +1,14 @@
-package com.example.webrtc.client.api
+package com.example.webrtc.sdk.api
 
-import com.example.webrtc.client.event.WebRtcEvent
-import com.example.webrtc.client.model.Message
+import com.example.webrtc.sdk.event.WebRtcEvent
+import com.example.webrtc.sdk.model.Message
 import kotlinx.coroutines.flow.Flow
 import org.webrtc.SurfaceViewRenderer
 
 interface WebRtcClient {
     fun connect(roomID: String)
+
+    fun startCapture()
 
     fun getEvent(): Flow<WebRtcEvent>
 

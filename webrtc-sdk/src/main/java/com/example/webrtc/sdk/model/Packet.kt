@@ -1,4 +1,4 @@
-package com.example.webrtc.client.model
+package com.example.webrtc.sdk.model
 
 data class Packet(
     val data: Map<String, Any>,

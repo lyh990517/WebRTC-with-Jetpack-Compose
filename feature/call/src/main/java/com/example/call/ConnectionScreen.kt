@@ -33,7 +33,7 @@ import com.example.call.ui.ControllerUi
 import com.example.call.ui.LocalSurface
 import com.example.call.ui.RemoteSurface
 import com.example.call.ui.chat.Chatting
-import com.example.webrtc.client.event.WebRtcEvent
+import com.example.webrtc.sdk.event.WebRtcEvent
 import kotlinx.coroutines.delay
 import org.webrtc.DataChannel
 import org.webrtc.PeerConnection

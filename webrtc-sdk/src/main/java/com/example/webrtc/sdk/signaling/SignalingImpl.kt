@@ -1,21 +1,17 @@
-package com.example.webrtc.client.signaling
+package com.example.webrtc.sdk.signaling
 
-import com.example.webrtc.client.event.WebRtcEvent
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.webrtc.sdk.event.WebRtcEvent
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.tasks.await
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
 import java.time.LocalDateTime
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-internal class SignalingImpl @Inject constructor(
+internal class SignalingImpl(
     private val firestore: FirebaseFirestore,
     private val sdpManager: SdpManager,
     private val iceManager: IceManager

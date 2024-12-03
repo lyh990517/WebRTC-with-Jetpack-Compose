@@ -1,4 +1,4 @@
-package com.example.webrtc.client.signaling
+package com.example.webrtc.sdk.signaling
 
 /**
  * This file is not used, but it is included for understanding the structure.

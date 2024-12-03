@@ -9,7 +9,8 @@ import com.example.call.navigation.roomIdArg
 import com.example.call.state.CallEvent
 import com.example.call.state.CallState
 import com.example.call.ui.chat.ChatMessage
-import com.example.webrtc.client.api.WebRtcClient
+import com.example.webrtc.sdk.api.WebRtcClient
+import com.example.webrtc.sdk.factory.WebRtcClientFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,10 +25,9 @@ import javax.inject.Inject
 @HiltViewModel
 class ConnectionViewModel @Inject constructor(
     application: Application,
-    private val webRtcClient: WebRtcClient,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
 ) : AndroidViewModel(application) {
-
+    private val webRtcClient = WebRtcClientFactory.create(application)
     private val _uiState = MutableStateFlow<CallState>(CallState.Loading)
     val uiState = _uiState.stateIn(
         initialValue = CallState.Loading,

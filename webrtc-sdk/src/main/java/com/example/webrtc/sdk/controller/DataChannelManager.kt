@@ -1,32 +1,27 @@
-package com.example.webrtc.client.controller
+package com.example.webrtc.sdk.controller
 
 import android.util.Log
-import com.example.webrtc.client.event.WebRtcEvent
-import com.example.webrtc.client.model.Message
+import com.example.webrtc.sdk.event.WebRtcEvent
+import com.example.webrtc.sdk.model.Message
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import org.webrtc.DataChannel
 import org.webrtc.DataChannel.Buffer
-import org.webrtc.PeerConnection
 import java.nio.ByteBuffer
-import javax.inject.Inject
 
-class DataChannelManager @Inject constructor(
-    private val webRtcScope: CoroutineScope
+internal class DataChannelManager(
+    private val webRtcScope: CoroutineScope,
 ) {
     private var dataChannel: DataChannel? = null
-    private val dataChannelEvent = MutableSharedFlow<WebRtcEvent>()
+    private val dataChannelEvent = MutableSharedFlow<WebRtcEvent>(extraBufferCapacity = 100)
     private val messages = MutableSharedFlow<Message>()
 
-    fun initialize(peerConnection: PeerConnection) {
-        dataChannel = peerConnection.createDataChannel(
-            "channel",
-            DataChannel.Init().apply { negotiated = true }
-        )
-
-        dataChannel?.registerObserver(createChannelObserver())
+    fun initialize(dataChannel: DataChannel?) {
+        this.dataChannel = dataChannel?.apply {
+            registerObserver(createDataChannelObserver())
+        }
     }
 
     fun sendMessage(message: String) {
@@ -49,7 +44,7 @@ class DataChannelManager @Inject constructor(
 
     fun getEvent() = dataChannelEvent.asSharedFlow()
 
-    private fun createChannelObserver() = object : DataChannel.Observer {
+    private fun createDataChannelObserver() = object : DataChannel.Observer {
         override fun onBufferedAmountChange(p0: Long) {
             webRtcScope.launch {
                 dataChannelEvent.emit(WebRtcEvent.StateChange.Buffer(p0))

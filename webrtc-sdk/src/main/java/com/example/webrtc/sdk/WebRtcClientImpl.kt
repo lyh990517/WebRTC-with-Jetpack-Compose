@@ -1,26 +1,22 @@
-package com.example.webrtc.client
+package com.example.webrtc.sdk
 
-import com.example.webrtc.client.api.WebRtcClient
-import com.example.webrtc.client.controller.Controller
-import com.example.webrtc.client.signaling.Signaling
-import com.example.webrtc.client.event.EventHandler
-import com.example.webrtc.client.event.WebRtcEvent
-import com.example.webrtc.client.model.Message
+import com.example.webrtc.sdk.api.WebRtcClient
+import com.example.webrtc.sdk.controller.WebRtcController
+import com.example.webrtc.sdk.event.EventHandler
+import com.example.webrtc.sdk.event.WebRtcEvent
+import com.example.webrtc.sdk.model.Message
+import com.example.webrtc.sdk.signaling.Signaling
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.webrtc.SurfaceViewRenderer
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-internal class WebRtcClientImpl @Inject constructor(
+internal class WebRtcClientImpl(
     private val webRtcScope: CoroutineScope,
     private val eventHandler: EventHandler,
-    private val webRtcController: Controller.WebRtc,
-    private val localResourceController: Controller.LocalResource,
-    private val signaling: Signaling
+    private val webRtcController: WebRtcController,
+    private val signaling: Signaling,
 ) : WebRtcClient {
     override fun connect(roomID: String) {
         webRtcScope.launch {
@@ -30,10 +26,12 @@ internal class WebRtcClientImpl @Inject constructor(
 
             launch { signaling.start(roomID, isHost) }
 
-            webRtcController.connect(roomID, isHost)
-
-            localResourceController.startCapture()
+            webRtcController.initialize(isHost)
         }
+    }
+
+    override fun startCapture() {
+        webRtcController.startCapture()
     }
 
     override fun getEvent(): Flow<WebRtcEvent> = eventHandler.getEvents()
@@ -51,22 +49,22 @@ internal class WebRtcClientImpl @Inject constructor(
     override fun getMessages(): Flow<Message> = webRtcController.getMessages()
 
     override fun toggleVoice() {
-        localResourceController.toggleVoice()
+        webRtcController.toggleVoice()
     }
 
     override fun toggleVideo() {
-        localResourceController.toggleVideo()
+        webRtcController.toggleVideo()
     }
 
     override fun getLocalSurface(): SurfaceViewRenderer =
-        localResourceController.getLocalSurface()
+        webRtcController.getLocalSurface()
 
     override fun getRemoteSurface(): SurfaceViewRenderer =
-        localResourceController.getRemoteSurface()
+        webRtcController.getRemoteSurface()
 
     override fun disconnect() {
         webRtcScope.launch {
-            localResourceController.dispose()
+            webRtcController.dispose()
             webRtcController.closeConnection()
             signaling.terminate()
             coroutineContext.cancelChildren()

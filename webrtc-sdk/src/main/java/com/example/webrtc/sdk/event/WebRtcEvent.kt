@@ -1,9 +1,10 @@
-package com.example.webrtc.client.event
+package com.example.webrtc.sdk.event
 
 import org.webrtc.IceCandidate
 import org.webrtc.PeerConnection
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
+import org.webrtc.VideoTrack
 
 sealed interface WebRtcEvent {
 
@@ -23,13 +24,13 @@ sealed interface WebRtcEvent {
 
         data class ReceiveAnswer(val sdp: SessionDescription) : Host
 
-        data class SetLocalSdp(val observer: SdpObserver, val sdp: SessionDescription) : Host
-
         data class SendSdpToGuest(val sdp: SessionDescription) : Host
 
         data class SendIceToGuest(val ice: IceCandidate) : Host
 
         data class SetRemoteIce(val ice: IceCandidate) : Host
+
+        data class VideoTrackReceived(val track: VideoTrack) : Host
     }
 
     sealed interface Guest : WebRtcEvent {
@@ -37,12 +38,12 @@ sealed interface WebRtcEvent {
 
         data object SendAnswer : Guest
 
-        data class SetLocalSdp(val observer: SdpObserver, val sdp: SessionDescription) : Guest
-
         data class SendSdpToHost(val sdp: SessionDescription) : Guest
 
         data class SendIceToHost(val ice: IceCandidate) : Guest
 
         data class SetRemoteIce(val ice: IceCandidate) : Guest
+
+        data class VideoTrackReceived(val track: VideoTrack) : Guest
     }
 }
