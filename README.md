@@ -33,7 +33,7 @@ This project is a video call application built using WebRTC technology. With thi
 With these simple steps, you can set up and enjoy video calls. Share the room number or word with other users to start a call together.
 
 # Modularization
-<img width="704" alt="스크린샷 2024-11-15 오후 6 03 44" src="https://github.com/user-attachments/assets/8b883e02-430e-4b19-93bb-fa27b148db35">
+![12412t5r3t1](https://github.com/user-attachments/assets/8ab7f77f-245d-4b0f-ba90-ff1efdd9c585)
 
 # Sample Preview
 <img width="330" alt="스크린샷 2024-11-23 오전 12 52 16" src="https://github.com/user-attachments/assets/dc7416ca-a3b8-4e84-8332-616ffb9c1daa">
