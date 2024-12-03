@@ -1,4 +1,4 @@
-package com.example.call.ui.chat
+package com.example.call
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -18,30 +18,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.example.call.state.CallState
+import com.example.call.ChatList
+import com.example.call.ChatMessage
+import com.example.call.ChatMessageInput
 import kotlinx.coroutines.launch
-
-sealed interface ChatMessage {
-    data class TextMessage(
-        val type: ChatType,
-        val message: String
-    ) : ChatMessage
-
-    data object InputEvent : ChatMessage
-
-    enum class ChatType {
-        ME,
-        OTHER
-    }
-}
 
 @Composable
 fun Chatting(
-    state: CallState.Success,
+    messages: List<ChatMessage>,
     otherUserOnInput: () -> Boolean,
-    onMessage: (String) -> Unit,
-    onInputChange: () -> Unit,
-    onToggleChat: () -> Unit,
+    onEvent: (ConnectionEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val lazyListState = rememberLazyListState()
@@ -49,25 +35,33 @@ fun Chatting(
     val scope = rememberCoroutineScope()
 
     BackHandler {
-        onToggleChat()
+        onEvent(ConnectionEvent.OnToggleChat)
     }
 
-    LaunchedEffect(state.messages.size) {
+    LaunchedEffect(messages.size) {
         if (lazyListState.layoutInfo.visibleItemsInfo.isNotEmpty()) {
             val lastVisibleItem = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()
             showNewMessageNotification =
                 lastVisibleItem != null
-                        && lastVisibleItem.index < state.messages.size - 1
+                        && lastVisibleItem.index < messages.size - 1
+        }
+
+        val isAtBottom =
+            lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index == messages.size - 1
+
+        if (isAtBottom) {
+            lazyListState.animateScrollToItem(messages.size - 1)
         }
     }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column {
-            ChattingTopBar(onToggleChat)
+            ChattingTopBar(onEvent)
 
             ChatList(
                 lazyListState = lazyListState,
-                state = state
+                messages = messages,
+                modifier = Modifier.weight(1f)
             )
 
             Column {
@@ -84,26 +78,25 @@ fun Chatting(
                     exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                 ) {
                     NewMessageReceivedNotification(
-                        state = state,
+                        messages = messages,
                         scope = scope,
                         lazyListState = lazyListState,
                         onClick = { showNewMessageNotification = false }
                     )
                 }
                 ChatMessageInput(
-                    onMessage = {
-                        if (it.isNotBlank()) {
-                            scope.launch {
-                                val isAtBottom =
-                                    lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index == state.messages.size - 1
-                                onMessage(it)
-
-                                if (isAtBottom) {
-                                    lazyListState.animateScrollToItem(state.messages.size - 1)
+                    onEvent = { event ->
+                        when (event) {
+                            is ConnectionEvent.Input.OnInputStateChanged -> onEvent(event)
+                            is ConnectionEvent.Input.OnMessage -> {
+                                if (event.message.isNotBlank()) {
+                                    scope.launch {
+                                        onEvent(ConnectionEvent.Input.OnMessage(event.message))
+                                    }
                                 }
                             }
                         }
-                    }, onInputChange = onInputChange
+                    }
                 )
             }
         }

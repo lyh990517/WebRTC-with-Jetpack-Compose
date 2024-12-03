@@ -1,8 +1,7 @@
-package com.example.call.ui.chat
+package com.example.call
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,23 +11,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.call.state.CallState
+import com.example.call.TextMessage
 
 @Composable
-fun ColumnScope.ChatList(
+fun ChatList(
     lazyListState: LazyListState,
-    state: CallState.Success
+    messages: List<ChatMessage>,
+    modifier: Modifier = Modifier
 ) {
     LazyColumn(
         state = lazyListState,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .weight(1f)
             .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(state.messages) { chatMessage ->
+        items(messages) { chatMessage ->
             if (chatMessage is ChatMessage.TextMessage) {
                 TextMessage(chatMessage)
             }

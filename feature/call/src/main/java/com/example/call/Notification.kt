@@ -1,4 +1,4 @@
-package com.example.call.ui.chat
+package com.example.call
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.call.state.CallState
+import com.example.call.ChatMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -43,7 +43,7 @@ fun OtherUserOnInputNotification() {
 
 @Composable
 fun NewMessageReceivedNotification(
-    state: CallState.Success,
+    messages: List<ChatMessage>,
     scope: CoroutineScope,
     lazyListState: LazyListState,
     onClick: () -> Unit
@@ -59,18 +59,18 @@ fun NewMessageReceivedNotification(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            val message = state.messages[state.messages.size - 1]
+            val message = messages[messages.size - 1]
 
             if (message is ChatMessage.TextMessage) {
                 Text(
-                    text = message.message ?: "",
+                    text = message.message,
                     color = MaterialTheme.colorScheme.onSecondary,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
             TextButton(onClick = {
                 scope.launch {
-                    lazyListState.animateScrollToItem(state.messages.size - 1)
+                    lazyListState.animateScrollToItem(messages.size - 1)
                 }
                 onClick()
             }) {

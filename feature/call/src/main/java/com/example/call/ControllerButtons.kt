@@ -1,4 +1,4 @@
-package com.example.call.ui
+package com.example.call
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,8 +15,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,15 +27,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ControllerUi(
+fun ControllerButtons(
     modifier: Modifier = Modifier,
-    onToggleVoice: () -> Unit = {},
-    onToggleVideo: () -> Unit = {},
-    onToggleChat: () -> Unit = {},
-    onDisconnect: () -> Unit = {}
+    onEvent: (ConnectionEvent) -> Unit
 ) {
-    val isCallClicked = rememberSaveable { mutableStateOf(false) }
-    val isVideoClicked = rememberSaveable { mutableStateOf(false) }
+    var isCallClicked by rememberSaveable { mutableStateOf(false) }
+    var isVideoClicked by rememberSaveable { mutableStateOf(false) }
 
     Row(
         modifier = modifier.padding(16.dp),
@@ -42,32 +41,32 @@ fun ControllerUi(
     ) {
         ControllerButton(
             label = "Voice",
-            isActive = isCallClicked.value,
+            isActive = isCallClicked,
             onClick = {
-                isCallClicked.value = !isCallClicked.value
-                onToggleVoice()
+                isCallClicked = !isCallClicked
+                onEvent(ConnectionEvent.OnToggleVoice)
             },
             icon = Icons.Default.Call
         )
         ControllerButton(
             label = "Video",
-            isActive = isVideoClicked.value,
+            isActive = isVideoClicked,
             onClick = {
-                isVideoClicked.value = !isVideoClicked.value
-                onToggleVideo()
+                isVideoClicked = !isVideoClicked
+                onEvent(ConnectionEvent.OnToggleVideo)
             },
             icon = Icons.Default.Face
         )
         ControllerButton(
             label = "Chat",
             isActive = false,
-            onClick = onToggleChat,
+            onClick = { onEvent(ConnectionEvent.OnToggleChat) },
             icon = Icons.Default.Email
         )
         ControllerButton(
             label = "End",
             isActive = false,
-            onClick = onDisconnect,
+            onClick = { onEvent(ConnectionEvent.OnDisconnect) },
             icon = Icons.Default.Close,
             activeColor = MaterialTheme.colorScheme.error,
             inactiveColor = MaterialTheme.colorScheme.error
@@ -110,6 +109,9 @@ fun ControllerButton(
 
 @Composable
 @Preview
-fun ControllerPreview() {
-    ControllerUi()
+fun ControllerSpeechPreview() {
+    ControllerButtons {
+
+    }
 }
+

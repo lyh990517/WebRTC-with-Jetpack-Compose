@@ -1,4 +1,4 @@
-package com.example.call.ui.chat
+package com.example.call
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -13,11 +13,13 @@ import androidx.compose.runtime.Composable
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun ChattingTopBar(onToggleChat: () -> Unit) {
+fun ChattingTopBar(
+    onEvent: (ConnectionEvent) -> Unit,
+) {
     TopAppBar(
         title = { Text("Chatting", style = MaterialTheme.typography.titleLarge) },
         navigationIcon = {
-            IconButton(onClick = onToggleChat) {
+            IconButton(onClick = { onEvent(ConnectionEvent.OnToggleChat) }) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back")
             }
         },

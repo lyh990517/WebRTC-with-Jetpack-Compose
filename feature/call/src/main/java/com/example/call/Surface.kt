@@ -1,4 +1,4 @@
-package com.example.call.ui
+package com.example.call
 
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
@@ -23,7 +23,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import org.webrtc.SurfaceViewRenderer
 
 @Composable
-fun RemoteSurface(remoteSurface: SurfaceViewRenderer) {
+fun RemoteSurfaceViewRenderer(remoteSurface: SurfaceViewRenderer) {
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { remoteSurface }
@@ -31,7 +31,7 @@ fun RemoteSurface(remoteSurface: SurfaceViewRenderer) {
 }
 
 @Composable
-fun LocalSurface(
+fun LocalSurfaceViewRenderer(
     localSurface: SurfaceViewRenderer,
 ) {
     var localViewOffset by remember { mutableStateOf(Offset(16f, 16f)) }

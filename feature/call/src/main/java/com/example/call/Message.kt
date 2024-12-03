@@ -1,4 +1,4 @@
-package com.example.call.ui.chat
+package com.example.call
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.call.ChatMessage
 
 @Composable
 fun TextMessage(chatMessage: ChatMessage.TextMessage) {
@@ -45,7 +46,7 @@ fun TextMessage(chatMessage: ChatMessage.TextMessage) {
                 .widthIn(max = 250.dp)
         ) {
             Text(
-                text = chatMessage.message ?: "",
+                text = chatMessage.message,
                 color = MaterialTheme.colorScheme.onPrimary,
                 style = MaterialTheme.typography.bodyMedium
             )

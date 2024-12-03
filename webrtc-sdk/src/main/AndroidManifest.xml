@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission
+        android:name="android.permission.CAPTURE_VIDEO_OUTPUT"
+        tools:ignore="ProtectedPermissions" />
+
+    <application>
+        <service
+            android:name="com.example.webrtc.sdk.mediaprojection.WebRtcCaptureService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
+    </application>
 </manifest>
