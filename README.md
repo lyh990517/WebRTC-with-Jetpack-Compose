@@ -16,7 +16,6 @@ This project uses a custom SDK that simplifies WebRTC integration to deliver sea
 <img width="330" alt="스크린샷 2024-11-23 오전 12 54 22" src="https://github.com/user-attachments/assets/87c0a4e3-3691-41a3-8700-4b190e0e7fdb">
 <img width="330" alt="스크린샷 2024-11-23 오전 12 58 16" src="https://github.com/user-attachments/assets/0f8c5946-2442-4254-b9f4-a8ec79db5ffc">
 <img width="330" alt="스크린샷 2024-11-23 오전 12 58 16" src="https://github.com/user-attachments/assets/1fa96fc2-2095-461f-b7cb-c1b8c6d504ea">
-![KakaoTalk_20241203_233520440](https://github.com/user-attachments/assets/283fa7b7-8dfe-4bf3-8b63-e047ec510615)
 
 # How To Start Sample
 1. **Create a Firebase Project**:
