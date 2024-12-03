@@ -39,13 +39,13 @@ This project uses a custom SDK that simplifies WebRTC integration to deliver sea
 
 5. **Creating a Room**
 
-   - Launch the app and select the option to "Create a New Room" or a similar choice.
+   - Launch the app and select the option to "connect" or "connect with projection"
    - A unique number or word will be assigned to the created room.
 
 6. **Joining a Room**
 
-   - To join a room created by another user, enter the assigned number or word for that room and click the "Join" button.
-   - When both users join the same room by using the same number or word, the video call will begin.
+   - To join a room created by another user, enter the assigned number or word for that room and click the "connect" or "connect with projection".
+   - When both users connect to the same room by using the same number or word, the video call will begin.
 
 With these simple steps, you can set up and enjoy video calls. Share the room number or word with other users to start a call together.
 
