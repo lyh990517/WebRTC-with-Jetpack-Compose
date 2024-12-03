@@ -41,4 +41,4 @@ With these simple steps, you can set up and enjoy video calls. Share the room nu
 <img width="330" alt="스크린샷 2024-11-23 오전 12 57 31" src="https://github.com/user-attachments/assets/daa9b2a8-8247-442b-9800-11567626b138">
 <img width="330" alt="스크린샷 2024-11-23 오전 12 54 22" src="https://github.com/user-attachments/assets/87c0a4e3-3691-41a3-8700-4b190e0e7fdb">
 <img width="330" alt="스크린샷 2024-11-23 오전 12 58 16" src="https://github.com/user-attachments/assets/0f8c5946-2442-4254-b9f4-a8ec79db5ffc">
-<img width="330" alt="스크린샷 2024-11-23 오전 12 58 16" src="https://github.com/user-attachments/assets/1d57f69e-1f59-4ca2-9374-5bd284a9eb4b">
+<img width="330" alt="스크린샷 2024-11-23 오전 12 58 16" src="https://github.com/user-attachments/assets/1fa96fc2-2095-461f-b7cb-c1b8c6d504ea">
