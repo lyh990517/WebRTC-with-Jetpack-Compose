@@ -2321,3 +2321,4 @@ local.properties
 /build-logic/build/kotlin-dsl/plugins-blocks/compiled/Webrtc_gradle.class
 /build-logic/build/classes/kotlin/main/WebrtcPlugin.class
 /build-logic/build/generated-sources/kotlin-dsl-plugins/kotlin/WebrtcPlugin.kt
+/app/google-services.json
