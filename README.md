@@ -31,6 +31,9 @@ This project is a video call application built using WebRTC technology. With thi
    - When both users join the same room by using the same number or word, the video call will begin.
 
 With these simple steps, you can set up and enjoy video calls. Share the room number or word with other users to start a call together.
+# Sdk Architecture
+![sdk arch](https://github.com/user-attachments/assets/c6a66737-5760-45fc-bb6a-f963bfad5601)
+
 # Modularization
 ![12412t5r3t1](https://github.com/user-attachments/assets/8ab7f77f-245d-4b0f-ba90-ff1efdd9c585)
 
