@@ -69,9 +69,11 @@ interface WebRtcClient {
 ```
 
 # WebRTC Sdk Usage
+
+### in Video Call
 ``` kotlin
 @Composable
-fun TestScreen() {
+fun VideoCallScreen() {
     val context = LocalContext.current
     val webrtcClient = remember { WebRtcClientFactory.create(context) } // 1. create client
 
@@ -88,6 +90,53 @@ fun TestScreen() {
     Button(
         onClick = {
             webrtcClient.connect("input roomId") // 4. try to connect
+        },
+    ) {
+        Text("Connect")
+    }
+}
+```
+
+### in Screen Share
+``` kotlin
+@Composable
+fun MediaProjectionScreen() {
+    val context = LocalContext.current
+    var webrtcClient by remember { mutableStateOf<WebRtcClient?>(null) }
+    val mediaProjectionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == RESULT_OK) {
+                result.data?.let { intent ->
+                    WebRtcCaptureService.startService(context, intent) // 2. start capture service
+                }
+            }
+        }
+    )
+
+    LaunchedEffect(Unit) {
+        val mediaProjectionManager =
+            context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
+
+        mediaProjectionLauncher.launch(captureIntent) // 1. get media projection
+
+        WebRtcCaptureService.getClient().collect { client -> webrtcClient = client } // 3. after the process of getting the media projection, initialize your client
+    }
+
+    webrtcClient?.getRemoteSurface()?.let { remote ->
+        AndroidView(
+            factory = { remote }
+        )
+    }
+    webrtcClient?.getLocalSurface()?.let { local ->
+        AndroidView(
+            factory = { local }
+        )
+    }
+    Button(
+        onClick = {
+            webrtcClient?.connect("input roomId") // 4. try to connect
         },
     ) {
         Text("Connect")
